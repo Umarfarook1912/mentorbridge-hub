@@ -1,0 +1,59 @@
+---
+description: Check for existing components before creating new ones
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+# Reuse First — Check Before Creating
+
+Before creating any new component, hook, utility, or service, you MUST verify that an equivalent does not already exist in the codebase.
+
+## Search checklist (in order):
+
+1. **shadcn/ui atoms** → `components/ui/` — check for Button, Input, Dialog, Table, Badge, etc.
+2. **Shared components** → `components/shared/` — check layout, data-display, feedback, forms
+3. **Feature components** → `features/` — check if a feature already has this UI
+4. **Custom hooks** → `hooks/` — check for data, pagination, debounce, auth hooks
+5. **Services/queries** → `services/` — check for existing TanStack Query hooks for this entity
+6. **Utilities** → `utils/` — check for existing helper functions
+7. **Zod schemas** → `lib/validations/` — check for existing validation schemas
+
+## Decision tree:
+
+```
+Need a UI component?
+  ├─ Exists in components/ui/ → USE IT directly
+  ├─ Exists in components/shared/ → USE IT, extend via props if needed
+  ├─ Similar exists but needs small change → EXTEND via props/variants
+  └─ Truly new → CREATE in the right folder (see architecture below)
+
+Need data fetching?
+  ├─ Service hook exists in services/<domain>/ → USE IT
+  └─ Not found → CREATE following the entity pattern
+
+Need a utility?
+  ├─ Exists in utils/ or lib/ → USE IT
+  └─ Not found → ADD to the appropriate utils file (don't create a new file for 1 function)
+```
+
+## Composition over duplication
+
+When an existing component is close but not exact:
+- Add a **prop** to toggle behavior (e.g., `variant`, `size`, `showActions`)
+- Use **children** slots for content variation
+- Create a **wrapper** component that composes the shared one with domain-specific props
+
+Never copy-paste an existing component to slightly modify it — that creates drift and maintenance burden.
+
+## Architecture folders
+
+| New thing | Goes in |
+|-----------|---------|
+| Generic UI primitive | `components/ui/` (shadcn only) or `components/shared/` |
+| Layout shell | `components/shared/layout/` |
+| Feature-specific UI | `features/<domain>/components/` |
+| Data fetching hook | `services/<domain>/` |
+| Cross-cutting hook | `hooks/` |
+| Form validation | `lib/validations/<domain>.ts` |
+| TS types/interfaces | `types/<domain>.types.ts` |
+| Pure utility | `utils/<name>.ts` |

@@ -1,0 +1,53 @@
+---
+description: Ban hardcoded color values — all colors must use CSS custom properties or Tailwind semantic tokens
+globs: ["**/*.ts", "**/*.tsx", "**/*.css"]
+alwaysApply: true
+---
+
+# No Hardcoded Colors
+
+All colors in this project MUST come from CSS custom properties defined in `app/globals.css` or the Tailwind semantic token system. Never write raw hex, rgb, hsl, or oklch color literals anywhere except in `app/globals.css`.
+
+## Forbidden patterns (never write these):
+
+```tsx
+// ❌ Hex literals
+style={{ color: '#D53F8C' }}
+className="text-[#D53F8C]"
+
+// ❌ RGB/RGBA
+style={{ backgroundColor: 'rgb(213, 63, 140)' }}
+
+// ❌ HSL
+style={{ color: 'hsl(326, 68%, 54%)' }}
+
+// ❌ Named colors except black/white
+className="text-pink-500"   // ← use brand tokens instead
+```
+
+## Correct patterns (always use these):
+
+```tsx
+// ✅ Tailwind semantic tokens (mapped to CSS vars in globals.css)
+className="text-primary"
+className="bg-secondary"
+className="border-brand-primary"
+
+// ✅ CSS custom property reference in Tailwind arbitrary value
+className="text-[var(--color-primary)]"
+
+// ✅ Inline style with CSS var
+style={{ color: 'var(--color-primary)' }}
+```
+
+## Brand token reference
+
+| Token | CSS Variable | Value |
+|-------|-------------|-------|
+| Primary (Pink) | `--color-primary` / `var(--color-brand-primary)` | `#D53F8C` |
+| Secondary (Blue) | `--color-secondary` / `var(--color-brand-secondary)` | `#00C5FA` |
+| Background | `--color-background` | `#FFFFFF` |
+
+## Where colors ARE allowed as literals
+
+Only in `app/globals.css` inside `:root` / `.dark` / `@theme` blocks where the CSS custom properties are defined.

@@ -1,0 +1,47 @@
+---
+description: Enforce maximum file size of 200 lines per file
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+# File Size Rule: ≤ 200 Lines
+
+Every TypeScript/TSX file in this project MUST stay under **200 lines** of code (excluding blank lines and comments).
+
+## When a file approaches or exceeds 200 lines:
+
+1. **Split by responsibility** — extract sub-components, helper functions, or hooks into separate files
+2. **Co-locate the split** — keep related files in the same folder
+3. **Create a barrel** — use `index.ts` to re-export from the folder
+
+## Splitting strategies:
+
+| Scenario | Solution |
+|----------|----------|
+| Large component with sub-components | Extract each sub-component to its own file |
+| Component with heavy logic | Extract logic into `use<Name>.ts` hook |
+| File with many type definitions | Move types to `<name>.types.ts` |
+| File with many constants | Move constants to `<name>.constants.ts` |
+| File with utility functions | Move to `utils/<name>.ts` |
+
+## Examples
+
+**Bad** — one 300-line component file:
+```
+components/shared/data-display/DataTable.tsx  (300 lines)
+```
+
+**Good** — split into focused files:
+```
+components/shared/data-display/
+  DataTable.tsx           (main component, <100 lines)
+  DataTableHeader.tsx     (header sub-component)
+  DataTablePagination.tsx (pagination sub-component)
+  useDataTable.ts         (table logic hook)
+  data-table.types.ts     (type definitions)
+  index.ts                (barrel exports)
+```
+
+## Enforcement
+
+Before creating or editing any file, count existing lines. If adding code would push it over 200 lines, split first, then add.
