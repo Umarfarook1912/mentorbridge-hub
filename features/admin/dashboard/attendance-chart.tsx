@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { FeatureCardSection } from '@/components/shared/data-display/feature-card'
-import { Skeleton } from '@/components/ui/skeleton'
+import { PageLoader } from '@/components/shared/feedback/page-loader'
 import { useMonthlyAttendance } from './use-dashboard-stats'
 
 export function AttendanceChart() {
@@ -20,7 +20,7 @@ export function AttendanceChart() {
   return (
     <FeatureCardSection title="Monthly Attendance">
       {isLoading ? (
-        <Skeleton className="h-[220px] w-full" />
+        <PageLoader className="min-h-[220px]" size="small" />
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>

@@ -33,6 +33,7 @@ export function MeetingCard({ meeting, onEdit, onDelete, showJoin = false }: Mee
     <Button
       size="sm"
       className="w-full"
+      nativeButton={false}
       render={<a href={meeting.meet_url!} target="_blank" rel="noopener noreferrer" />}
     >
       <Video className="h-3.5 w-3.5" />

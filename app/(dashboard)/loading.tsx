@@ -1,5 +1,5 @@
 import { PageLoader } from '@/components/shared/feedback/page-loader'
 
-export default function Loading() {
-  return <PageLoader fullScreen />
+export default function DashboardLoading() {
+  return <PageLoader />
 }
