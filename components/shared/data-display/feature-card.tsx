@@ -7,11 +7,11 @@ import { cn } from '@/utils/cn'
 type Accent = 'brand' | 'muted' | 'danger' | 'success' | 'warning'
 
 const ACCENT_STYLES: Record<Accent, string> = {
-  brand: 'bg-gradient-to-r from-primary via-primary to-brand-secondary',
+  brand: 'bg-primary',
   muted: 'bg-muted-foreground/25',
-  danger: 'bg-gradient-to-r from-destructive to-destructive/70',
-  success: 'bg-gradient-to-r from-success to-success/70',
-  warning: 'bg-gradient-to-r from-warning to-warning/70',
+  danger: 'bg-destructive',
+  success: 'bg-success',
+  warning: 'bg-warning',
 }
 
 interface FeatureCardProps {
