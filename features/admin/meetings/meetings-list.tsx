@@ -51,7 +51,7 @@ export function MeetingsList() {
 
         <TabsContent value="upcoming" className="mt-4">
           {loadingUpcoming ? (
-            <LoadingSkeleton variant="card" count={3} />
+            <LoadingSkeleton />
           ) : upcoming.length === 0 ? (
             <EmptyState
               icon={CalendarDays}
@@ -75,7 +75,7 @@ export function MeetingsList() {
 
         <TabsContent value="past" className="mt-4">
           {loadingPast ? (
-            <LoadingSkeleton variant="card" count={3} />
+            <LoadingSkeleton />
           ) : past.length === 0 ? (
             <EmptyState icon={CalendarDays} title="No past meetings" />
           ) : (

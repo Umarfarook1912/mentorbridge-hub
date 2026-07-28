@@ -48,7 +48,7 @@ export default function StudentDashboardPage() {
             Upcoming Meetings
           </h2>
           {loadingMeetings ? (
-            <LoadingSkeleton variant="list" count={3} />
+            <LoadingSkeleton />
           ) : meetings.slice(0, 4).length === 0 ? (
             <EmptyState icon={CalendarDays} title="No upcoming meetings" />
           ) : (
@@ -78,7 +78,7 @@ export default function StudentDashboardPage() {
             Pending Tasks
           </h2>
           {loadingTasks ? (
-            <LoadingSkeleton variant="list" count={3} />
+            <LoadingSkeleton />
           ) : pendingTasks.slice(0, 4).length === 0 ? (
             <EmptyState
               icon={CheckSquare}

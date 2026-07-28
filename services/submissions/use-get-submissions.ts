@@ -42,21 +42,3 @@ export function useGetSubmissions(filters: SubmissionFilters = {}) {
     staleTime: STALE_TIME.short,
   })
 }
-
-export function useGetMySubmissions(studentId: string) {
-  return useQuery({
-    queryKey: [QUERY_KEYS.submissions, 'student', studentId],
-    queryFn: async () => {
-      const supabase = getSupabaseBrowserClient()
-      const { data, error } = await supabase
-        .from('task_submissions')
-        .select('*, tasks(title, due_date, description)')
-        .eq('student_id', studentId)
-        .order('submitted_at', { ascending: false })
-      if (error) throw error
-      return data ?? []
-    },
-    enabled: !!studentId,
-    staleTime: STALE_TIME.medium,
-  })
-}

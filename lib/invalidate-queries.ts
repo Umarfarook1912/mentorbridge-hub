@@ -43,6 +43,7 @@ export function invalidateTasks(qc: QueryClient) {
     invalidate(qc, QUERY_KEYS.submissions),
     invalidate(qc, QUERY_KEYS.dashboardStats),
     invalidate(qc, QUERY_KEYS.studentStats),
+    invalidate(qc, QUERY_KEYS.reportsTasks),
   ])
 }
 
@@ -52,9 +53,10 @@ export function invalidateSubmissions(qc: QueryClient) {
     invalidate(qc, QUERY_KEYS.tasks),
     invalidate(qc, QUERY_KEYS.dashboardStats),
     invalidate(qc, QUERY_KEYS.studentStats),
+    invalidate(qc, QUERY_KEYS.reportsTasks),
   ])
 }
 
 export function invalidateProfile(qc: QueryClient) {
-  return Promise.all([invalidate(qc, QUERY_KEYS.profile), invalidate(qc, QUERY_KEYS.students)])
+  return invalidate(qc, QUERY_KEYS.students)
 }

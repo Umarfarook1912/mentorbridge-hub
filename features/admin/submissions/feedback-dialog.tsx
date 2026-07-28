@@ -66,7 +66,7 @@ export function FeedbackDialog({ submissionId, open, onOpenChange }: FeedbackDia
         onOpenChange(o)
       }}
       title="Review Submission"
-      description="Provide feedback and update the submission status"
+      description="Update the submission status and optionally leave feedback"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <FormFieldWrapper label="Decision" error={errors.status} required>
@@ -94,10 +94,10 @@ export function FeedbackDialog({ submissionId, open, onOpenChange }: FeedbackDia
           </Select>
         </FormFieldWrapper>
 
-        <FormFieldWrapper label="Feedback" htmlFor="feedback" error={errors.feedback} required>
+        <FormFieldWrapper label="Feedback" htmlFor="feedback" error={errors.feedback}>
           <Textarea
             id="feedback"
-            placeholder="Provide constructive feedback for the student…"
+            placeholder="Optional feedback for the student…"
             rows={4}
             {...register('feedback')}
           />

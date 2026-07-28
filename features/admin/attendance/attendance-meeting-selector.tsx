@@ -19,7 +19,7 @@ export function AttendanceMeetingSelector() {
 
   const selected = meetings.find((m) => m.id === selectedId)
 
-  if (isLoading) return <LoadingSkeleton variant="list" />
+  if (isLoading) return <LoadingSkeleton />
 
   if (!meetings.length) {
     return (

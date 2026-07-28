@@ -29,7 +29,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .from('task_submissions')
     .update({
       status,
-      feedback,
+      feedback: feedback?.trim() ? feedback.trim() : null,
       reviewed_by: auth.user.id,
       reviewed_by_name: reviewer?.full_name ?? null,
       reviewed_at: new Date().toISOString(),

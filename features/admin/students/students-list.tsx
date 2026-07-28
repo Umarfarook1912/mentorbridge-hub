@@ -82,7 +82,7 @@ export function StudentsList() {
 
       {/* Table */}
       {isLoading ? (
-        <LoadingSkeleton variant="table" />
+        <LoadingSkeleton />
       ) : !data?.data.length ? (
         <EmptyState
           icon={Users}

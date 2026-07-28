@@ -1,7 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
-const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/auth/callback']
+const PUBLIC_ROUTES = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/auth/callback',
+]
 const ADMIN_ROUTES = ['/admin']
 const STUDENT_ROUTES = ['/student']
 
@@ -43,6 +49,11 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  // Allow recovery session to stay on reset-password page
+  if (user && pathname.startsWith('/reset-password')) {
+    return response
+  }
 
   // Redirect authenticated users away from public routes
   if (user && isPublicRoute(pathname)) {

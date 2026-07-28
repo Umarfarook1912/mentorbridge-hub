@@ -196,7 +196,7 @@ export function SubmissionsDashboard() {
       </div>
 
       {isLoading ? (
-        <LoadingSkeleton variant="table" />
+        <LoadingSkeleton />
       ) : !submissions.length ? (
         <EmptyState
           icon={ClipboardList}

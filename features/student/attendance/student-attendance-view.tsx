@@ -74,7 +74,7 @@ export function StudentAttendanceView({ studentId }: StudentAttendanceViewProps)
     { key: 'status', header: 'Status', cell: (r) => <StatusBadge status={r.status} /> },
   ]
 
-  if (isLoading) return <LoadingSkeleton variant="table" />
+  if (isLoading) return <LoadingSkeleton />
 
   return (
     <div className="space-y-6">

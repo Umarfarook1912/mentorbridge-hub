@@ -2,7 +2,8 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/utils/cn'
 import type { AttendanceStatus, SubmissionStatus } from '@/types/supabase.types'
 
-type StatusValue = AttendanceStatus | SubmissionStatus | 'upcoming' | 'completed' | 'overdue'
+type StatusValue =
+  AttendanceStatus | SubmissionStatus | 'upcoming' | 'completed' | 'overdue' | 'missing'
 
 const STATUS_CONFIG: Record<StatusValue, { label: string; className: string }> = {
   Present: {
@@ -40,6 +41,10 @@ const STATUS_CONFIG: Record<StatusValue, { label: string; className: string }> =
   overdue: {
     label: 'Overdue',
     className: 'bg-destructive/10 text-destructive border-destructive/20',
+  },
+  missing: {
+    label: 'Not Submitted',
+    className: 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/20',
   },
 }
 

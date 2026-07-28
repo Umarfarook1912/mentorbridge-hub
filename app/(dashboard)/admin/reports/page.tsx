@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { PageHeader } from '@/components/shared/layout/page-header'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AttendanceReport } from '@/features/admin/reports/attendance-report'
+import { TaskCompletionReport } from '@/features/admin/reports/task-completion-report'
 
 export const metadata: Metadata = { title: 'Reports' }
 
@@ -24,9 +25,7 @@ export default function ReportsPage() {
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-4">
-          <div className="bg-muted/30 rounded-xl border border-dashed p-12 text-center">
-            <p className="text-muted-foreground text-sm">Task completion analytics coming soon</p>
-          </div>
+          <TaskCompletionReport />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,7 +1,6 @@
 import type { Database } from '@/types/supabase.types'
 
 export type ITaskEntity = Database['public']['Tables']['tasks']['Row']
-export type ISubmissionEntity = Database['public']['Tables']['task_submissions']['Row']
 
 export interface ITaskMutation {
   title: string
@@ -21,6 +20,5 @@ export interface ISubmissionMutation {
 export interface IReviewMutation {
   submissionId: string
   status: 'Approved' | 'Rejected'
-  feedback: string
-  reviewedBy?: string
+  feedback?: string
 }

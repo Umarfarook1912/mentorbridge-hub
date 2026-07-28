@@ -47,7 +47,7 @@ export function StudentTasksList() {
     (s: Submission) => s.student_id === user.id
   ) as Submission | undefined
 
-  if (isLoading) return <LoadingSkeleton variant="card" count={3} />
+  if (isLoading) return <LoadingSkeleton />
 
   if (!tasks.length) {
     return (

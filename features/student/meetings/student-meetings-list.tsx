@@ -20,7 +20,7 @@ export function StudentMeetingsList() {
 
       <TabsContent value="upcoming" className="mt-4">
         {lu ? (
-          <LoadingSkeleton variant="card" count={3} />
+          <LoadingSkeleton />
         ) : upcoming.length === 0 ? (
           <EmptyState
             icon={CalendarDays}
@@ -38,7 +38,7 @@ export function StudentMeetingsList() {
 
       <TabsContent value="past" className="mt-4">
         {lp ? (
-          <LoadingSkeleton variant="card" count={3} />
+          <LoadingSkeleton />
         ) : past.length === 0 ? (
           <EmptyState icon={CalendarDays} title="No past meetings" />
         ) : (

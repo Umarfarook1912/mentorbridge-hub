@@ -15,7 +15,11 @@ export const submissionSchema = z
   })
 
 export const feedbackSchema = z.object({
-  feedback: z.string().min(1, 'Feedback is required').max(1000),
+  feedback: z
+    .string()
+    .max(1000, 'Feedback must be under 1000 characters')
+    .optional()
+    .or(z.literal('')),
   status: z.enum(['Approved', 'Rejected']),
 })
 

@@ -105,7 +105,7 @@ export function TasksList() {
       </div>
 
       {isLoading ? (
-        <LoadingSkeleton variant="card" count={3} />
+        <LoadingSkeleton />
       ) : !tasks.length ? (
         <EmptyState
           icon={ClipboardPlus}

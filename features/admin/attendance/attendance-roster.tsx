@@ -92,7 +92,7 @@ export function AttendanceRoster({ meetingId, meetingTitle, meetingDate }: Atten
     return counts
   }, [students, overrides, existingMap])
 
-  if (loadingStudents || loadingAttendance) return <LoadingSkeleton variant="list" />
+  if (loadingStudents || loadingAttendance) return <LoadingSkeleton />
 
   if (!students.length) {
     return (

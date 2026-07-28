@@ -206,7 +206,7 @@ export function AttendanceReport() {
       </div>
 
       {isLoading ? (
-        <LoadingSkeleton variant="table" />
+        <LoadingSkeleton />
       ) : (
         <>
           {!studentId && (

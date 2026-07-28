@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
+import { ROUTES } from '@/lib/constants'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -11,6 +12,11 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
+      // Password recovery: send user to set a new password
+      if (next === ROUTES.resetPassword || next.startsWith(`${ROUTES.resetPassword}?`)) {
+        return NextResponse.redirect(`${origin}${ROUTES.resetPassword}`)
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -24,8 +30,8 @@ export async function GET(request: Request) {
 
         const destination =
           (profile as { role?: string } | null)?.role === 'Admin'
-            ? '/admin/dashboard'
-            : '/student/dashboard'
+            ? ROUTES.admin.dashboard
+            : ROUTES.student.dashboard
         return NextResponse.redirect(`${origin}${destination}`)
       }
 
@@ -33,5 +39,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_error`)
+  return NextResponse.redirect(`${origin}${ROUTES.login}?error=auth_callback_error`)
 }

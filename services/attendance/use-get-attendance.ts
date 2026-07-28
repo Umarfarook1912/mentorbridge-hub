@@ -36,33 +36,3 @@ export function useGetStudentAttendance(studentId: string) {
     staleTime: STALE_TIME.medium,
   })
 }
-
-export function useGetAttendanceSummaryToday() {
-  return useQuery({
-    queryKey: [QUERY_KEYS.attendance, 'today-summary'],
-    queryFn: async () => {
-      const supabase = getSupabaseBrowserClient()
-      const today = new Date().toISOString().split('T')[0]
-
-      const { data: todayMeetings } = await supabase
-        .from('meetings')
-        .select('id')
-        .eq('meeting_date', today)
-
-      if (!todayMeetings?.length) return { present: 0, absent: 0, permission: 0 }
-
-      const meetingIds = todayMeetings.map((m) => m.id)
-      const { data } = await supabase
-        .from('attendance')
-        .select('status')
-        .in('meeting_id', meetingIds)
-
-      return {
-        present: data?.filter((a) => a.status === 'Present').length ?? 0,
-        absent: data?.filter((a) => a.status === 'Absent').length ?? 0,
-        permission: data?.filter((a) => a.status === 'Permission').length ?? 0,
-      }
-    },
-    staleTime: STALE_TIME.short,
-  })
-}
