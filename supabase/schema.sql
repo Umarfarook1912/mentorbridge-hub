@@ -92,6 +92,7 @@ create table public.task_submissions (
   submitted_at     timestamptz not null default now(),
   status           public.submission_status not null default 'Pending',
   reviewed_by      uuid references public.profiles(id) on delete set null,
+  reviewed_by_name text,
   reviewed_at      timestamptz,
   unique (task_id, student_id)
 );

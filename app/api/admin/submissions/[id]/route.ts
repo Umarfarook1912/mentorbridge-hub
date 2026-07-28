@@ -19,12 +19,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { status, feedback } = parsed.data
 
+  const { data: reviewer } = await auth.supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', auth.user.id)
+    .single()
+
   const { data, error } = await auth.supabase
     .from('task_submissions')
     .update({
       status,
       feedback,
       reviewed_by: auth.user.id,
+      reviewed_by_name: reviewer?.full_name ?? null,
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', id)

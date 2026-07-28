@@ -133,6 +133,7 @@ export interface Database {
           submitted_at: string
           status: SubmissionStatus
           reviewed_by: string | null
+          reviewed_by_name: string | null
           reviewed_at: string | null
         }
         Insert: {
@@ -146,6 +147,9 @@ export interface Database {
           feedback?: string | null
           submitted_at?: string
           status?: SubmissionStatus
+          reviewed_by?: string | null
+          reviewed_by_name?: string | null
+          reviewed_at?: string | null
         }
         Update: {
           github_url?: string | null
@@ -155,6 +159,7 @@ export interface Database {
           feedback?: string | null
           status?: SubmissionStatus
           reviewed_by?: string | null
+          reviewed_by_name?: string | null
           reviewed_at?: string | null
         }
       }

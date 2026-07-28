@@ -13,12 +13,13 @@ import {
 import { DataTable, type Column } from '@/components/shared/data-display/data-table'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import { UserAvatar } from '@/components/shared/data-display/user-avatar'
+import { SubmissionReviewMeta } from '@/components/shared/data-display/submission-review-meta'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { FeedbackDialog } from './feedback-dialog'
 import { useGetSubmissions } from '@/services/submissions/use-get-submissions'
 import { DEPARTMENTS } from '@/lib/constants'
-import { formatDate } from '@/utils/format'
+import { formatDateTime } from '@/utils/format'
 import { ClipboardList } from 'lucide-react'
 import type { SubmissionStatus } from '@/types/supabase.types'
 
@@ -33,6 +34,8 @@ type SubmissionRow = {
   feedback: string | null
   submitted_at: string
   status: SubmissionStatus
+  reviewed_by_name: string | null
+  reviewed_at: string | null
   tasks: { title: string; due_date: string } | null
   profiles: {
     full_name: string
@@ -124,13 +127,22 @@ export function SubmissionsDashboard() {
       key: 'submitted',
       header: 'Submitted',
       cell: (row) => (
-        <span className="text-muted-foreground text-sm">{formatDate(row.submitted_at)}</span>
+        <span className="text-muted-foreground text-sm">{formatDateTime(row.submitted_at)}</span>
       ),
     },
     {
       key: 'status',
       header: 'Status',
-      cell: (row) => <StatusBadge status={row.status} />,
+      cell: (row) => (
+        <div className="space-y-1">
+          <StatusBadge status={row.status} />
+          <SubmissionReviewMeta
+            status={row.status}
+            reviewedByName={row.reviewed_by_name}
+            reviewedAt={row.reviewed_at}
+          />
+        </div>
+      ),
     },
     {
       key: 'actions',

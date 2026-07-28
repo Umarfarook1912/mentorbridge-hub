@@ -9,6 +9,7 @@ import {
   FeatureCardDateBlock,
   FeatureCardMeta,
 } from '@/components/shared/data-display/feature-card'
+import { SubmissionReviewMeta } from '@/components/shared/data-display/submission-review-meta'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
@@ -27,6 +28,8 @@ interface Submission {
   medium_blog_url: string | null
   remarks: string | null
   feedback: string | null
+  reviewed_by_name: string | null
+  reviewed_at: string | null
 }
 
 export function StudentTasksList() {
@@ -94,12 +97,21 @@ export function StudentTasksList() {
                   tone={overdue && !submission ? 'danger' : 'brand'}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                    {submission ? (
-                      <StatusBadge status={submission.status} />
-                    ) : overdue ? (
-                      <StatusBadge status="overdue" />
-                    ) : null}
+                  <div className="mb-1.5 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {submission ? (
+                        <StatusBadge status={submission.status} />
+                      ) : overdue ? (
+                        <StatusBadge status="overdue" />
+                      ) : null}
+                    </div>
+                    {submission && (
+                      <SubmissionReviewMeta
+                        status={submission.status}
+                        reviewedByName={submission.reviewed_by_name}
+                        reviewedAt={submission.reviewed_at}
+                      />
+                    )}
                   </div>
                   <h3 className="text-base leading-snug font-semibold">{task.title}</h3>
                   {task.description && (
