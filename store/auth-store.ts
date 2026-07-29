@@ -11,6 +11,7 @@ export interface AuthUser {
   phone: string | null
   department: string | null
   domainInterest: string | null
+  studentCategory: string | null
 }
 
 interface AuthState {

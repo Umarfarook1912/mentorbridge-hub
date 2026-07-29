@@ -20,15 +20,14 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
-  const { fullName, email, phone, department, domainInterest, password } = body
+  const { fullName, email, phone, department, domainInterest, studentCategory, password } = body
 
-  if (!fullName || !email || !password || !department || !domainInterest) {
+  if (!fullName || !email || !password || !department || !domainInterest || !studentCategory) {
     return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
   }
 
   const adminClient = await getSupabaseAdminClient()
 
-  // Detect misconfigured service role (anon key cannot create users)
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
   if (!serviceKey || serviceKey === anonKey || serviceKey.includes('"role":"anon"')) {
@@ -62,6 +61,7 @@ export async function POST(request: Request) {
       phone: phone ?? null,
       department,
       domain_interest: domainInterest,
+      student_category: studentCategory,
       role: 'Student' as const,
     } as Record<string, unknown>)
     .eq('id', newUser.user.id)

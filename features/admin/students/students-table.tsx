@@ -58,6 +58,11 @@ export function StudentsTable({ data }: StudentsTableProps) {
       cell: (row) => <span className="text-sm">{row.department ?? '—'}</span>,
     },
     {
+      key: 'category',
+      header: 'Type',
+      cell: (row) => <span className="text-sm">{row.student_category ?? '—'}</span>,
+    },
+    {
       key: 'domainInterest',
       header: 'Domain Interest',
       cell: (row) => <span className="text-sm">{row.domain_interest ?? '—'}</span>,

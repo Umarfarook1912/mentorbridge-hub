@@ -1,4 +1,18 @@
-export const DEPARTMENTS = ['IT', 'CSE', 'ECE', 'AIDS', 'CSBS', 'Non SSM Students'] as const
+export const DEPARTMENTS = [
+  'IT',
+  'CSE',
+  'ECE',
+  'AIDS',
+  'CSBS',
+  'BSc CS',
+  'MSc CS',
+  'BCA',
+  'MSc Software Systems',
+] as const
+
+export const STUDENT_CATEGORIES = ['SSM Student', 'Other College'] as const
+
+export const USER_ROLES = ['Student', 'Admin'] as const
 
 export const DOMAIN_INTERESTS = ['Frontend', 'Backend', 'Data Engineer'] as const
 
@@ -15,6 +29,8 @@ export const ROUTES = {
     attendance: '/admin/attendance',
     tasks: '/admin/tasks',
     submissions: '/admin/submissions',
+    blogs: '/admin/blogs',
+    admins: '/admin/admins',
     reports: '/admin/reports',
   },
   student: {
@@ -22,6 +38,7 @@ export const ROUTES = {
     meetings: '/student/meetings',
     attendance: '/student/attendance',
     tasks: '/student/tasks',
+    blogs: '/student/blogs',
     profile: '/student/profile',
   },
 } as const
@@ -32,10 +49,12 @@ export const APP_LOGO = '/logo.webp'
 
 export const QUERY_KEYS = {
   students: 'students',
+  admins: 'admins',
   meetings: 'meetings',
   attendance: 'attendance',
   tasks: 'tasks',
   submissions: 'submissions',
+  blogs: 'blogs',
   notifications: 'notifications',
   dashboardStats: 'dashboard-stats',
   dashboardMonthlyAttendance: 'dashboard-monthly-attendance',

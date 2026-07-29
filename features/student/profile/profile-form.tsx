@@ -1,28 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, Camera } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { FormFieldWrapper } from '@/components/shared/forms/form-field-wrapper'
 import { UserAvatar } from '@/components/shared/data-display/user-avatar'
 import { FeatureCardSection } from '@/components/shared/data-display/feature-card'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { invalidateProfile } from '@/lib/invalidate-queries'
 import { useAuthStore } from '@/store/auth-store'
-import { DEPARTMENTS, DOMAIN_INTERESTS } from '@/lib/constants'
 import { profileSchema, type ProfileInput } from './profile-form.schema'
+import { ProfileInfoFields } from './profile-info-fields'
 
 export function ProfileForm() {
   const { user, setUser } = useAuthStore()
@@ -33,16 +23,26 @@ export function ProfileForm() {
   const userId = user?.id
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
     reset,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { fullName: '', phone: '', department: '', domainInterest: '' },
+    defaultValues: {
+      fullName: '',
+      phone: '',
+      studentCategory: 'SSM Student',
+      department: '',
+      domainInterest: '',
+    },
   })
+
+  const studentCategory = useWatch({ control, name: 'studentCategory' })
+  const department = useWatch({ control, name: 'department' })
+  const domainInterest = useWatch({ control, name: 'domainInterest' })
 
   useEffect(() => {
     if (!userId) return
@@ -53,7 +53,9 @@ export function ProfileForm() {
       setLoadingProfile(true)
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('full_name, phone, department, domain_interest, avatar_url, email, role')
+        .select(
+          'full_name, phone, department, domain_interest, student_category, avatar_url, email, role'
+        )
         .eq('id', id)
         .single()
 
@@ -67,6 +69,8 @@ export function ProfileForm() {
       reset({
         fullName: profile.full_name ?? '',
         phone: profile.phone ?? '',
+        studentCategory:
+          (profile.student_category as ProfileInput['studentCategory']) ?? 'SSM Student',
         department: profile.department ?? '',
         domainInterest: profile.domain_interest ?? '',
       })
@@ -80,6 +84,7 @@ export function ProfileForm() {
         phone: profile.phone ?? null,
         department: profile.department,
         domainInterest: profile.domain_interest ?? null,
+        studentCategory: profile.student_category ?? null,
       })
       setLoadingProfile(false)
     }
@@ -90,9 +95,6 @@ export function ProfileForm() {
     }
   }, [userId, reset, setUser, supabase])
 
-  const department = watch('department')
-  const domainInterest = watch('domainInterest')
-
   async function onSubmit(data: ProfileInput) {
     if (!user) return
     const { error } = await supabase
@@ -100,6 +102,7 @@ export function ProfileForm() {
       .update({
         full_name: data.fullName,
         phone: data.phone || null,
+        student_category: data.studentCategory,
         department: data.department,
         domain_interest: data.domainInterest,
       })
@@ -114,6 +117,7 @@ export function ProfileForm() {
       ...user,
       fullName: data.fullName,
       phone: data.phone || null,
+      studentCategory: data.studentCategory,
       department: data.department,
       domainInterest: data.domainInterest,
     })
@@ -182,61 +186,17 @@ export function ProfileForm() {
             <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
-            <FormFieldWrapper label="Full Name" htmlFor="fullName" error={errors.fullName} required>
-              <Input id="fullName" autoComplete="name" {...register('fullName')} />
-            </FormFieldWrapper>
-            <FormFieldWrapper label="Email">
-              <Input value={user.email} disabled readOnly />
-            </FormFieldWrapper>
-            <FormFieldWrapper label="Phone Number" htmlFor="phone" error={errors.phone}>
-              <Input
-                id="phone"
-                type="tel"
-                autoComplete="off"
-                placeholder="+91 9876543210"
-                {...register('phone')}
-              />
-            </FormFieldWrapper>
-            <FormFieldWrapper label="Department" error={errors.department} required>
-              <Select
-                value={department || null}
-                onValueChange={(v) => setValue('department', v ?? '', { shouldValidate: true })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DEPARTMENTS.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormFieldWrapper>
-            <FormFieldWrapper label="Domain Interest" error={errors.domainInterest} required>
-              <Select
-                value={domainInterest || null}
-                onValueChange={(v) => setValue('domainInterest', v ?? '', { shouldValidate: true })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select domain interest" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DOMAIN_INTERESTS.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormFieldWrapper>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Changes
-            </Button>
-          </form>
+          <ProfileInfoFields
+            email={user.email}
+            register={register}
+            setValue={setValue}
+            errors={errors}
+            studentCategory={studentCategory}
+            department={department}
+            domainInterest={domainInterest}
+            isSubmitting={isSubmitting}
+            onSubmit={handleSubmit(onSubmit)}
+          />
         )}
       </FeatureCardSection>
     </div>

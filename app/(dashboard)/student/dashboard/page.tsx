@@ -3,6 +3,7 @@
 import { useAuthStore } from '@/store/auth-store'
 import { PageHeader } from '@/components/shared/layout/page-header'
 import { StudentStats } from '@/features/student/dashboard/student-stats'
+import { DashboardBlogs } from '@/features/blogs/dashboard-blogs'
 import { useGetMeetings } from '@/services/meetings/use-get-meetings'
 import { useGetStudentTasks } from '@/services/tasks/use-get-tasks'
 import type { SubmissionStatus } from '@/types/supabase.types'
@@ -13,6 +14,7 @@ import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import { formatDate, formatTime } from '@/utils/format'
 import { CalendarDays, CheckSquare } from 'lucide-react'
 import { isPast, parseISO } from 'date-fns'
+import { ROUTES } from '@/lib/constants'
 
 export default function StudentDashboardPage() {
   const { user } = useAuthStore()
@@ -116,6 +118,8 @@ export default function StudentDashboardPage() {
           )}
         </div>
       </div>
+
+      <DashboardBlogs blogsHref={ROUTES.student.blogs} />
     </div>
   )
 }

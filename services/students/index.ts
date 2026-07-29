@@ -1,5 +1,7 @@
 export * from './students.types'
 export * from './use-get-students'
+export * from './use-get-admins'
 export * from './use-create-student'
 export * from './use-update-student'
+export * from './use-update-user-role'
 export * from './use-delete-student'

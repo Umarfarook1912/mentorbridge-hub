@@ -13,6 +13,7 @@ export interface Database {
           phone: string | null
           department: string | null
           domain_interest: string | null
+          student_category: string | null
           role: UserRole
           avatar_url: string | null
           created_at: string
@@ -24,6 +25,7 @@ export interface Database {
           phone?: string | null
           department?: string | null
           domain_interest?: string | null
+          student_category?: string | null
           role?: UserRole
           avatar_url?: string | null
           created_at?: string
@@ -34,6 +36,7 @@ export interface Database {
           phone?: string | null
           department?: string | null
           domain_interest?: string | null
+          student_category?: string | null
           role?: UserRole
           avatar_url?: string | null
         }
@@ -184,6 +187,32 @@ export interface Database {
         }
         Update: {
           is_read?: boolean
+        }
+      }
+      blogs: {
+        Row: {
+          id: string
+          title: string
+          medium_url: string
+          preview_image_url: string | null
+          author_id: string
+          author_name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          medium_url: string
+          preview_image_url?: string | null
+          author_id: string
+          author_name: string
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          medium_url?: string
+          preview_image_url?: string | null
+          author_name?: string
         }
       }
     }

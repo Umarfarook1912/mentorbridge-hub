@@ -7,6 +7,8 @@ import {
   BarChart3,
   UserCheck,
   BookOpen,
+  Newspaper,
+  Shield,
   User,
   type LucideIcon,
 } from 'lucide-react'
@@ -33,10 +35,12 @@ export const ADMIN_NAV: NavSection[] = [
     title: 'Management',
     items: [
       { label: 'Students', href: ROUTES.admin.students, icon: Users },
+      { label: 'Admins', href: ROUTES.admin.admins, icon: Shield },
       { label: 'Meetings', href: ROUTES.admin.meetings, icon: CalendarDays },
       { label: 'Attendance', href: ROUTES.admin.attendance, icon: UserCheck },
       { label: 'Tasks', href: ROUTES.admin.tasks, icon: CheckSquare },
       { label: 'Submissions', href: ROUTES.admin.submissions, icon: ClipboardList },
+      { label: 'Blogs', href: ROUTES.admin.blogs, icon: Newspaper },
     ],
   },
   {
@@ -55,6 +59,7 @@ export const STUDENT_NAV: NavSection[] = [
       { label: 'Meetings', href: ROUTES.student.meetings, icon: CalendarDays },
       { label: 'Attendance', href: ROUTES.student.attendance, icon: UserCheck },
       { label: 'Tasks', href: ROUTES.student.tasks, icon: BookOpen },
+      { label: 'Blogs', href: ROUTES.student.blogs, icon: Newspaper },
     ],
   },
   {

@@ -9,6 +9,7 @@ function invalidate(qc: QueryClient, key: string) {
 export function invalidateStudents(qc: QueryClient) {
   return Promise.all([
     invalidate(qc, QUERY_KEYS.students),
+    invalidate(qc, QUERY_KEYS.admins),
     invalidate(qc, QUERY_KEYS.dashboardStats),
   ])
 }
@@ -55,6 +56,10 @@ export function invalidateSubmissions(qc: QueryClient) {
     invalidate(qc, QUERY_KEYS.studentStats),
     invalidate(qc, QUERY_KEYS.reportsTasks),
   ])
+}
+
+export function invalidateBlogs(qc: QueryClient) {
+  return invalidate(qc, QUERY_KEYS.blogs)
 }
 
 export function invalidateProfile(qc: QueryClient) {

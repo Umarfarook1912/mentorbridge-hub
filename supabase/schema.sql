@@ -19,6 +19,7 @@ create table public.profiles (
   phone       text,
   department  text,
   domain_interest text,
+  student_category text,
   role        public.user_role not null default 'Student',
   avatar_url  text,
   created_at  timestamptz not null default now()
@@ -28,6 +29,7 @@ create index idx_profiles_role       on public.profiles(role);
 create index idx_profiles_email      on public.profiles(email);
 create index idx_profiles_department on public.profiles(department);
 create index idx_profiles_domain_interest on public.profiles(domain_interest);
+create index idx_profiles_student_category on public.profiles(student_category);
 
 -- ── Table: meetings ─────────────────────────────────────────
 create table public.meetings (
@@ -116,6 +118,20 @@ create index idx_notifications_user_id   on public.notifications(user_id);
 create index idx_notifications_is_read   on public.notifications(is_read);
 create index idx_notifications_created_at on public.notifications(created_at desc);
 
+-- ── Table: blogs ────────────────────────────────────────────
+create table public.blogs (
+  id          uuid primary key default uuid_generate_v4(),
+  title       text not null,
+  medium_url  text not null,
+  preview_image_url text,
+  author_id   uuid not null references public.profiles(id) on delete cascade,
+  author_name text not null,
+  created_at  timestamptz not null default now()
+);
+
+create index idx_blogs_created_at on public.blogs(created_at desc);
+create index idx_blogs_author_id on public.blogs(author_id);
+
 -- ── Storage: avatars bucket ─────────────────────────────────
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
@@ -128,6 +144,7 @@ alter table public.attendance        enable row level security;
 alter table public.tasks             enable row level security;
 alter table public.task_submissions  enable row level security;
 alter table public.notifications     enable row level security;
+alter table public.blogs             enable row level security;
 
 -- ── Helper function: get current user role ───────────────────
 create or replace function public.get_my_role()
@@ -222,6 +239,20 @@ create policy "submissions_delete_admin" on public.task_submissions for delete
 create policy "notifications_own" on public.notifications for all
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- ── RLS Policies: blogs ──────────────────────────────────────
+create policy "blogs_select" on public.blogs for select
+  using (auth.role() = 'authenticated');
+
+create policy "blogs_insert" on public.blogs for insert
+  with check (author_id = auth.uid());
+
+create policy "blogs_update" on public.blogs for update
+  using (author_id = auth.uid() or public.get_my_role() = 'Admin')
+  with check (author_id = auth.uid() or public.get_my_role() = 'Admin');
+
+create policy "blogs_delete" on public.blogs for delete
+  using (author_id = auth.uid() or public.get_my_role() = 'Admin');
 
 -- ── Storage RLS: avatars ─────────────────────────────────────
 create policy "avatar_public_read" on storage.objects for select

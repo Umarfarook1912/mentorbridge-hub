@@ -3,6 +3,8 @@ import { PageHeader } from '@/components/shared/layout/page-header'
 import { DashboardStatsGrid } from '@/features/admin/dashboard/dashboard-stats-grid'
 import { AttendanceChart } from '@/features/admin/dashboard/attendance-chart'
 import { QuickActions } from '@/features/admin/dashboard/quick-actions'
+import { DashboardBlogs } from '@/features/blogs/dashboard-blogs'
+import { ROUTES } from '@/lib/constants'
 
 export const metadata: Metadata = { title: 'Admin Dashboard' }
 
@@ -22,6 +24,8 @@ export default function AdminDashboardPage() {
         </div>
         <QuickActions />
       </div>
+
+      <DashboardBlogs blogsHref={ROUTES.admin.blogs} />
     </div>
   )
 }

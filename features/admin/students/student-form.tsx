@@ -1,27 +1,20 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { FormFieldWrapper } from '@/components/shared/forms/form-field-wrapper'
+import { StudentFormSelects } from './student-form-selects'
 import {
   studentSchema,
   updateStudentSchema,
   type StudentInput,
   type UpdateStudentInput,
 } from '@/lib/validations/student'
-import { DEPARTMENTS, DOMAIN_INTERESTS } from '@/lib/constants'
 import { useCreateStudent } from '@/services/students/use-create-student'
 import { useUpdateStudent } from '@/services/students/use-update-student'
 import type { IStudentEntity } from '@/services/students'
@@ -39,48 +32,57 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
   const isLoading = creating || updating
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
     reset,
-    watch,
     formState: { errors },
   } = useForm<StudentInput | UpdateStudentInput>({
     resolver: zodResolver(isEdit ? updateStudentSchema : studentSchema),
     defaultValues: {
-      fullName: student?.full_name ?? '',
-      email: student?.email ?? '',
-      phone: student?.phone ?? '',
-      department: student?.department ?? '',
-      domainInterest: student?.domain_interest ?? '',
+      fullName: '',
+      email: '',
+      phone: '',
+      studentCategory: 'SSM Student',
+      department: '',
+      domainInterest: '',
+      ...(isEdit ? { role: 'Student' as const } : {}),
     },
   })
 
-  // Re-fill form whenever the selected student changes (edit again after save)
+  const studentCategory = useWatch({ control, name: 'studentCategory' }) ?? ''
+  const department = useWatch({ control, name: 'department' }) ?? ''
+  const domainInterest = useWatch({ control, name: 'domainInterest' }) ?? ''
+  const roleValue = useWatch({ control, name: 'role' }) ?? ''
+
   useEffect(() => {
     if (!student) return
     reset({
       fullName: student.full_name ?? '',
       email: student.email ?? '',
       phone: student.phone ?? '',
+      studentCategory:
+        (student.student_category as StudentInput['studentCategory']) ?? 'SSM Student',
       department: student.department ?? '',
       domainInterest: student.domain_interest ?? '',
+      role: student.role,
     })
   }, [student, reset])
-
-  const department = watch('department')
-  const domainInterest = watch('domainInterest')
 
   async function onSubmit(data: StudentInput | UpdateStudentInput) {
     try {
       if (isEdit) {
+        const editData = data as UpdateStudentInput
         await updateStudent({
           id: student.id,
           data: {
-            fullName: data.fullName,
-            phone: data.phone || '',
-            department: data.department,
-            domainInterest: data.domainInterest,
+            fullName: editData.fullName,
+            phone: editData.phone || '',
+            studentCategory: editData.studentCategory,
+            department: editData.department,
+            domainInterest: editData.domainInterest,
+            role: editData.role,
           },
         })
         toast.success('Student updated successfully')
@@ -115,41 +117,29 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
         <Input id="phone" placeholder="+91 9876543210" {...register('phone')} />
       </FormFieldWrapper>
 
-      <FormFieldWrapper label="Department" error={errors.department} required>
-        <Select
-          value={department || null}
-          onValueChange={(v) => setValue('department', v ?? '', { shouldValidate: true })}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select department" />
-          </SelectTrigger>
-          <SelectContent>
-            {DEPARTMENTS.map((dept) => (
-              <SelectItem key={dept} value={dept}>
-                {dept}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FormFieldWrapper>
-
-      <FormFieldWrapper label="Domain Interest" error={errors.domainInterest} required>
-        <Select
-          value={domainInterest || null}
-          onValueChange={(v) => setValue('domainInterest', v ?? '', { shouldValidate: true })}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select domain interest" />
-          </SelectTrigger>
-          <SelectContent>
-            {DOMAIN_INTERESTS.map((domain) => (
-              <SelectItem key={domain} value={domain}>
-                {domain}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FormFieldWrapper>
+      <StudentFormSelects
+        studentCategory={studentCategory}
+        department={department}
+        domainInterest={domainInterest}
+        role={isEdit ? roleValue : undefined}
+        showRole={isEdit}
+        errors={{
+          studentCategory: errors.studentCategory,
+          department: errors.department,
+          domainInterest: errors.domainInterest,
+          role: 'role' in errors ? errors.role : undefined,
+        }}
+        onStudentCategoryChange={(v) =>
+          setValue('studentCategory', v as StudentInput['studentCategory'], {
+            shouldValidate: true,
+          })
+        }
+        onDepartmentChange={(v) => setValue('department', v, { shouldValidate: true })}
+        onDomainInterestChange={(v) => setValue('domainInterest', v, { shouldValidate: true })}
+        onRoleChange={(v) =>
+          setValue('role', v as UpdateStudentInput['role'], { shouldValidate: true })
+        }
+      />
 
       {!isEdit && (
         <FormFieldWrapper

@@ -41,6 +41,7 @@ export function useAuth() {
           phone: profile.phone ?? null,
           department: profile.department,
           domainInterest: profile.domain_interest ?? null,
+          studentCategory: profile.student_category ?? null,
         }
         setUser(authUser)
       }
@@ -62,7 +63,7 @@ export function useAuth() {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [])
+  }, [clearUser, setUser, supabase])
 
   async function signOut() {
     await supabase.auth.signOut()
