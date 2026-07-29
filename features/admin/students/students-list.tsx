@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { UserPlus } from 'lucide-react'
+import { UserPlus, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -21,7 +21,6 @@ import { useGetStudents } from '@/services/students/use-get-students'
 import { useDebounce } from '@/hooks/use-debounce'
 import { usePagination } from '@/hooks/use-pagination'
 import { DEPARTMENTS } from '@/lib/constants'
-import { Users } from 'lucide-react'
 
 export function StudentsList() {
   const [search, setSearch] = useState('')
@@ -29,7 +28,7 @@ export function StudentsList() {
   const [addOpen, setAddOpen] = useState(false)
 
   const debouncedSearch = useDebounce(search)
-  const pagination = usePagination(0)
+  const pagination = usePagination()
 
   const { data, isLoading } = useGetStudents({
     search: debouncedSearch,
@@ -38,9 +37,11 @@ export function StudentsList() {
     pageSize: pagination.pageSize,
   })
 
+  const total = data?.total ?? 0
+  const { page, totalPages, canPrev, canNext } = pagination.getState(total)
+
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <SearchBar
           value={search}
@@ -52,7 +53,7 @@ export function StudentsList() {
           className="sm:w-72"
         />
         <Select
-          value={department}
+          value={department || 'all'}
           onValueChange={(v) => {
             setDepartment(v === 'all' ? '' : (v ?? ''))
             pagination.reset()
@@ -80,7 +81,6 @@ export function StudentsList() {
         </div>
       </div>
 
-      {/* Table */}
       {isLoading ? (
         <LoadingSkeleton />
       ) : !data?.data.length ? (
@@ -96,14 +96,15 @@ export function StudentsList() {
         <>
           <StudentsTable data={data.data} />
           <PaginationControls
-            page={pagination.page}
-            totalPages={Math.ceil((data.total ?? 0) / pagination.pageSize)}
-            canPrev={pagination.canPrev}
-            canNext={pagination.canNext}
-            onPrev={() => pagination.goTo(pagination.page - 1)}
-            onNext={() => pagination.goTo(pagination.page + 1)}
-            totalItems={data.total}
+            page={page}
+            totalPages={totalPages}
+            canPrev={canPrev}
+            canNext={canNext}
+            onPrev={() => pagination.goTo(page - 1, total)}
+            onNext={() => pagination.goTo(page + 1, total)}
+            totalItems={total}
             pageSize={pagination.pageSize}
+            onPageSizeChange={pagination.setPageSize}
           />
         </>
       )}

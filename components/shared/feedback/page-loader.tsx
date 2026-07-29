@@ -14,7 +14,7 @@ export function PageLoader({ className, size = 'medium', fullScreen = false }: P
     <div
       className={cn(
         'flex w-full items-center justify-center',
-        fullScreen ? 'min-h-screen' : 'min-h-[40vh]',
+        fullScreen ? 'min-h-dvh' : 'min-h-32 py-10',
         className
       )}
       role="status"

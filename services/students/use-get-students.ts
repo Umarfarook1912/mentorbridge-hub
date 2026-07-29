@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
-import { QUERY_KEYS, STALE_TIME } from '@/lib/constants'
+import { QUERY_KEYS, STALE_TIME, PAGE_SIZE } from '@/lib/constants'
 import type { IStudentFilters } from './students.types'
 
 async function fetchStudents(filters: IStudentFilters) {
@@ -19,7 +19,7 @@ async function fetchStudents(filters: IStudentFilters) {
     query = query.eq('department', filters.department)
   }
 
-  const pageSize = filters.pageSize ?? 10
+  const pageSize = filters.pageSize ?? PAGE_SIZE
   const page = filters.page ?? 1
   const from = (page - 1) * pageSize
   query = query.range(from, from + pageSize - 1)

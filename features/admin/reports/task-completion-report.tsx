@@ -14,10 +14,12 @@ import {
 } from 'recharts'
 import { FeatureCardSection } from '@/components/shared/data-display/feature-card'
 import { DataTable } from '@/components/shared/data-display/data-table'
+import { PaginationControls } from '@/components/shared/data-display/pagination-controls'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { QUERY_KEYS } from '@/lib/constants'
 import { useGetAllStudents } from '@/services/students/use-get-students'
+import { usePagination } from '@/hooks/use-pagination'
 import { exportToCSV } from '@/utils/export'
 import { taskDetailColumns, taskSummaryColumns } from './task-completion-report-columns'
 import { TaskCompletionReportFilters } from './task-completion-report-filters'
@@ -37,6 +39,7 @@ export function TaskCompletionReport() {
   })
 
   const { data: students = [], isLoading: loadingStudents } = useGetAllStudents()
+  const pagination = usePagination()
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: [QUERY_KEYS.reportsTasks, month, department, studentId, students],
@@ -75,6 +78,8 @@ export function TaskCompletionReport() {
   const summary = aggregateTaskByStudent(rows)
   const chartData = buildTaskChartData(rows)
   const selectedStudent = studentId ? summary[0] : null
+  const total = studentId ? rows.length : summary.length
+  const { page, totalPages, canPrev, canNext } = pagination.getState(total)
 
   function handleExport() {
     if (studentId) exportToCSV(rows, `tasks-${studentId}-${month}`)
@@ -89,9 +94,18 @@ export function TaskCompletionReport() {
         department={department}
         students={students}
         canExport={rows.length > 0}
-        onMonthChange={setMonth}
-        onStudentChange={setStudentId}
-        onDepartmentChange={setDepartment}
+        onMonthChange={(v) => {
+          setMonth(v)
+          pagination.reset()
+        }}
+        onStudentChange={(v) => {
+          setStudentId(v)
+          pagination.reset()
+        }}
+        onDepartmentChange={(v) => {
+          setDepartment(v)
+          pagination.reset()
+        }}
         onExport={handleExport}
       />
 
@@ -138,15 +152,30 @@ export function TaskCompletionReport() {
                   completion
                 </p>
               )}
-              <DataTable data={rows} columns={taskDetailColumns} keyExtractor={(r) => r.id} />
+              <DataTable
+                data={pagination.paginate(rows)}
+                columns={taskDetailColumns}
+                keyExtractor={(r) => r.id}
+              />
             </div>
           ) : (
             <DataTable
-              data={summary}
+              data={pagination.paginate(summary)}
               columns={taskSummaryColumns}
               keyExtractor={(r) => r.studentId}
             />
           )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            canPrev={canPrev}
+            canNext={canNext}
+            onPrev={() => pagination.goTo(page - 1, total)}
+            onNext={() => pagination.goTo(page + 1, total)}
+            totalItems={total}
+            pageSize={pagination.pageSize}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </>
       )}
     </div>

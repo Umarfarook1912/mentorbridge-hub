@@ -50,4 +50,5 @@ export const STALE_TIME = {
   long: 5 * 60 * 1000, // 5m — reference data like students list
 } as const
 
-export const PAGE_SIZE = 10
+export const PAGE_SIZE = 50
+export const PAGE_SIZE_OPTIONS = [10, 25, 50] as const

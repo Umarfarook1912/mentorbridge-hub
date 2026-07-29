@@ -4,9 +4,11 @@ import { useMemo } from 'react'
 import { RadialBarChart, RadialBar, ResponsiveContainer, PolarAngleAxis } from 'recharts'
 import { FeatureCardSection } from '@/components/shared/data-display/feature-card'
 import { DataTable, type Column } from '@/components/shared/data-display/data-table'
+import { PaginationControls } from '@/components/shared/data-display/pagination-controls'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { useGetStudentAttendance } from '@/services/attendance/use-get-attendance'
+import { usePagination } from '@/hooks/use-pagination'
 import { formatDate, formatTime } from '@/utils/format'
 import type { AttendanceStatus } from '@/types/supabase.types'
 
@@ -24,6 +26,7 @@ interface StudentAttendanceViewProps {
 
 export function StudentAttendanceView({ studentId }: StudentAttendanceViewProps) {
   const { data = [], isLoading } = useGetStudentAttendance(studentId)
+  const pagination = usePagination()
 
   const rows: AttendanceRow[] = useMemo(
     () =>
@@ -42,6 +45,9 @@ export function StudentAttendanceView({ studentId }: StudentAttendanceViewProps)
     const present = rows.filter((r) => r.status === 'Present').length
     return Math.round((present / rows.length) * 100)
   }, [rows])
+
+  const total = rows.length
+  const { page, totalPages, canPrev, canNext } = pagination.getState(total)
 
   const chartData = [
     {
@@ -124,7 +130,20 @@ export function StudentAttendanceView({ studentId }: StudentAttendanceViewProps)
         </div>
       </FeatureCardSection>
 
-      <DataTable data={rows} columns={columns} keyExtractor={(r) => r.id} />
+      <div>
+        <DataTable data={pagination.paginate(rows)} columns={columns} keyExtractor={(r) => r.id} />
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          canPrev={canPrev}
+          canNext={canNext}
+          onPrev={() => pagination.goTo(page - 1, total)}
+          onNext={() => pagination.goTo(page + 1, total)}
+          totalItems={total}
+          pageSize={pagination.pageSize}
+          onPageSizeChange={pagination.setPageSize}
+        />
+      </div>
     </div>
   )
 }

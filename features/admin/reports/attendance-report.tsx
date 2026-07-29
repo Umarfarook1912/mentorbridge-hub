@@ -25,9 +25,11 @@ import { FeatureCardSection } from '@/components/shared/data-display/feature-car
 import { DataTable, type Column } from '@/components/shared/data-display/data-table'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
+import { PaginationControls } from '@/components/shared/data-display/pagination-controls'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { DEPARTMENTS, QUERY_KEYS } from '@/lib/constants'
 import { useGetAllStudents } from '@/services/students/use-get-students'
+import { usePagination } from '@/hooks/use-pagination'
 import { exportToCSV } from '@/utils/export'
 import { formatDate } from '@/utils/format'
 import {
@@ -46,6 +48,7 @@ export function AttendanceReport() {
   })
 
   const { data: students = [] } = useGetAllStudents()
+  const pagination = usePagination()
 
   const { data, isLoading } = useQuery({
     queryKey: [QUERY_KEYS.reportsAttendance, month, department, studentId],
@@ -87,6 +90,8 @@ export function AttendanceReport() {
   const summary = aggregateByStudent(rows)
   const chartData = buildSessionChartData(rows)
   const selectedStudent = studentId ? summary[0] : null
+  const total = studentId ? rows.length : summary.length
+  const { page, totalPages, canPrev, canNext } = pagination.getState(total)
 
   const summaryColumns: Column<StudentAttendanceSummary>[] = [
     {
@@ -152,12 +157,18 @@ export function AttendanceReport() {
         <input
           type="month"
           value={month}
-          onChange={(e) => setMonth(e.target.value)}
+          onChange={(e) => {
+            setMonth(e.target.value)
+            pagination.reset()
+          }}
           className="bg-background h-9 rounded-md border px-3 text-sm"
         />
         <Select
           value={studentId || 'all'}
-          onValueChange={(v) => setStudentId(v === 'all' ? '' : (v ?? ''))}
+          onValueChange={(v) => {
+            setStudentId(v === 'all' ? '' : (v ?? ''))
+            pagination.reset()
+          }}
         >
           <SelectTrigger className="w-52">
             <SelectValue placeholder="All students">
@@ -178,7 +189,10 @@ export function AttendanceReport() {
         </Select>
         <Select
           value={department || 'all'}
-          onValueChange={(v) => setDepartment(v === 'all' ? '' : (v ?? ''))}
+          onValueChange={(v) => {
+            setDepartment(v === 'all' ? '' : (v ?? ''))
+            pagination.reset()
+          }}
         >
           <SelectTrigger className="w-44">
             <SelectValue placeholder="All departments">
@@ -248,11 +262,30 @@ export function AttendanceReport() {
                   attendance
                 </p>
               )}
-              <DataTable data={rows} columns={detailColumns} keyExtractor={(r) => r.id} />
+              <DataTable
+                data={pagination.paginate(rows)}
+                columns={detailColumns}
+                keyExtractor={(r) => r.id}
+              />
             </div>
           ) : (
-            <DataTable data={summary} columns={summaryColumns} keyExtractor={(r) => r.studentId} />
+            <DataTable
+              data={pagination.paginate(summary)}
+              columns={summaryColumns}
+              keyExtractor={(r) => r.studentId}
+            />
           )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            canPrev={canPrev}
+            canNext={canNext}
+            onPrev={() => pagination.goTo(page - 1, total)}
+            onNext={() => pagination.goTo(page + 1, total)}
+            totalItems={total}
+            pageSize={pagination.pageSize}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </>
       )}
     </div>

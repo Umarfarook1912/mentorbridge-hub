@@ -16,8 +16,10 @@ import { UserAvatar } from '@/components/shared/data-display/user-avatar'
 import { SubmissionReviewMeta } from '@/components/shared/data-display/submission-review-meta'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
+import { PaginationControls } from '@/components/shared/data-display/pagination-controls'
 import { FeedbackDialog } from './feedback-dialog'
 import { useGetSubmissions } from '@/services/submissions/use-get-submissions'
+import { usePagination } from '@/hooks/use-pagination'
 import { DEPARTMENTS } from '@/lib/constants'
 import { formatDateTime } from '@/utils/format'
 import { ClipboardList } from 'lucide-react'
@@ -49,11 +51,16 @@ export function SubmissionsDashboard() {
   const [statusFilter, setStatusFilter] = useState('')
   const [departmentFilter, setDepartmentFilter] = useState('')
   const [feedbackId, setFeedbackId] = useState<string | null>(null)
+  const pagination = usePagination()
 
   const { data: submissions = [], isLoading } = useGetSubmissions({
     status: (statusFilter as SubmissionStatus) || undefined,
     department: departmentFilter || undefined,
   })
+
+  const total = submissions.length
+  const { page, totalPages, canPrev, canNext } = pagination.getState(total)
+  const pageRows = pagination.paginate(submissions as SubmissionRow[])
 
   const columns: Column<SubmissionRow>[] = [
     {
@@ -161,11 +168,16 @@ export function SubmissionsDashboard() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <Select
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v === 'all' ? '' : (v ?? ''))}
+          value={statusFilter || 'all'}
+          onValueChange={(v) => {
+            setStatusFilter(v === 'all' ? '' : (v ?? ''))
+            pagination.reset()
+          }}
         >
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All status" />
+            <SelectValue placeholder="All status">
+              {(value: string | null) => (!value || value === 'all' ? 'All Status' : value)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
@@ -176,11 +188,16 @@ export function SubmissionsDashboard() {
         </Select>
 
         <Select
-          value={departmentFilter}
-          onValueChange={(v) => setDepartmentFilter(v === 'all' ? '' : (v ?? ''))}
+          value={departmentFilter || 'all'}
+          onValueChange={(v) => {
+            setDepartmentFilter(v === 'all' ? '' : (v ?? ''))
+            pagination.reset()
+          }}
         >
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="All departments" />
+            <SelectValue placeholder="All departments">
+              {(value: string | null) => (!value || value === 'all' ? 'All Departments' : value)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Departments</SelectItem>
@@ -192,7 +209,7 @@ export function SubmissionsDashboard() {
           </SelectContent>
         </Select>
 
-        <p className="text-muted-foreground ml-auto text-sm">{submissions.length} submissions</p>
+        <p className="text-muted-foreground ml-auto text-sm">{total} submissions</p>
       </div>
 
       {isLoading ? (
@@ -204,11 +221,20 @@ export function SubmissionsDashboard() {
           description="Submissions will appear here once students submit their work"
         />
       ) : (
-        <DataTable
-          data={submissions as SubmissionRow[]}
-          columns={columns}
-          keyExtractor={(r) => r.id}
-        />
+        <>
+          <DataTable data={pageRows} columns={columns} keyExtractor={(r) => r.id} />
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            canPrev={canPrev}
+            canNext={canNext}
+            onPrev={() => pagination.goTo(page - 1, total)}
+            onNext={() => pagination.goTo(page + 1, total)}
+            totalItems={total}
+            pageSize={pagination.pageSize}
+            onPageSizeChange={pagination.setPageSize}
+          />
+        </>
       )}
 
       <FeedbackDialog
