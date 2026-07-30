@@ -10,11 +10,12 @@ import type { IBlogEntity } from '@/services/blogs'
 const BLOG_PAGE_SIZE = 10
 
 interface BlogSectionProps {
-  title: string
+  title?: string
   description?: string
   blogs: IBlogEntity[]
   emptyTitle: string
   emptyDescription: string
+  emptyAction?: { label: string; onClick: () => void }
   canEdit?: (blog: IBlogEntity) => boolean
   canDelete: (blog: IBlogEntity) => boolean
   onEdit?: (blog: IBlogEntity) => void
@@ -26,6 +27,7 @@ export function BlogSection({
   blogs,
   emptyTitle,
   emptyDescription,
+  emptyAction,
   canEdit,
   canDelete,
   onEdit,
@@ -38,13 +40,20 @@ export function BlogSection({
 
   return (
     <section className="space-y-3">
-      <div>
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
-      </div>
+      {(title || description) && (
+        <div>
+          {title ? <h2 className="text-lg font-semibold">{title}</h2> : null}
+          {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
+        </div>
+      )}
 
       {!blogs.length ? (
-        <EmptyState icon={Newspaper} title={emptyTitle} description={emptyDescription} />
+        <EmptyState
+          icon={Newspaper}
+          title={emptyTitle}
+          description={emptyDescription}
+          action={emptyAction}
+        />
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

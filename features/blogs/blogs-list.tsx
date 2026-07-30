@@ -3,13 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Newspaper, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { SearchBar } from '@/components/shared/forms/search-bar'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
@@ -20,40 +14,38 @@ import { useGetBlogs, type IBlogEntity } from '@/services/blogs'
 import { useAuthStore } from '@/store/auth-store'
 import { useDebounce } from '@/hooks/use-debounce'
 
-type BlogFilter = 'all' | 'mine' | 'community'
-
 export function BlogsList() {
   const { user } = useAuthStore()
   const { data: blogs = [], isLoading } = useGetBlogs()
   const [addOpen, setAddOpen] = useState(false)
   const [editBlog, setEditBlog] = useState<IBlogEntity | null>(null)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<BlogFilter>('all')
   const debouncedSearch = useDebounce(search)
 
-  const filteredBlogs = useMemo(() => {
+  const searchedBlogs = useMemo(() => {
     const q = debouncedSearch.trim().toLowerCase()
-    return blogs.filter((blog) => {
-      if (filter === 'mine' && user && blog.author_id !== user.id) return false
-      if (filter === 'community' && user && blog.author_id === user.id) return false
-      if (!q) return true
-      return blog.title.toLowerCase().includes(q) || blog.author_name.toLowerCase().includes(q)
-    })
-  }, [blogs, debouncedSearch, filter, user])
+    if (!q) return blogs
+    return blogs.filter(
+      (blog) => blog.title.toLowerCase().includes(q) || blog.author_name.toLowerCase().includes(q)
+    )
+  }, [blogs, debouncedSearch])
 
   const { myBlogs, otherBlogs } = useMemo(() => {
-    if (!user) return { myBlogs: [] as typeof filteredBlogs, otherBlogs: filteredBlogs }
+    if (!user) return { myBlogs: [] as typeof searchedBlogs, otherBlogs: searchedBlogs }
     return {
-      myBlogs: filteredBlogs.filter((b) => b.author_id === user.id),
-      otherBlogs: filteredBlogs.filter((b) => b.author_id !== user.id),
+      myBlogs: searchedBlogs.filter((b) => b.author_id === user.id),
+      otherBlogs: searchedBlogs.filter((b) => b.author_id !== user.id),
     }
-  }, [filteredBlogs, user])
+  }, [searchedBlogs, user])
 
   const canManage = (blog: IBlogEntity) =>
     !!user && (user.id === blog.author_id || user.role === 'Admin')
 
-  const showMine = filter !== 'community'
-  const showCommunity = filter !== 'mine'
+  const canManageCommunity = (): boolean => !!user && user.role === 'Admin'
+
+  const hasSearch = debouncedSearch.trim().length > 0
+  const noMatchTitle = 'No matching blogs'
+  const noMatchDescription = 'Try a different search'
 
   return (
     <div className="space-y-6">
@@ -64,22 +56,6 @@ export function BlogsList() {
           placeholder="Search by title or author…"
           className="sm:w-72"
         />
-        <Select value={filter} onValueChange={(v) => setFilter((v as BlogFilter) ?? 'all')}>
-          <SelectTrigger className="w-44">
-            <SelectValue>
-              {(value: string | null) => {
-                if (value === 'mine') return 'My Blogs'
-                if (value === 'community') return 'Community'
-                return 'All Blogs'
-              }}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Blogs</SelectItem>
-            <SelectItem value="mine">My Blogs</SelectItem>
-            <SelectItem value="community">Community</SelectItem>
-          </SelectContent>
-        </Select>
         <div className="sm:ml-auto">
           <Button onClick={() => setAddOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -97,39 +73,54 @@ export function BlogsList() {
           description="Be the first to share a Medium article with the MentorBridge community"
           action={{ label: 'Share Blog', onClick: () => setAddOpen(true) }}
         />
-      ) : !filteredBlogs.length ? (
-        <EmptyState
-          icon={Newspaper}
-          title="No matching blogs"
-          description="Try a different search or filter"
-        />
       ) : (
-        <div className="space-y-8">
-          {showMine && (
+        <Tabs defaultValue="all">
+          <TabsList>
+            <TabsTrigger value="all">All ({searchedBlogs.length})</TabsTrigger>
+            <TabsTrigger value="mine">My Blogs ({myBlogs.length})</TabsTrigger>
+            <TabsTrigger value="community">Community ({otherBlogs.length})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-4">
             <BlogSection
-              title="My Blogs"
-              description="Articles you have shared"
-              blogs={myBlogs}
-              emptyTitle="You haven't shared a blog yet"
-              emptyDescription="Use Share Blog to post your Medium article"
+              blogs={searchedBlogs}
+              emptyTitle={noMatchTitle}
+              emptyDescription={noMatchDescription}
               canEdit={canManage}
               canDelete={canManage}
               onEdit={setEditBlog}
             />
-          )}
-          {showCommunity && (
+          </TabsContent>
+
+          <TabsContent value="mine" className="mt-4">
             <BlogSection
-              title="Community Blogs"
-              description="Articles shared by others"
-              blogs={otherBlogs}
-              emptyTitle="No community blogs yet"
-              emptyDescription="When others share blogs, they will appear here"
-              canEdit={() => !!user && user.role === 'Admin'}
-              canDelete={() => !!user && user.role === 'Admin'}
+              blogs={myBlogs}
+              emptyTitle={hasSearch ? noMatchTitle : "You haven't shared a blog yet"}
+              emptyDescription={
+                hasSearch ? noMatchDescription : 'Use Share Blog to post your Medium article'
+              }
+              emptyAction={
+                hasSearch ? undefined : { label: 'Share Blog', onClick: () => setAddOpen(true) }
+              }
+              canEdit={canManage}
+              canDelete={canManage}
               onEdit={setEditBlog}
             />
-          )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="community" className="mt-4">
+            <BlogSection
+              blogs={otherBlogs}
+              emptyTitle={hasSearch ? noMatchTitle : 'No community blogs yet'}
+              emptyDescription={
+                hasSearch ? noMatchDescription : 'When others share blogs, they will appear here'
+              }
+              canEdit={canManageCommunity}
+              canDelete={canManageCommunity}
+              onEdit={setEditBlog}
+            />
+          </TabsContent>
+        </Tabs>
       )}
 
       <FormDialog
