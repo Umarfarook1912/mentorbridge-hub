@@ -82,7 +82,7 @@ export function MeetingCard({ meeting, onEdit, onDelete, showJoin = false }: Mee
               </span>
             )}
           </div>
-          <h3 className="truncate text-base leading-snug font-semibold">{meeting.title}</h3>
+          <h3 className="text-base leading-snug font-semibold break-words">{meeting.title}</h3>
           {meeting.description && (
             <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{meeting.description}</p>
           )}
@@ -119,12 +119,11 @@ export function MeetingCard({ meeting, onEdit, onDelete, showJoin = false }: Mee
           icon={Clock}
           label={`${formatTime(meeting.start_time)} – ${formatTime(meeting.end_time)}`}
         />
-        <FeatureCardMeta icon={User} label={meeting.handled_by} />
         <FeatureCardMeta
           icon={CalendarDays}
           label={formatDate(meeting.meeting_date, 'EEEE, dd MMM')}
-          className="sm:col-span-2"
         />
+        <FeatureCardMeta icon={User} label={meeting.handled_by} className="sm:col-span-2" />
       </div>
     </FeatureCard>
   )

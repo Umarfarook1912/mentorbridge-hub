@@ -88,7 +88,7 @@ export function FeatureCardMeta({
       >
         <Icon className="h-3.5 w-3.5" />
       </span>
-      <span className="text-foreground/80 truncate font-medium">{label}</span>
+      <span className="text-foreground/80 min-w-0 font-medium break-words">{label}</span>
     </div>
   )
 }
