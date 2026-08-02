@@ -15,13 +15,15 @@ interface FormDialogProps {
   title: string
   description?: string
   children: ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg'
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 }
 
 const maxWidthClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
+  sm: 'max-w-sm sm:max-w-sm',
+  md: 'max-w-md sm:max-w-md',
+  lg: 'max-w-lg sm:max-w-lg',
+  xl: 'max-w-xl sm:max-w-xl',
+  '2xl': 'max-w-2xl sm:max-w-2xl',
 }
 
 export function FormDialog({

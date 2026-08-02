@@ -76,21 +76,22 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <FormFieldWrapper label="Meeting Title" htmlFor="title" error={errors.title} required>
-        <Input id="title" placeholder="React Fundamentals Session" {...register('title')} />
-      </FormFieldWrapper>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormFieldWrapper label="Meeting Title" htmlFor="title" error={errors.title} required>
+          <Input id="title" placeholder="React Fundamentals Session" {...register('title')} />
+        </FormFieldWrapper>
+        <FormFieldWrapper label="Handled By" htmlFor="handledBy" error={errors.handledBy} required>
+          <Input id="handledBy" placeholder="Senthil Kumar" {...register('handledBy')} />
+        </FormFieldWrapper>
+      </div>
 
       <FormFieldWrapper label="Description" htmlFor="description" error={errors.description}>
         <Textarea
           id="description"
           placeholder="What will be covered…"
-          rows={3}
+          rows={2}
           {...register('description')}
         />
-      </FormFieldWrapper>
-
-      <FormFieldWrapper label="Handled By" htmlFor="handledBy" error={errors.handledBy} required>
-        <Input id="handledBy" placeholder="Senthil Kumar" {...register('handledBy')} />
       </FormFieldWrapper>
 
       <MeetingAudiencePicker
@@ -101,7 +102,7 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
         error={errors.targetDomains ?? errors.targetStudentIds}
       />
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <FormFieldWrapper label="Date" htmlFor="meetingDate" error={errors.meetingDate} required>
           <Input id="meetingDate" type="date" {...register('meetingDate')} />
         </FormFieldWrapper>

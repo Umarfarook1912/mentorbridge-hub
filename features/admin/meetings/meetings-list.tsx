@@ -93,7 +93,7 @@ export function MeetingsList() {
         </TabsContent>
       </Tabs>
 
-      <FormDialog open={addOpen} onOpenChange={setAddOpen} title="Create Meeting" maxWidth="lg">
+      <FormDialog open={addOpen} onOpenChange={setAddOpen} title="Create Meeting" maxWidth="2xl">
         {addOpen && <MeetingForm key="create-meeting" onSuccess={() => setAddOpen(false)} />}
       </FormDialog>
 
@@ -101,7 +101,7 @@ export function MeetingsList() {
         open={!!editMeeting}
         onOpenChange={(o) => !o && setEditMeeting(null)}
         title="Edit Meeting"
-        maxWidth="lg"
+        maxWidth="2xl"
       >
         {editMeeting && (
           <MeetingForm
