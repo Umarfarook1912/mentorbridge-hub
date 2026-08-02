@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -9,10 +9,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { FormFieldWrapper } from '@/components/shared/forms/form-field-wrapper'
+import { MeetingAudiencePicker } from './meeting-audience-picker'
 import { meetingSchema, type MeetingInput } from '@/lib/validations/meeting'
 import { useUpsertMeeting } from '@/services/meetings/use-upsert-meeting'
 import type { IMeetingEntity } from '@/services/meetings'
 import { getErrorMessage, toDateInputValue, toTimeInputValue } from '@/utils/form'
+import type { MeetingDomain } from '@/utils/meeting-audience'
 
 interface MeetingFormProps {
   meeting?: IMeetingEntity | null
@@ -24,9 +26,11 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
   const { mutateAsync: upsertMeeting, isPending } = useUpsertMeeting()
 
   const {
+    control,
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<MeetingInput>({
     resolver: zodResolver(meetingSchema),
@@ -38,8 +42,13 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
       startTime: '',
       endTime: '',
       meetUrl: '',
+      targetDomains: [],
+      targetStudentIds: [],
     },
   })
+
+  const targetDomains = useWatch({ control, name: 'targetDomains' }) ?? []
+  const targetStudentIds = useWatch({ control, name: 'targetStudentIds' }) ?? []
 
   useEffect(() => {
     reset({
@@ -50,6 +59,8 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
       startTime: toTimeInputValue(meeting?.start_time),
       endTime: toTimeInputValue(meeting?.end_time),
       meetUrl: meeting?.meet_url ?? '',
+      targetDomains: (meeting?.target_domains as MeetingDomain[] | null) ?? [],
+      targetStudentIds: meeting?.target_student_ids ?? [],
     })
   }, [meeting, reset])
 
@@ -81,6 +92,14 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
       <FormFieldWrapper label="Handled By" htmlFor="handledBy" error={errors.handledBy} required>
         <Input id="handledBy" placeholder="Senthil Kumar" {...register('handledBy')} />
       </FormFieldWrapper>
+
+      <MeetingAudiencePicker
+        domains={targetDomains}
+        studentIds={targetStudentIds}
+        onDomainsChange={(domains) => setValue('targetDomains', domains, { shouldValidate: true })}
+        onStudentIdsChange={(ids) => setValue('targetStudentIds', ids, { shouldValidate: true })}
+        error={errors.targetDomains ?? errors.targetStudentIds}
+      />
 
       <div className="grid grid-cols-3 gap-3">
         <FormFieldWrapper label="Date" htmlFor="meetingDate" error={errors.meetingDate} required>

@@ -52,6 +52,8 @@ export interface Database {
           end_time: string
           duration: number | null
           meet_url: string | null
+          target_domains: string[] | null
+          target_student_ids: string[] | null
           created_by: string
           created_at: string
         }
@@ -64,6 +66,8 @@ export interface Database {
           start_time: string
           end_time: string
           meet_url?: string | null
+          target_domains?: string[] | null
+          target_student_ids?: string[] | null
           created_by: string
           created_at?: string
         }
@@ -75,6 +79,8 @@ export interface Database {
           start_time?: string
           end_time?: string
           meet_url?: string | null
+          target_domains?: string[] | null
+          target_student_ids?: string[] | null
         }
       }
       attendance: {

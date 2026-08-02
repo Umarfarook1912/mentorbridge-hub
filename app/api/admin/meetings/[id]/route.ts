@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/api/require-admin'
+import { toDbTargetDomains, toDbTargetStudentIds } from '@/utils/meeting-audience'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin()
@@ -7,11 +8,28 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params
   const body = await request.json()
-  const { title, description, handledBy, meetingDate, startTime, endTime, meetUrl } = body
+  const {
+    title,
+    description,
+    handledBy,
+    meetingDate,
+    startTime,
+    endTime,
+    meetUrl,
+    targetDomains,
+    targetStudentIds,
+  } = body
 
   if (!title || !handledBy || !meetingDate || !startTime || !endTime) {
     return NextResponse.json({ message: 'Missing required meeting fields' }, { status: 400 })
   }
+
+  const domains = toDbTargetDomains(
+    Array.isArray(targetDomains) ? (targetDomains as string[]) : undefined
+  )
+  const studentIds = toDbTargetStudentIds(
+    Array.isArray(targetStudentIds) ? (targetStudentIds as string[]) : undefined
+  )
 
   const { data, error } = await auth.supabase
     .from('meetings')
@@ -23,6 +41,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       start_time: startTime,
       end_time: endTime,
       meet_url: meetUrl || null,
+      target_domains: domains,
+      target_student_ids: studentIds,
     })
     .eq('id', id)
     .select('id')

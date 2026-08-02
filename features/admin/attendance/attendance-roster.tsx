@@ -12,6 +12,7 @@ import { useGetAllStudents } from '@/services/students/use-get-students'
 import { useGetAttendanceByMeeting } from '@/services/attendance/use-get-attendance'
 import { useMarkAttendance } from '@/services/attendance/use-mark-attendance'
 import { exportToCSV } from '@/utils/export'
+import { isMeetingForStudent } from '@/utils/meeting-audience'
 import type { AttendanceStatus } from '@/types/supabase.types'
 import { Users } from 'lucide-react'
 
@@ -37,14 +38,33 @@ interface AttendanceRosterProps {
   meetingId: string
   meetingTitle: string
   meetingDate: string
+  targetDomains?: string[] | null
+  targetStudentIds?: string[] | null
 }
 
-export function AttendanceRoster({ meetingId, meetingTitle, meetingDate }: AttendanceRosterProps) {
-  const { data: students = [], isLoading: loadingStudents } = useGetAllStudents()
+export function AttendanceRoster({
+  meetingId,
+  meetingTitle,
+  meetingDate,
+  targetDomains,
+  targetStudentIds,
+}: AttendanceRosterProps) {
+  const { data: allStudents = [], isLoading: loadingStudents } = useGetAllStudents()
   const { data: existing = [], isLoading: loadingAttendance } = useGetAttendanceByMeeting(meetingId)
   const { mutateAsync: markAttendance, isPending: saving } = useMarkAttendance()
 
   const [overrides, setOverrides] = useState<Record<string, AttendanceStatus>>({})
+
+  const students = useMemo(
+    () =>
+      allStudents.filter((s) =>
+        isMeetingForStudent(
+          { targetDomains, targetStudentIds },
+          { id: s.id, domainInterest: s.domain_interest }
+        )
+      ),
+    [allStudents, targetDomains, targetStudentIds]
+  )
 
   const existingMap = useMemo(
     () => Object.fromEntries(existing.map((a) => [a.student_id, a.status as AttendanceStatus])),
@@ -88,7 +108,10 @@ export function AttendanceRoster({ meetingId, meetingTitle, meetingDate }: Atten
 
   const summary = useMemo(() => {
     const counts = { Present: 0, Absent: 0, Permission: 0 }
-    students.forEach((s) => counts[getStatus(s.id)]++)
+    students.forEach((s) => {
+      const status = overrides[s.id] ?? existingMap[s.id] ?? 'Absent'
+      counts[status]++
+    })
     return counts
   }, [students, overrides, existingMap])
 
@@ -98,8 +121,8 @@ export function AttendanceRoster({ meetingId, meetingTitle, meetingDate }: Atten
     return (
       <EmptyState
         icon={Users}
-        title="No students enrolled"
-        description="Add students before marking attendance"
+        title="No students for this audience"
+        description="No enrolled students match this meeting’s domains"
       />
     )
   }

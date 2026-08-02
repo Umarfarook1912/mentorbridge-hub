@@ -1,6 +1,6 @@
 'use client'
 
-import { CalendarDays, Clock, ExternalLink, Pencil, Trash2, User, Video } from 'lucide-react'
+import { CalendarDays, Clock, ExternalLink, Pencil, Trash2, User, Users, Video } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import {
@@ -9,6 +9,7 @@ import {
   FeatureCardMeta,
 } from '@/components/shared/data-display/feature-card'
 import { formatDate, formatTime, getMeetingLabel } from '@/utils/format'
+import { formatMeetingAudience } from '@/utils/meeting-audience'
 import type { IMeetingEntity } from '@/services/meetings'
 
 interface MeetingCardProps {
@@ -124,6 +125,11 @@ export function MeetingCard({ meeting, onEdit, onDelete, showJoin = false }: Mee
           label={formatDate(meeting.meeting_date, 'EEEE, dd MMM')}
         />
         <FeatureCardMeta icon={User} label={meeting.handled_by} className="sm:col-span-2" />
+        <FeatureCardMeta
+          icon={Users}
+          label={formatMeetingAudience(meeting.target_domains, meeting.target_student_ids)}
+          className="sm:col-span-2"
+        />
       </div>
     </FeatureCard>
   )

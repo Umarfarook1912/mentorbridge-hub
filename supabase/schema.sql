@@ -44,6 +44,8 @@ create table public.meetings (
                  extract(epoch from (end_time - start_time))::int / 60
                ) stored,
   meet_url     text,
+  target_domains text[],   -- null/empty = unrestricted by domain
+  target_student_ids uuid[], -- specific invitees; OR with domains; both empty = all
   created_by   uuid not null references public.profiles(id) on delete set null,
   created_at   timestamptz not null default now()
 );

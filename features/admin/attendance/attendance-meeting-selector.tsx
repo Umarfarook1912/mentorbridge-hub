@@ -74,6 +74,8 @@ export function AttendanceMeetingSelector() {
               meetingId={selected.id}
               meetingTitle={selected.title}
               meetingDate={selected.meeting_date}
+              targetDomains={selected.target_domains}
+              targetStudentIds={selected.target_student_ids}
             />
           </div>
         ) : (

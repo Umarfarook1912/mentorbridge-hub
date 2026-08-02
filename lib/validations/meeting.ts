@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { DOMAIN_INTERESTS } from '@/lib/constants'
 
 export const meetingSchema = z
   .object({
@@ -12,6 +13,8 @@ export const meetingSchema = z
       .string()
       .optional()
       .refine((v) => !v || /^https?:\/\/.+/i.test(v), 'Enter a valid meeting URL'),
+    targetDomains: z.array(z.enum(DOMAIN_INTERESTS)).default([]),
+    targetStudentIds: z.array(z.string().uuid()).default([]),
   })
   .refine(
     (data) => {

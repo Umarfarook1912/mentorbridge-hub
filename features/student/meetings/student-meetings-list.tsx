@@ -1,15 +1,40 @@
 'use client'
 
+import { useMemo } from 'react'
 import { CalendarDays } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MeetingCard } from '@/components/shared/data-display/meeting-card'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { useGetMeetings } from '@/services/meetings/use-get-meetings'
+import { useAuthStore } from '@/store/auth-store'
+import { isMeetingForStudent } from '@/utils/meeting-audience'
 
 export function StudentMeetingsList() {
-  const { data: upcoming = [], isLoading: lu } = useGetMeetings('upcoming')
-  const { data: past = [], isLoading: lp } = useGetMeetings('past')
+  const { user } = useAuthStore()
+  const { data: upcomingRaw = [], isLoading: lu } = useGetMeetings('upcoming')
+  const { data: pastRaw = [], isLoading: lp } = useGetMeetings('past')
+
+  const upcoming = useMemo(
+    () =>
+      upcomingRaw.filter((m) =>
+        isMeetingForStudent(
+          { targetDomains: m.target_domains, targetStudentIds: m.target_student_ids },
+          { id: user?.id ?? '', domainInterest: user?.domainInterest }
+        )
+      ),
+    [upcomingRaw, user?.id, user?.domainInterest]
+  )
+  const past = useMemo(
+    () =>
+      pastRaw.filter((m) =>
+        isMeetingForStudent(
+          { targetDomains: m.target_domains, targetStudentIds: m.target_student_ids },
+          { id: user?.id ?? '', domainInterest: user?.domainInterest }
+        )
+      ),
+    [pastRaw, user?.id, user?.domainInterest]
+  )
 
   return (
     <Tabs defaultValue="upcoming">
