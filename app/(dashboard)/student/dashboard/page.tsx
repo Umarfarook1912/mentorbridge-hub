@@ -12,19 +12,22 @@ import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { FeatureCard, FeatureCardDateBlock } from '@/components/shared/data-display/feature-card'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import { formatDate, formatTime } from '@/utils/format'
+import { localToday } from '@/utils/meeting-time'
 import { CalendarDays, CheckSquare } from 'lucide-react'
 import { isPast, parseISO } from 'date-fns'
 import { ROUTES } from '@/lib/constants'
 
 export default function StudentDashboardPage() {
   const { user } = useAuthStore()
-  const { data: meetings = [], isLoading: loadingMeetings } = useGetMeetings('upcoming')
+  const { data: meetingsRaw = [], isLoading: loadingMeetings } = useGetMeetings('today')
   const { data: tasks = [], isLoading: loadingTasks } = useGetStudentTasks(
     user?.id ?? '',
-    user?.department ?? null
+    user?.domainInterest ?? null
   )
 
   if (!user) return null
+
+  const meetings = meetingsRaw.filter((m) => m.meeting_date === localToday())
 
   const pendingTasks = tasks.filter((t) => {
     const submissions = (t.task_submissions ?? []) as {
@@ -47,12 +50,12 @@ export default function StudentDashboardPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-3">
           <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
-            Upcoming Meetings
+            Today&apos;s Meetings
           </h2>
           {loadingMeetings ? (
             <LoadingSkeleton />
           ) : meetings.slice(0, 4).length === 0 ? (
-            <EmptyState icon={CalendarDays} title="No upcoming meetings" />
+            <EmptyState icon={CalendarDays} title="No meetings today" />
           ) : (
             meetings.slice(0, 4).map((m) => (
               <FeatureCard key={m.id} contentClassName="space-y-0">

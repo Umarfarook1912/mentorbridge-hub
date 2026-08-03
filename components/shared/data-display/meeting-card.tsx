@@ -20,7 +20,7 @@ interface MeetingCardProps {
 }
 
 export function MeetingCard({ meeting, onEdit, onDelete, showJoin = false }: MeetingCardProps) {
-  const label = getMeetingLabel(meeting.meeting_date)
+  const label = getMeetingLabel(meeting.meeting_date, meeting.end_time)
   const statusMap = {
     today: 'upcoming',
     tomorrow: 'upcoming',

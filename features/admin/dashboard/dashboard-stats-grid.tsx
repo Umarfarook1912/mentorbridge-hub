@@ -49,11 +49,11 @@ export function DashboardStatsGrid() {
         description="With permission"
       />
       <StatsCard
-        title="Upcoming Meetings"
-        value={stats?.upcomingMeetings ?? 0}
+        title="Today's Meetings"
+        value={stats?.todaysMeetings ?? 0}
         icon={CalendarDays}
         variant="secondary"
-        description="Scheduled ahead"
+        description="Sessions scheduled today"
       />
       <StatsCard
         title="Active Tasks"

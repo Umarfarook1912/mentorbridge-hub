@@ -14,6 +14,8 @@ export function SectionPermissionsPicker({
   onChange,
   error,
 }: SectionPermissionsPickerProps) {
+  const allSelected = ADMIN_SECTIONS.every((s) => value.includes(s))
+
   function toggle(section: AdminSection) {
     if (value.includes(section)) {
       onChange(value.filter((s) => s !== section))
@@ -22,11 +24,24 @@ export function SectionPermissionsPicker({
     }
   }
 
+  function toggleAll() {
+    onChange(allSelected ? [] : [...ADMIN_SECTIONS])
+  }
+
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium">
-        Section access <span className="text-destructive">*</span>
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium">
+          Section access <span className="text-destructive">*</span>
+        </p>
+        <button
+          type="button"
+          onClick={toggleAll}
+          className="text-primary text-xs font-medium hover:underline"
+        >
+          {allSelected ? 'Clear all' : 'Select all'}
+        </button>
+      </div>
       <p className="text-muted-foreground text-xs">
         Choose which admin areas this Associate can open.
       </p>

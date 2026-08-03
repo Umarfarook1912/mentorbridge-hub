@@ -73,13 +73,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true })
   }
 
-  if (!fullName || !department || !domainInterest || !studentCategory) {
-    return NextResponse.json(
-      { message: 'Full name, category, department and domain interest are required' },
-      { status: 400 }
-    )
-  }
-
   if (role === 'Associate') {
     const perms = Array.isArray(sectionPermissions) ? sectionPermissions : []
     const valid = perms.every((p: string) => (ADMIN_SECTIONS as readonly string[]).includes(p))
@@ -91,18 +84,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
   }
 
+  if (typeof fullName !== 'string' || fullName.trim().length < 2) {
+    return NextResponse.json({ message: 'Full name is required' }, { status: 400 })
+  }
+
   const updates: Record<string, unknown> = {
-    full_name: fullName,
+    full_name: fullName.trim(),
     phone: phone || null,
-    department,
-    domain_interest: domainInterest,
-    student_category: studentCategory,
+    department: department || null,
+    domain_interest: domainInterest || null,
+    student_category: studentCategory || null,
   }
 
   if (role && VALID_ROLES.includes(role)) {
     updates.role = role as UserRole
-    updates.section_permissions =
-      role === 'Associate' ? sectionPermissions : role === 'Admin' ? null : null
+    updates.section_permissions = role === 'Associate' ? sectionPermissions : null
   }
 
   const { data, error } = await auth.supabase

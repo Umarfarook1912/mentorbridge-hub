@@ -12,18 +12,18 @@ import { isMeetingForStudent } from '@/utils/meeting-audience'
 
 export function StudentMeetingsList() {
   const { user } = useAuthStore()
-  const { data: upcomingRaw = [], isLoading: lu } = useGetMeetings('upcoming')
+  const { data: todayRaw = [], isLoading: lt } = useGetMeetings('today')
   const { data: pastRaw = [], isLoading: lp } = useGetMeetings('past')
 
-  const upcoming = useMemo(
+  const today = useMemo(
     () =>
-      upcomingRaw.filter((m) =>
+      todayRaw.filter((m) =>
         isMeetingForStudent(
           { targetDomains: m.target_domains, targetStudentIds: m.target_student_ids },
           { id: user?.id ?? '', domainInterest: user?.domainInterest }
         )
       ),
-    [upcomingRaw, user?.id, user?.domainInterest]
+    [todayRaw, user?.id, user?.domainInterest]
   )
   const past = useMemo(
     () =>
@@ -37,24 +37,24 @@ export function StudentMeetingsList() {
   )
 
   return (
-    <Tabs defaultValue="upcoming">
+    <Tabs defaultValue="today">
       <TabsList>
-        <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
+        <TabsTrigger value="today">Today ({today.length})</TabsTrigger>
         <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="upcoming" className="mt-4">
-        {lu ? (
+      <TabsContent value="today" className="mt-4">
+        {lt ? (
           <LoadingSkeleton />
-        ) : upcoming.length === 0 ? (
+        ) : today.length === 0 ? (
           <EmptyState
             icon={CalendarDays}
-            title="No upcoming meetings"
+            title="No meetings today"
             description="Check back soon for new sessions"
           />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
-            {upcoming.map((m) => (
+            {today.map((m) => (
               <MeetingCard key={m.id} meeting={m} showJoin />
             ))}
           </div>

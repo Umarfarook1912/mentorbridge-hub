@@ -20,7 +20,7 @@ export function MeetingsList() {
   const [editMeeting, setEditMeeting] = useState<IMeetingEntity | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  const { data: upcoming = [], isLoading: loadingUpcoming } = useGetMeetings('upcoming')
+  const { data: today = [], isLoading: loadingToday } = useGetMeetings('today')
   const { data: past = [], isLoading: loadingPast } = useGetMeetings('past')
   const { mutateAsync: deleteMeeting, isPending: deleting } = useDeleteMeeting()
 
@@ -43,25 +43,25 @@ export function MeetingsList() {
         </Button>
       </div>
 
-      <Tabs defaultValue="upcoming">
+      <Tabs defaultValue="today">
         <TabsList>
-          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
+          <TabsTrigger value="today">Today ({today.length})</TabsTrigger>
           <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upcoming" className="mt-4">
-          {loadingUpcoming ? (
+        <TabsContent value="today" className="mt-4">
+          {loadingToday ? (
             <LoadingSkeleton />
-          ) : upcoming.length === 0 ? (
+          ) : today.length === 0 ? (
             <EmptyState
               icon={CalendarDays}
-              title="No upcoming meetings"
-              description="Create your first meeting to get started"
+              title="No meetings today"
+              description="Create a meeting or check back for scheduled sessions"
               action={{ label: 'Create Meeting', onClick: () => setAddOpen(true) }}
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {upcoming.map((m) => (
+              {today.map((m) => (
                 <MeetingCard
                   key={m.id}
                   meeting={m}

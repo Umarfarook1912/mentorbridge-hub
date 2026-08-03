@@ -98,7 +98,22 @@ function filterAdminNav(user: PermissionUser): NavSection[] {
   })).filter((section) => section.items.length > 0)
 }
 
+/** Learner links so Associates can view own attendance and submit tasks. */
+const ASSOCIATE_LEARNING_NAV: NavSection = {
+  title: 'My learning',
+  items: [
+    { label: 'My Attendance', href: ROUTES.student.attendance, icon: UserCheck },
+    { label: 'My Tasks', href: ROUTES.student.tasks, icon: BookOpen },
+    { label: 'My Meetings', href: ROUTES.student.meetings, icon: CalendarDays },
+    { label: 'Profile', href: ROUTES.student.profile, icon: User },
+  ],
+}
+
 export function getNavByRole(role: UserRole, sectionPermissions?: string[] | null): NavSection[] {
   if (role === 'Student') return STUDENT_NAV
-  return filterAdminNav({ role, sectionPermissions })
+  const adminNav = filterAdminNav({ role, sectionPermissions })
+  if (role === 'Associate') {
+    return [...adminNav, ASSOCIATE_LEARNING_NAV]
+  }
+  return adminNav
 }

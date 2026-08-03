@@ -6,9 +6,9 @@ export interface IStudentMutation {
   fullName: string
   email: string
   phone?: string
-  studentCategory: string
-  department: string
-  domainInterest: string
+  studentCategory?: string
+  department?: string
+  domainInterest?: string
   password?: string
 }
 

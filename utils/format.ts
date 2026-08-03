@@ -1,4 +1,5 @@
 import { format, formatDistanceToNow, parseISO, isToday, isTomorrow, isPast } from 'date-fns'
+import { isMeetingCompleted } from '@/utils/meeting-time'
 
 export function formatDate(dateStr: string, pattern = 'dd MMM yyyy') {
   try {
@@ -35,8 +36,12 @@ export function formatRelative(dateStr: string) {
   }
 }
 
-export function getMeetingLabel(dateStr: string): 'today' | 'tomorrow' | 'upcoming' | 'past' {
+export function getMeetingLabel(
+  dateStr: string,
+  endTime?: string
+): 'today' | 'tomorrow' | 'upcoming' | 'past' {
   try {
+    if (endTime && isMeetingCompleted(dateStr, endTime)) return 'past'
     const date = parseISO(dateStr)
     if (isToday(date)) return 'today'
     if (isTomorrow(date)) return 'tomorrow'

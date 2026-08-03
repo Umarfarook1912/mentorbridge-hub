@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/shared/layout/page-header'
-import { AttendanceMeetingSelector } from '@/features/admin/attendance/attendance-meeting-selector'
+import { AttendancePageContent } from '@/features/admin/attendance/attendance-page-content'
 
 export const metadata: Metadata = { title: 'Attendance' }
 
@@ -11,7 +11,7 @@ export default function AttendancePage() {
         title="Attendance"
         description="Mark and track student attendance per meeting session"
       />
-      <AttendanceMeetingSelector />
+      <AttendancePageContent />
     </div>
   )
 }

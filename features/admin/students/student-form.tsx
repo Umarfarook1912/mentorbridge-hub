@@ -46,7 +46,7 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
       fullName: '',
       email: '',
       phone: '',
-      studentCategory: 'SSM Student',
+      studentCategory: '' as StudentInput['studentCategory'],
       department: '',
       domainInterest: '',
       ...(isEdit ? { role: 'Student' as const, sectionPermissions: [] as AdminSection[] } : {}),
@@ -66,8 +66,7 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
       fullName: student.full_name ?? '',
       email: student.email ?? '',
       phone: student.phone ?? '',
-      studentCategory:
-        (student.student_category as StudentInput['studentCategory']) ?? 'SSM Student',
+      studentCategory: (student.student_category as StudentInput['studentCategory']) ?? '',
       department: student.department ?? '',
       domainInterest: student.domain_interest ?? '',
       role: student.role,
@@ -84,9 +83,9 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
           data: {
             fullName: editData.fullName,
             phone: editData.phone || '',
-            studentCategory: editData.studentCategory,
-            department: editData.department,
-            domainInterest: editData.domainInterest,
+            studentCategory: editData.studentCategory || '',
+            department: editData.department || '',
+            domainInterest: editData.domainInterest || '',
             role: editData.role,
             sectionPermissions: editData.role === 'Associate' ? editData.sectionPermissions : [],
           },
@@ -108,7 +107,7 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
         <Input id="fullName" placeholder="Prasanna Kumar" {...register('fullName')} />
       </FormFieldWrapper>
 
-      <FormFieldWrapper label="Email" htmlFor="email" error={errors.email} required>
+      <FormFieldWrapper label="Email" htmlFor="email" error={errors.email} required={!isEdit}>
         <Input
           id="email"
           type="email"

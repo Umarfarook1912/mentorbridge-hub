@@ -84,28 +84,25 @@ export function StudentFormSelects({
         label="Student Type"
         value={studentCategory}
         error={errors.studentCategory}
-        placeholder="Select type"
+        placeholder="Select type (optional)"
         options={STUDENT_CATEGORIES}
         onChange={onStudentCategoryChange}
-        required
       />
       <SelectField
         label="Department"
         value={department}
         error={errors.department}
-        placeholder="Select department"
+        placeholder="Select department (optional)"
         options={DEPARTMENTS}
         onChange={onDepartmentChange}
-        required
       />
       <SelectField
         label="Domain Interest"
         value={domainInterest}
         error={errors.domainInterest}
-        placeholder="Select domain interest"
+        placeholder="Select domain interest (optional)"
         options={DOMAIN_INTERESTS}
         onChange={onDomainInterestChange}
-        required
       />
       {showRole && onRoleChange && (
         <SelectField

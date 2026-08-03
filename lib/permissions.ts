@@ -91,5 +91,18 @@ export function firstAllowedAdminRoute(user: PermissionUser | null | undefined):
       if (found) return found.prefix
     }
   }
-  return ROUTES.login
+  // Associates always keep student-style learning routes
+  return ROUTES.student.attendance
+}
+
+/** Student paths Associates may open (act as learner + staff). */
+export const ASSOCIATE_STUDENT_PATHS = [
+  ROUTES.student.attendance,
+  ROUTES.student.tasks,
+  ROUTES.student.meetings,
+  ROUTES.student.profile,
+] as const
+
+export function canAssociateAccessStudentPath(pathname: string): boolean {
+  return ASSOCIATE_STUDENT_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }

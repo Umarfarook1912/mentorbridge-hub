@@ -22,8 +22,12 @@ export async function POST(request: Request) {
   const body = await request.json()
   const { fullName, email, phone, department, domainInterest, studentCategory, password } = body
 
-  if (!fullName || !email || !password || !department || !domainInterest || !studentCategory) {
-    return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
+  if (!email || !password) {
+    return NextResponse.json({ message: 'Email and password are required' }, { status: 400 })
+  }
+
+  if (typeof fullName !== 'string' || fullName.trim().length < 2) {
+    return NextResponse.json({ message: 'Full name is required' }, { status: 400 })
   }
 
   const adminClient = await getSupabaseAdminClient()
@@ -40,11 +44,13 @@ export async function POST(request: Request) {
     )
   }
 
+  const resolvedName = fullName.trim()
+
   const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName, role: 'Student' },
+    user_metadata: { full_name: resolvedName, role: 'Student' },
   })
 
   if (createError) {
@@ -57,11 +63,11 @@ export async function POST(request: Request) {
   const { error: profileError } = await adminClient
     .from('profiles')
     .update({
-      full_name: fullName,
-      phone: phone ?? null,
-      department,
-      domain_interest: domainInterest,
-      student_category: studentCategory,
+      full_name: resolvedName,
+      phone: phone || null,
+      department: department || null,
+      domain_interest: domainInterest || null,
+      student_category: studentCategory || null,
       role: 'Student' as const,
     } as Record<string, unknown>)
     .eq('id', newUser.user.id)
