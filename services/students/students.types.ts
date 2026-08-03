@@ -24,6 +24,7 @@ export interface IStudentUpdateMutation {
 export interface IStudentFilters {
   search?: string
   department?: string
+  domainInterest?: string
   page?: number
   pageSize?: number
 }

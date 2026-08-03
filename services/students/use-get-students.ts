@@ -19,6 +19,10 @@ async function fetchStudents(filters: IStudentFilters) {
     query = query.eq('department', filters.department)
   }
 
+  if (filters.domainInterest) {
+    query = query.eq('domain_interest', filters.domainInterest)
+  }
+
   const pageSize = filters.pageSize ?? PAGE_SIZE
   const page = filters.page ?? 1
   const from = (page - 1) * pageSize

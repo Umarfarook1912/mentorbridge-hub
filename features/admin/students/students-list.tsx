@@ -20,11 +20,12 @@ import { StudentForm } from './student-form'
 import { useGetStudents } from '@/services/students/use-get-students'
 import { useDebounce } from '@/hooks/use-debounce'
 import { usePagination } from '@/hooks/use-pagination'
-import { DEPARTMENTS } from '@/lib/constants'
+import { DEPARTMENTS, DOMAIN_INTERESTS } from '@/lib/constants'
 
 export function StudentsList() {
   const [search, setSearch] = useState('')
   const [department, setDepartment] = useState('')
+  const [domainInterest, setDomainInterest] = useState('')
   const [addOpen, setAddOpen] = useState(false)
 
   const debouncedSearch = useDebounce(search)
@@ -33,16 +34,18 @@ export function StudentsList() {
   const { data, isLoading } = useGetStudents({
     search: debouncedSearch,
     department: department || undefined,
+    domainInterest: domainInterest || undefined,
     page: pagination.page,
     pageSize: pagination.pageSize,
   })
 
   const total = data?.total ?? 0
   const { page, totalPages, canPrev, canNext } = pagination.getState(total)
+  const hasFilters = !!(search || department || domainInterest)
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <SearchBar
           value={search}
           onChange={(v) => {
@@ -73,7 +76,28 @@ export function StudentsList() {
             ))}
           </SelectContent>
         </Select>
-        <div className="ml-auto">
+        <Select
+          value={domainInterest || 'all'}
+          onValueChange={(v) => {
+            setDomainInterest(v === 'all' ? '' : (v ?? ''))
+            pagination.reset()
+          }}
+        >
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All domains">
+              {(value: string | null) => (!value || value === 'all' ? 'All domains' : value)}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All domains</SelectItem>
+            {DOMAIN_INTERESTS.map((d) => (
+              <SelectItem key={d} value={d}>
+                {d}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="sm:ml-auto">
           <Button onClick={() => setAddOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Add Student
@@ -88,9 +112,13 @@ export function StudentsList() {
           icon={Users}
           title="No students found"
           description={
-            search ? 'Try a different search term' : 'Add your first student to get started'
+            hasFilters
+              ? 'Try a different search or filter'
+              : 'Add your first student to get started'
           }
-          action={!search ? { label: 'Add Student', onClick: () => setAddOpen(true) } : undefined}
+          action={
+            !hasFilters ? { label: 'Add Student', onClick: () => setAddOpen(true) } : undefined
+          }
         />
       ) : (
         <>
