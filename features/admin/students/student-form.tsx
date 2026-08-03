@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FormFieldWrapper } from '@/components/shared/forms/form-field-wrapper'
 import { StudentFormSelects } from './student-form-selects'
+import { SectionPermissionsPicker } from './section-permissions-picker'
 import {
   studentSchema,
   updateStudentSchema,
@@ -19,6 +20,7 @@ import { useCreateStudent } from '@/services/students/use-create-student'
 import { useUpdateStudent } from '@/services/students/use-update-student'
 import type { IStudentEntity } from '@/services/students'
 import { getErrorMessage } from '@/utils/form'
+import type { AdminSection } from '@/lib/permissions'
 
 interface StudentFormProps {
   student?: IStudentEntity | null
@@ -47,7 +49,7 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
       studentCategory: 'SSM Student',
       department: '',
       domainInterest: '',
-      ...(isEdit ? { role: 'Student' as const } : {}),
+      ...(isEdit ? { role: 'Student' as const, sectionPermissions: [] as AdminSection[] } : {}),
     },
   })
 
@@ -55,6 +57,8 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
   const department = useWatch({ control, name: 'department' }) ?? ''
   const domainInterest = useWatch({ control, name: 'domainInterest' }) ?? ''
   const roleValue = useWatch({ control, name: 'role' }) ?? ''
+  const sectionPermissions =
+    (useWatch({ control, name: 'sectionPermissions' }) as AdminSection[] | undefined) ?? []
 
   useEffect(() => {
     if (!student) return
@@ -67,6 +71,7 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
       department: student.department ?? '',
       domainInterest: student.domain_interest ?? '',
       role: student.role,
+      sectionPermissions: (student.section_permissions as AdminSection[] | null) ?? [],
     })
   }, [student, reset])
 
@@ -83,9 +88,10 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
             department: editData.department,
             domainInterest: editData.domainInterest,
             role: editData.role,
+            sectionPermissions: editData.role === 'Associate' ? editData.sectionPermissions : [],
           },
         })
-        toast.success('Student updated successfully')
+        toast.success('Updated successfully')
       } else {
         await createStudent(data as StudentInput)
         toast.success('Student created successfully')
@@ -136,10 +142,27 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
         }
         onDepartmentChange={(v) => setValue('department', v, { shouldValidate: true })}
         onDomainInterestChange={(v) => setValue('domainInterest', v, { shouldValidate: true })}
-        onRoleChange={(v) =>
+        onRoleChange={(v) => {
           setValue('role', v as UpdateStudentInput['role'], { shouldValidate: true })
-        }
+          if (v !== 'Associate') {
+            setValue('sectionPermissions', [], { shouldValidate: true })
+          }
+        }}
       />
+
+      {isEdit && roleValue === 'Associate' && (
+        <SectionPermissionsPicker
+          value={sectionPermissions}
+          onChange={(sections) =>
+            setValue('sectionPermissions', sections, { shouldValidate: true })
+          }
+          error={
+            'sectionPermissions' in errors
+              ? (errors.sectionPermissions as { message?: string } | undefined)
+              : undefined
+          }
+        />
+      )}
 
       {!isEdit && (
         <FormFieldWrapper

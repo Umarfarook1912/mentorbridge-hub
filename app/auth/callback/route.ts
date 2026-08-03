@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { ROUTES } from '@/lib/constants'
+import { canUseAdminShell, firstAllowedAdminRoute } from '@/lib/permissions'
+import type { UserRole } from '@/types/supabase.types'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -12,7 +14,6 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Password recovery: send user to set a new password
       if (next === ROUTES.resetPassword || next.startsWith(`${ROUTES.resetPassword}?`)) {
         return NextResponse.redirect(`${origin}${ROUTES.resetPassword}`)
       }
@@ -24,14 +25,23 @@ export async function GET(request: Request) {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, section_permissions')
           .eq('id', user.id)
           .single()
 
+        const permUser = profile
+          ? {
+              role: profile.role as UserRole,
+              sectionPermissions: profile.section_permissions ?? null,
+            }
+          : null
+
         const destination =
-          (profile as { role?: string } | null)?.role === 'Admin'
-            ? ROUTES.admin.dashboard
-            : ROUTES.student.dashboard
+          permUser?.role === 'Student'
+            ? ROUTES.student.dashboard
+            : canUseAdminShell(permUser)
+              ? firstAllowedAdminRoute(permUser)
+              : ROUTES.student.dashboard
         return NextResponse.redirect(`${origin}${destination}`)
       }
 

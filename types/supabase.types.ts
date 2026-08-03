@@ -1,4 +1,4 @@
-export type UserRole = 'Admin' | 'Student'
+export type UserRole = 'Admin' | 'Associate' | 'Student'
 export type AttendanceStatus = 'Present' | 'Absent' | 'Permission'
 export type SubmissionStatus = 'Pending' | 'Approved' | 'Rejected'
 
@@ -15,6 +15,7 @@ export interface Database {
           domain_interest: string | null
           student_category: string | null
           role: UserRole
+          section_permissions: string[] | null
           avatar_url: string | null
           created_at: string
         }
@@ -27,6 +28,7 @@ export interface Database {
           domain_interest?: string | null
           student_category?: string | null
           role?: UserRole
+          section_permissions?: string[] | null
           avatar_url?: string | null
           created_at?: string
         }
@@ -38,6 +40,7 @@ export interface Database {
           domain_interest?: string | null
           student_category?: string | null
           role?: UserRole
+          section_permissions?: string[] | null
           avatar_url?: string | null
         }
       }
@@ -109,7 +112,8 @@ export interface Database {
           title: string
           description: string | null
           due_date: string
-          department: string | null
+          target_domains: string[] | null
+          target_student_ids: string[] | null
           created_by: string
           created_at: string
         }
@@ -118,7 +122,8 @@ export interface Database {
           title: string
           description?: string | null
           due_date: string
-          department?: string | null
+          target_domains?: string[] | null
+          target_student_ids?: string[] | null
           created_by: string
           created_at?: string
         }
@@ -126,7 +131,8 @@ export interface Database {
           title?: string
           description?: string | null
           due_date?: string
-          department?: string | null
+          target_domains?: string[] | null
+          target_student_ids?: string[] | null
         }
       }
       task_submissions: {

@@ -1,16 +1,25 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/api/require-admin'
+import { requirePermission } from '@/lib/api/require-admin'
+import { notifyStudentsByDomains } from '@/lib/notifications/notify-students'
+import { toDbTargetDomains, toDbTargetStudentIds } from '@/utils/meeting-audience'
 
 export async function POST(request: Request) {
-  const auth = await requireAdmin()
+  const auth = await requirePermission('tasks')
   if ('error' in auth && auth.error) return auth.error
 
   const body = await request.json()
-  const { title, description, dueDate, department } = body
+  const { title, description, dueDate, targetDomains, targetStudentIds } = body
 
   if (!title || !dueDate) {
     return NextResponse.json({ message: 'Title and due date are required' }, { status: 400 })
   }
+
+  const domains = toDbTargetDomains(
+    Array.isArray(targetDomains) ? (targetDomains as string[]) : undefined
+  )
+  const studentIds = toDbTargetStudentIds(
+    Array.isArray(targetStudentIds) ? (targetStudentIds as string[]) : undefined
+  )
 
   const { data, error } = await auth.supabase
     .from('tasks')
@@ -18,12 +27,22 @@ export async function POST(request: Request) {
       title,
       description: description || null,
       due_date: dueDate,
-      department: !department || department === 'all' ? null : department,
+      target_domains: domains,
+      target_student_ids: studentIds,
       created_by: auth.user.id,
     })
     .select('id')
     .single()
 
   if (error) return NextResponse.json({ message: error.message }, { status: 400 })
+
+  await notifyStudentsByDomains({
+    targetDomains: domains,
+    targetStudentIds: studentIds,
+    title: `New task: ${title}`,
+    body: `Due ${dueDate}`,
+    type: 'task',
+  })
+
   return NextResponse.json(data, { status: 201 })
 }

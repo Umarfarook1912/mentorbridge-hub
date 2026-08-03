@@ -10,16 +10,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/shared/data-display/data-table'
 import { UserAvatar } from '@/components/shared/data-display/user-avatar'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
+import { FormDialog } from '@/components/shared/forms/form-dialog'
+import { SectionPermissionsPicker } from '@/features/admin/students/section-permissions-picker'
 import { useGetAdmins, useUpdateUserRole, type IStudentEntity } from '@/services/students'
 import { useAuthStore } from '@/store/auth-store'
 import { USER_ROLES } from '@/lib/constants'
 import { formatDate } from '@/utils/format'
 import { getErrorMessage } from '@/utils/form'
+import type { AdminSection } from '@/lib/permissions'
 import type { UserRole } from '@/types/supabase.types'
 
 export function AdminsList() {
@@ -27,6 +31,8 @@ export function AdminsList() {
   const { data: admins = [], isLoading } = useGetAdmins()
   const { mutateAsync: updateRole, isPending } = useUpdateUserRole()
   const [pending, setPending] = useState<{ id: string; role: UserRole; name: string } | null>(null)
+  const [associateSections, setAssociateSections] = useState<AdminSection[]>([])
+  const [sectionError, setSectionError] = useState<string | undefined>()
 
   async function confirmRoleChange() {
     if (!pending) return
@@ -41,6 +47,33 @@ export function AdminsList() {
     } catch (error: unknown) {
       toast.error(getErrorMessage(error))
     }
+  }
+
+  async function confirmAssociate() {
+    if (!pending || pending.role !== 'Associate') return
+    if (associateSections.length === 0) {
+      setSectionError('Select at least one section for Associate')
+      return
+    }
+    try {
+      await updateRole({
+        id: pending.id,
+        role: 'Associate',
+        sectionPermissions: associateSections,
+      })
+      toast.success(`${pending.name} is now an Associate`)
+      setPending(null)
+      setAssociateSections([])
+      setSectionError(undefined)
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error))
+    }
+  }
+
+  function openRoleChange(id: string, role: UserRole, name: string) {
+    setPending({ id, role, name })
+    setAssociateSections([])
+    setSectionError(undefined)
   }
 
   const columns: Column<IStudentEntity>[] = [
@@ -80,10 +113,10 @@ export function AdminsList() {
             disabled={isSelf || isPending}
             onValueChange={(v) => {
               if (!v || v === row.role) return
-              setPending({ id: row.id, role: v as UserRole, name: row.full_name })
+              openRoleChange(row.id, v as UserRole, row.full_name)
             }}
           >
-            <SelectTrigger className="h-8 w-32">
+            <SelectTrigger className="h-8 w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -111,11 +144,56 @@ export function AdminsList() {
     )
   }
 
+  const associateOpen = !!pending && pending.role === 'Associate'
+  const confirmOpen = !!pending && pending.role !== 'Associate'
+
   return (
     <>
       <DataTable data={admins} columns={columns} keyExtractor={(r) => r.id} />
+
+      <FormDialog
+        open={associateOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setPending(null)
+            setAssociateSections([])
+            setSectionError(undefined)
+          }
+        }}
+        title={`Make ${pending?.name ?? ''} an Associate`}
+        description="Choose which admin sections this Associate can access"
+        maxWidth="lg"
+      >
+        <div className="space-y-4">
+          <SectionPermissionsPicker
+            value={associateSections}
+            onChange={(sections) => {
+              setAssociateSections(sections)
+              setSectionError(undefined)
+            }}
+            error={sectionError ? { message: sectionError } : undefined}
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setPending(null)
+                setAssociateSections([])
+                setSectionError(undefined)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={confirmAssociate} disabled={isPending}>
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </FormDialog>
+
       <ConfirmDialog
-        open={!!pending}
+        open={confirmOpen}
         onOpenChange={(o) => !o && setPending(null)}
         title={pending?.role === 'Student' ? 'Demote to Student' : 'Change Role'}
         description={

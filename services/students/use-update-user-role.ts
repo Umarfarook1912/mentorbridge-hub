@@ -1,12 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { invalidateStudents } from '@/lib/invalidate-queries'
+import { QUERY_KEYS } from '@/lib/constants'
 import type { UserRole } from '@/types/supabase.types'
 
-async function updateUserRole({ id, role }: { id: string; role: UserRole }) {
+async function updateUserRole({
+  id,
+  role,
+  sectionPermissions,
+}: {
+  id: string
+  role: UserRole
+  sectionPermissions?: string[]
+}) {
   const response = await fetch(`/api/admin/students/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role }),
+    body: JSON.stringify({ role, sectionPermissions }),
   })
 
   if (!response.ok) {
@@ -24,6 +33,7 @@ export function useUpdateUserRole() {
     mutationFn: updateUserRole,
     onSuccess: async () => {
       await invalidateStudents(queryClient)
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.admins] })
     },
   })
 }

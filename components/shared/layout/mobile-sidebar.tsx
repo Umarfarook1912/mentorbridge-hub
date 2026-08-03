@@ -14,7 +14,7 @@ export function MobileSidebar() {
   const { sidebarMobileOpen, setSidebarMobileOpen } = useUIStore()
   const { user } = useAuthStore()
 
-  const navSections = user ? getNavByRole(user.role) : []
+  const navSections = user ? getNavByRole(user.role, user.sectionPermissions) : []
 
   useEffect(() => {
     setSidebarMobileOpen(false)

@@ -51,7 +51,7 @@ export function TaskCompletionReport() {
 
       const { data: tasks, error: tasksError } = await supabase
         .from('tasks')
-        .select('id, title, due_date, department')
+        .select('id, title, due_date, target_domains, target_student_ids')
         .gte('due_date', start)
         .lte('due_date', end)
       if (tasksError) throw tasksError
@@ -70,7 +70,17 @@ export function TaskCompletionReport() {
       if (department) scopedStudents = scopedStudents.filter((s) => s.department === department)
       if (studentId) scopedStudents = scopedStudents.filter((s) => s.id === studentId)
 
-      return buildTaskDetailRows(scopedStudents, tasks, submissions ?? [])
+      return buildTaskDetailRows(
+        scopedStudents.map((s) => ({
+          id: s.id,
+          full_name: s.full_name,
+          email: s.email,
+          department: s.department,
+          domain_interest: s.domain_interest,
+        })),
+        tasks,
+        submissions ?? []
+      )
     },
     enabled: students.length > 0,
   })

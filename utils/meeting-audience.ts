@@ -49,3 +49,7 @@ export function toDbTargetStudentIds(ids: string[] | undefined): string[] | null
   if (!ids || ids.length === 0) return null
   return ids
 }
+
+/** Aliases for shared meeting + task audience */
+export const isAudienceForStudent = isMeetingForStudent
+export const formatAudience = formatMeetingAudience

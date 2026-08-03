@@ -19,6 +19,7 @@ export interface IStudentUpdateMutation {
   department?: string
   domainInterest?: string
   role?: UserRole
+  sectionPermissions?: string[]
 }
 
 export interface IStudentFilters {

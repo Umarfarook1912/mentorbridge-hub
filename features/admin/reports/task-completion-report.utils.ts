@@ -1,4 +1,5 @@
 import type { SubmissionStatus } from '@/types/supabase.types'
+import { isAudienceForStudent } from '@/utils/meeting-audience'
 
 export type TaskReportStatus = SubmissionStatus | 'missing'
 
@@ -34,13 +35,15 @@ interface StudentInput {
   full_name: string
   email: string
   department: string | null
+  domain_interest: string | null
 }
 
 interface TaskInput {
   id: string
   title: string
   due_date: string
-  department: string | null
+  target_domains: string[] | null
+  target_student_ids: string[] | null
 }
 
 interface SubmissionInput {
@@ -63,7 +66,17 @@ export function buildTaskDetailRows(
 
   for (const student of students) {
     for (const task of tasks) {
-      if (task.department && task.department !== student.department) continue
+      if (
+        !isAudienceForStudent(
+          {
+            targetDomains: task.target_domains,
+            targetStudentIds: task.target_student_ids,
+          },
+          { id: student.id, domainInterest: student.domain_interest }
+        )
+      ) {
+        continue
+      }
 
       const submission = submissionMap.get(`${student.id}:${task.id}`)
       rows.push({

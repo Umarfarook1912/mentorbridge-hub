@@ -12,7 +12,7 @@ export const DEPARTMENTS = [
 
 export const STUDENT_CATEGORIES = ['SSM Student', 'Other College'] as const
 
-export const USER_ROLES = ['Student', 'Admin'] as const
+export const USER_ROLES = ['Student', 'Associate', 'Admin'] as const
 
 export const DOMAIN_INTERESTS = ['Frontend', 'Backend', 'Data Engineer'] as const
 

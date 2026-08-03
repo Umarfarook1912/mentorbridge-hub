@@ -18,6 +18,7 @@ import { TaskForm } from './task-form'
 import { useGetTasks } from '@/services/tasks/use-get-tasks'
 import { useDeleteTask } from '@/services/tasks/use-delete-task'
 import { formatDate } from '@/utils/format'
+import { formatAudience } from '@/utils/meeting-audience'
 import type { ITaskEntity } from '@/services/tasks'
 import { isPast, parseISO } from 'date-fns'
 
@@ -71,7 +72,10 @@ function TaskCard({
           label={`Due ${formatDate(task.due_date)}${overdue ? ' (Overdue)' : ''}`}
           tone={overdue ? 'danger' : 'default'}
         />
-        <FeatureCardMeta icon={Users} label={task.department ?? 'All Students'} />
+        <FeatureCardMeta
+          icon={Users}
+          label={formatAudience(task.target_domains, task.target_student_ids)}
+        />
       </div>
     </FeatureCard>
   )
@@ -121,7 +125,7 @@ export function TasksList() {
         </div>
       )}
 
-      <FormDialog open={addOpen} onOpenChange={setAddOpen} title="Create Task" maxWidth="lg">
+      <FormDialog open={addOpen} onOpenChange={setAddOpen} title="Create Task" maxWidth="2xl">
         {addOpen && <TaskForm key="create-task" onSuccess={() => setAddOpen(false)} />}
       </FormDialog>
 
@@ -129,7 +133,7 @@ export function TasksList() {
         open={!!editTask}
         onOpenChange={(o) => !o && setEditTask(null)}
         title="Edit Task"
-        maxWidth="lg"
+        maxWidth="2xl"
       >
         {editTask && (
           <TaskForm key={editTask.id} task={editTask} onSuccess={() => setEditTask(null)} />

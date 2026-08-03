@@ -183,3 +183,12 @@
     @apply font-sans;
   }
 }
+
+/* Scrollable panels without visible scrollbar (e.g. form dialogs) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

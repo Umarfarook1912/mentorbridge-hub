@@ -54,7 +54,7 @@ export function ProfileForm() {
       const { data: profile, error } = await supabase
         .from('profiles')
         .select(
-          'full_name, phone, department, domain_interest, student_category, avatar_url, email, role'
+          'full_name, phone, department, domain_interest, student_category, avatar_url, email, role, section_permissions'
         )
         .eq('id', id)
         .single()
@@ -80,6 +80,7 @@ export function ProfileForm() {
         email: profile.email,
         fullName: profile.full_name,
         role: profile.role,
+        sectionPermissions: profile.section_permissions ?? null,
         avatarUrl: profile.avatar_url,
         phone: profile.phone ?? null,
         department: profile.department,

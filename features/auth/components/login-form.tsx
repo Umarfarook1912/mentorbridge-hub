@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { loginSchema, type LoginInput } from '@/lib/validations/auth'
 import { ROUTES } from '@/lib/constants'
+import { canUseAdminShell, firstAllowedAdminRoute } from '@/lib/permissions'
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -38,9 +39,24 @@ export function LoginForm() {
       return
     }
 
-    const { data: profile } = await supabase.from('profiles').select('role').single()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, section_permissions')
+      .single()
 
-    const dest = profile?.role === 'Admin' ? ROUTES.admin.dashboard : ROUTES.student.dashboard
+    const permUser = profile
+      ? {
+          role: profile.role,
+          sectionPermissions: profile.section_permissions ?? null,
+        }
+      : null
+
+    const dest =
+      permUser?.role === 'Student'
+        ? ROUTES.student.dashboard
+        : canUseAdminShell(permUser)
+          ? firstAllowedAdminRoute(permUser)
+          : ROUTES.student.dashboard
     router.push(dest)
     router.refresh()
   }

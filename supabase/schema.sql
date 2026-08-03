@@ -7,7 +7,7 @@
 create extension if not exists "uuid-ossp";
 
 -- ── Enums ───────────────────────────────────────────────────
-create type public.user_role as enum ('Admin', 'Student');
+create type public.user_role as enum ('Admin', 'Associate', 'Student');
 create type public.attendance_status as enum ('Present', 'Absent', 'Permission');
 create type public.submission_status as enum ('Pending', 'Approved', 'Rejected');
 
@@ -21,6 +21,7 @@ create table public.profiles (
   domain_interest text,
   student_category text,
   role        public.user_role not null default 'Student',
+  section_permissions text[],
   avatar_url  text,
   created_at  timestamptz not null default now()
 );
@@ -74,14 +75,14 @@ create table public.tasks (
   title       text not null,
   description text,
   due_date    date not null,
-  department  text,           -- null means assigned to all departments
+  target_domains text[],
+  target_student_ids uuid[],
   created_by  uuid not null references public.profiles(id) on delete set null,
   created_at  timestamptz not null default now()
 );
 
 create index idx_tasks_due_date   on public.tasks(due_date);
 create index idx_tasks_created_by on public.tasks(created_by);
-create index idx_tasks_department on public.tasks(department);
 
 -- ── Table: task_submissions ─────────────────────────────────
 create table public.task_submissions (

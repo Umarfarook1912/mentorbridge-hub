@@ -16,7 +16,7 @@ export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
   const { user } = useAuthStore()
 
-  const navSections = user ? getNavByRole(user.role) : []
+  const navSections = user ? getNavByRole(user.role, user.sectionPermissions) : []
 
   return (
     <aside

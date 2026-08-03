@@ -37,6 +37,7 @@ export function useAuth() {
           email: profile.email,
           fullName: profile.full_name,
           role: profile.role,
+          sectionPermissions: profile.section_permissions ?? null,
           avatarUrl: profile.avatar_url,
           phone: profile.phone ?? null,
           department: profile.department,

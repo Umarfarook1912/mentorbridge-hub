@@ -27,14 +27,17 @@ export async function notifyStudentsByDomains({
     const recipientIds = new Set<string>()
 
     if (domains.length === 0 && ids.length === 0) {
-      const { data } = await admin.from('profiles').select('id').eq('role', 'Student')
+      const { data } = await admin
+        .from('profiles')
+        .select('id')
+        .in('role', ['Student', 'Associate'])
       data?.forEach((s) => recipientIds.add(s.id))
     } else {
       if (domains.length > 0) {
         const { data } = await admin
           .from('profiles')
           .select('id')
-          .eq('role', 'Student')
+          .in('role', ['Student', 'Associate'])
           .in('domain_interest', domains)
         data?.forEach((s) => recipientIds.add(s.id))
       }

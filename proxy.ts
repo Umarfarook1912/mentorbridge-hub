@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
+import { canAccessAdminPath, canUseAdminShell, firstAllowedAdminRoute } from '@/lib/permissions'
+import type { UserRole } from '@/types/supabase.types'
 
 const PUBLIC_ROUTES = [
   '/login',
@@ -21,7 +23,6 @@ export async function proxy(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // If env is missing on the host, still allow public pages instead of crashing.
   if (!supabaseUrl || !supabaseAnonKey) {
     if (pathname === '/') {
       return NextResponse.redirect(new URL('/login', request.url))
@@ -50,62 +51,76 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Allow recovery session to stay on reset-password page
   if (user && pathname.startsWith('/reset-password')) {
     return response
   }
 
-  // Redirect authenticated users away from public routes
-  if (user && isPublicRoute(pathname)) {
+  async function loadPermUser() {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
-      .eq('id', user.id)
+      .select('role, section_permissions')
+      .eq('id', user!.id)
       .single()
-
-    const destination = profile?.role === 'Admin' ? '/admin/dashboard' : '/student/dashboard'
-    return NextResponse.redirect(new URL(destination, request.url))
+    if (!profile) return null
+    return {
+      role: profile.role as UserRole,
+      sectionPermissions: profile.section_permissions ?? null,
+    }
   }
 
-  // Redirect unauthenticated users to login
+  if (user && isPublicRoute(pathname)) {
+    const permUser = await loadPermUser()
+    const dest =
+      permUser?.role === 'Student'
+        ? '/student/dashboard'
+        : canUseAdminShell(permUser)
+          ? firstAllowedAdminRoute(permUser)
+          : '/student/dashboard'
+    return NextResponse.redirect(new URL(dest, request.url))
+  }
+
   if (!user && !isPublicRoute(pathname) && pathname !== '/') {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Role-based access control
   if (
     user &&
     (ADMIN_ROUTES.some((r) => pathname.startsWith(r)) ||
       STUDENT_ROUTES.some((r) => pathname.startsWith(r)))
   ) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
+    const permUser = await loadPermUser()
     const isAdminRoute = ADMIN_ROUTES.some((r) => pathname.startsWith(r))
     const isStudentRoute = STUDENT_ROUTES.some((r) => pathname.startsWith(r))
 
-    if (isAdminRoute && profile?.role !== 'Admin') {
-      return NextResponse.redirect(new URL('/student/dashboard', request.url))
+    if (isAdminRoute) {
+      if (!canAccessAdminPath(permUser, pathname)) {
+        if (canUseAdminShell(permUser)) {
+          return NextResponse.redirect(new URL(firstAllowedAdminRoute(permUser), request.url))
+        }
+        return NextResponse.redirect(new URL('/student/dashboard', request.url))
+      }
     }
 
-    if (isStudentRoute && profile?.role !== 'Student') {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+    if (isStudentRoute && permUser?.role !== 'Student') {
+      return NextResponse.redirect(
+        new URL(
+          canUseAdminShell(permUser) ? firstAllowedAdminRoute(permUser) : '/login',
+          request.url
+        )
+      )
     }
   }
 
-  // Root redirect
   if (pathname === '/') {
     if (!user) return NextResponse.redirect(new URL('/login', request.url))
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    const destination = profile?.role === 'Admin' ? '/admin/dashboard' : '/student/dashboard'
-    return NextResponse.redirect(new URL(destination, request.url))
+    const permUser = await loadPermUser()
+    const dest =
+      permUser?.role === 'Student'
+        ? '/student/dashboard'
+        : canUseAdminShell(permUser)
+          ? firstAllowedAdminRoute(permUser)
+          : '/login'
+    return NextResponse.redirect(new URL(dest, request.url))
   }
 
   return response

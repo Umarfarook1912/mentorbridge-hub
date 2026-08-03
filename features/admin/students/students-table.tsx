@@ -53,6 +53,11 @@ export function StudentsTable({ data }: StudentsTableProps) {
       ),
     },
     {
+      key: 'role',
+      header: 'Role',
+      cell: (row) => <span className="text-sm font-medium">{row.role}</span>,
+    },
+    {
       key: 'department',
       header: 'Department',
       cell: (row) => <span className="text-sm">{row.department ?? '—'}</span>,
@@ -112,7 +117,8 @@ export function StudentsTable({ data }: StudentsTableProps) {
         open={!!editStudent}
         onOpenChange={(o) => !o && setEditStudent(null)}
         title="Edit Student"
-        description="Update student information"
+        description="Update student information and access"
+        maxWidth="3xl"
       >
         {editStudent && (
           <StudentForm

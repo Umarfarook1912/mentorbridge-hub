@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/api/require-admin'
+import { requirePermission } from '@/lib/api/require-admin'
 import { notifyStudentsByDomains } from '@/lib/notifications/notify-students'
 import { toDbTargetDomains, toDbTargetStudentIds } from '@/utils/meeting-audience'
 
 export async function POST(request: Request) {
-  const auth = await requireAdmin()
+  const auth = await requirePermission('meetings')
   if ('error' in auth && auth.error) return auth.error
 
   const body = await request.json()

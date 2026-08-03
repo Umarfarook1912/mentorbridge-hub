@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/api/require-admin'
+import { requirePermission } from '@/lib/api/require-admin'
 import { toDbTargetDomains, toDbTargetStudentIds } from '@/utils/meeting-audience'
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAdmin()
+  const auth = await requirePermission('meetings')
   if ('error' in auth && auth.error) return auth.error
 
   const { id } = await params
@@ -60,7 +60,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAdmin()
+  const auth = await requirePermission('meetings')
   if ('error' in auth && auth.error) return auth.error
 
   const { id } = await params

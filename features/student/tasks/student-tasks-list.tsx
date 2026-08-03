@@ -36,7 +36,7 @@ export function StudentTasksList() {
   const { user } = useAuthStore()
   const { data: tasks = [], isLoading } = useGetStudentTasks(
     user?.id ?? '',
-    user?.department ?? null
+    user?.domainInterest ?? null
   )
   const [submitTaskId, setSubmitTaskId] = useState<string | null>(null)
 

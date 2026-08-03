@@ -1,4 +1,5 @@
 import type { Database } from '@/types/supabase.types'
+import type { MeetingDomain } from '@/utils/meeting-audience'
 
 export type ITaskEntity = Database['public']['Tables']['tasks']['Row']
 
@@ -6,7 +7,8 @@ export interface ITaskMutation {
   title: string
   description?: string
   dueDate: string
-  department?: string | null
+  targetDomains?: MeetingDomain[]
+  targetStudentIds?: string[]
 }
 
 export interface ISubmissionMutation {

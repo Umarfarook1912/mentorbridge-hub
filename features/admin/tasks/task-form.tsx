@@ -1,26 +1,20 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { FormFieldWrapper } from '@/components/shared/forms/form-field-wrapper'
+import { AudiencePicker } from '@/components/shared/forms/audience-picker'
 import { taskSchema, type TaskInput } from '@/lib/validations/task'
 import { useUpsertTask } from '@/services/tasks/use-upsert-task'
-import { DEPARTMENTS } from '@/lib/constants'
 import type { ITaskEntity } from '@/services/tasks'
 import { getErrorMessage, toDateInputValue } from '@/utils/form'
+import type { MeetingDomain } from '@/utils/meeting-audience'
 
 interface TaskFormProps {
   task?: ITaskEntity | null
@@ -32,32 +26,35 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
   const { mutateAsync: upsertTask, isPending } = useUpsertTask()
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
     reset,
-    watch,
     formState: { errors },
   } = useForm<TaskInput>({
-    resolver: zodResolver(taskSchema) as never,
+    resolver: zodResolver(taskSchema),
     defaultValues: {
       title: '',
       description: '',
       dueDate: '',
-      department: 'all',
+      targetDomains: [],
+      targetStudentIds: [],
     },
   })
+
+  const targetDomains = useWatch({ control, name: 'targetDomains' }) ?? []
+  const targetStudentIds = useWatch({ control, name: 'targetStudentIds' }) ?? []
 
   useEffect(() => {
     reset({
       title: task?.title ?? '',
       description: task?.description ?? '',
       dueDate: toDateInputValue(task?.due_date),
-      department: task?.department ?? 'all',
+      targetDomains: (task?.target_domains as MeetingDomain[] | null) ?? [],
+      targetStudentIds: task?.target_student_ids ?? [],
     })
   }, [task, reset])
-
-  const department = watch('department')
 
   async function onSubmit(data: TaskInput) {
     try {
@@ -84,32 +81,19 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
         />
       </FormFieldWrapper>
 
-      <div className="grid grid-cols-2 gap-4">
-        <FormFieldWrapper label="Due Date" htmlFor="dueDate" error={errors.dueDate} required>
-          <Input id="dueDate" type="date" {...register('dueDate')} />
-        </FormFieldWrapper>
+      <FormFieldWrapper label="Due Date" htmlFor="dueDate" error={errors.dueDate} required>
+        <Input id="dueDate" type="date" {...register('dueDate')} />
+      </FormFieldWrapper>
 
-        <FormFieldWrapper label="Assign To" error={errors.department}>
-          <Select
-            value={department || 'all'}
-            onValueChange={(v) => setValue('department', v ?? 'all', { shouldValidate: true })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All students">
-                {(value: string | null) => (!value || value === 'all' ? 'All Students' : value)}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Students</SelectItem>
-              {DEPARTMENTS.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </FormFieldWrapper>
-      </div>
+      <AudiencePicker
+        label="Assigned to"
+        description="All students, domain groups, and/or specific people. Groups and people combine."
+        domains={targetDomains}
+        studentIds={targetStudentIds}
+        onDomainsChange={(domains) => setValue('targetDomains', domains, { shouldValidate: true })}
+        onStudentIdsChange={(ids) => setValue('targetStudentIds', ids, { shouldValidate: true })}
+        error={errors.targetDomains ?? errors.targetStudentIds}
+      />
 
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={isPending}>

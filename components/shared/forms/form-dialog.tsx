@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { cn } from '@/utils/cn'
 
 interface FormDialogProps {
   open: boolean
@@ -15,7 +16,7 @@ interface FormDialogProps {
   title: string
   description?: string
   children: ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
 }
 
 const maxWidthClasses = {
@@ -24,6 +25,7 @@ const maxWidthClasses = {
   lg: 'max-w-lg sm:max-w-lg',
   xl: 'max-w-xl sm:max-w-xl',
   '2xl': 'max-w-2xl sm:max-w-2xl',
+  '3xl': 'max-w-3xl sm:max-w-3xl',
 }
 
 export function FormDialog({
@@ -36,12 +38,19 @@ export function FormDialog({
 }: FormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={maxWidthClasses[maxWidth]}>
-        <DialogHeader>
+      <DialogContent
+        className={cn(
+          maxWidthClasses[maxWidth],
+          'flex max-h-[min(90vh,900px)] flex-col gap-0 overflow-hidden p-0'
+        )}
+      >
+        <DialogHeader className="shrink-0 border-b px-5 pt-5 pr-12 pb-3">
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {children}
+        <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   )

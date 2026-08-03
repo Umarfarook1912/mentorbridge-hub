@@ -20,7 +20,10 @@ export function useDashboardStats() {
       const today = new Date().toISOString().split('T')[0]
 
       const [studentsRes, todayMeetingsRes, tasksRes, pendingReviewsRes] = await Promise.all([
-        supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'Student'),
+        supabase
+          .from('profiles')
+          .select('id', { count: 'exact' })
+          .in('role', ['Student', 'Associate']),
         supabase.from('meetings').select('id').eq('meeting_date', today),
         supabase.from('tasks').select('id', { count: 'exact' }).gte('due_date', today),
         supabase.from('task_submissions').select('id', { count: 'exact' }).eq('status', 'Pending'),
