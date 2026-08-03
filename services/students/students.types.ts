@@ -25,6 +25,7 @@ export interface IStudentFilters {
   search?: string
   department?: string
   domainInterest?: string
+  studentCategory?: string
   page?: number
   pageSize?: number
 }

@@ -26,6 +26,7 @@ export function StudentsList() {
   const [search, setSearch] = useState('')
   const [department, setDepartment] = useState('')
   const [domainInterest, setDomainInterest] = useState('')
+  const [studentCategory, setStudentCategory] = useState('')
   const [addOpen, setAddOpen] = useState(false)
 
   const debouncedSearch = useDebounce(search)
@@ -35,13 +36,14 @@ export function StudentsList() {
     search: debouncedSearch,
     department: department || undefined,
     domainInterest: domainInterest || undefined,
+    studentCategory: studentCategory || undefined,
     page: pagination.page,
     pageSize: pagination.pageSize,
   })
 
   const total = data?.total ?? 0
   const { page, totalPages, canPrev, canNext } = pagination.getState(total)
-  const hasFilters = !!(search || department || domainInterest)
+  const hasFilters = !!(search || department || domainInterest || studentCategory)
 
   return (
     <div className="space-y-4">
@@ -55,6 +57,29 @@ export function StudentsList() {
           placeholder="Search by name or email…"
           className="sm:w-72"
         />
+        <Select
+          value={studentCategory || 'all'}
+          onValueChange={(v) => {
+            setStudentCategory(v === 'all' ? '' : (v ?? ''))
+            pagination.reset()
+          }}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="All types">
+              {(value: string | null) => {
+                if (!value || value === 'all') return 'All types'
+                if (value === 'SSM Student') return 'SSM'
+                if (value === 'Other College') return 'Non SSM'
+                return value
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            <SelectItem value="SSM Student">SSM</SelectItem>
+            <SelectItem value="Other College">Non SSM</SelectItem>
+          </SelectContent>
+        </Select>
         <Select
           value={department || 'all'}
           onValueChange={(v) => {
