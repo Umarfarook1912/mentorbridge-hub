@@ -33,10 +33,10 @@ export const updateStudentSchema = z
     sectionPermissions: z.array(z.enum(ADMIN_SECTIONS)),
   })
   .superRefine((data, ctx) => {
-    if (data.role === 'Associate' && data.sectionPermissions.length === 0) {
+    if (data.role === 'Executive' && data.sectionPermissions.length === 0) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Select at least one section for Associate',
+        message: 'Select at least one section for Executive',
         path: ['sectionPermissions'],
       })
     }

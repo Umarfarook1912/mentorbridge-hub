@@ -43,7 +43,7 @@ export function SectionPermissionsPicker({
         </button>
       </div>
       <p className="text-muted-foreground text-xs">
-        Choose which admin areas this Associate can open.
+        Choose which admin areas this Executive can open.
       </p>
       <div className="grid gap-2 sm:grid-cols-2">
         {ADMIN_SECTIONS.map((section) => {

@@ -23,7 +23,7 @@ export const ADMIN_SECTION_LABELS: Record<AdminSection, string> = {
   reports: 'Reports',
 }
 
-/** Admin-only paths Associates cannot access */
+/** Admin-only paths Executives cannot access */
 const ADMIN_ONLY_PREFIXES = [ROUTES.admin.students, ROUTES.admin.admins] as const
 
 const SECTION_BY_PREFIX: { prefix: string; section: AdminSection }[] = [
@@ -45,12 +45,12 @@ export function isFullAdmin(user: PermissionUser | null | undefined): boolean {
   return user?.role === 'Admin'
 }
 
-export function isAssociate(user: PermissionUser | null | undefined): boolean {
-  return user?.role === 'Associate'
+export function isExecutive(user: PermissionUser | null | undefined): boolean {
+  return user?.role === 'Executive'
 }
 
 export function canUseAdminShell(user: PermissionUser | null | undefined): boolean {
-  return isFullAdmin(user) || isAssociate(user)
+  return isFullAdmin(user) || isExecutive(user)
 }
 
 export function hasSection(
@@ -59,7 +59,7 @@ export function hasSection(
 ): boolean {
   if (!user) return false
   if (user.role === 'Admin') return true
-  if (user.role !== 'Associate') return false
+  if (user.role !== 'Executive') return false
   return (user.sectionPermissions ?? []).includes(section)
 }
 
@@ -75,7 +75,7 @@ export function canAccessAdminPath(
 ): boolean {
   if (!user) return false
   if (user.role === 'Admin') return true
-  if (user.role !== 'Associate') return false
+  if (user.role !== 'Executive') return false
   if (ADMIN_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) return false
   const section = sectionForAdminPath(pathname)
   if (!section) return false
@@ -91,18 +91,18 @@ export function firstAllowedAdminRoute(user: PermissionUser | null | undefined):
       if (found) return found.prefix
     }
   }
-  // Associates always keep student-style learning routes
+  // Executives always keep student-style learning routes
   return ROUTES.student.attendance
 }
 
-/** Student paths Associates may open (act as learner + staff). */
-export const ASSOCIATE_STUDENT_PATHS = [
+/** Student paths Executives may open (act as learner + staff). */
+export const EXECUTIVE_STUDENT_PATHS = [
   ROUTES.student.attendance,
   ROUTES.student.tasks,
   ROUTES.student.meetings,
   ROUTES.student.profile,
 ] as const
 
-export function canAssociateAccessStudentPath(pathname: string): boolean {
-  return ASSOCIATE_STUDENT_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+export function canExecutiveAccessStudentPath(pathname: string): boolean {
+  return EXECUTIVE_STUDENT_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }

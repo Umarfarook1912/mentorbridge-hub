@@ -7,7 +7,7 @@
 create extension if not exists "uuid-ossp";
 
 -- ── Enums ───────────────────────────────────────────────────
-create type public.user_role as enum ('Admin', 'Associate', 'Student');
+create type public.user_role as enum ('Admin', 'Executive', 'Student');
 create type public.attendance_status as enum ('Present', 'Absent', 'Permission');
 create type public.submission_status as enum ('Pending', 'Approved', 'Rejected');
 

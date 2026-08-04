@@ -87,7 +87,7 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
             department: editData.department || '',
             domainInterest: editData.domainInterest || '',
             role: editData.role,
-            sectionPermissions: editData.role === 'Associate' ? editData.sectionPermissions : [],
+            sectionPermissions: editData.role === 'Executive' ? editData.sectionPermissions : [],
           },
         })
         toast.success('Updated successfully')
@@ -143,13 +143,13 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
         onDomainInterestChange={(v) => setValue('domainInterest', v, { shouldValidate: true })}
         onRoleChange={(v) => {
           setValue('role', v as UpdateStudentInput['role'], { shouldValidate: true })
-          if (v !== 'Associate') {
+          if (v !== 'Executive') {
             setValue('sectionPermissions', [], { shouldValidate: true })
           }
         }}
       />
 
-      {isEdit && roleValue === 'Associate' && (
+      {isEdit && roleValue === 'Executive' && (
         <SectionPermissionsPicker
           value={sectionPermissions}
           onChange={(sections) =>

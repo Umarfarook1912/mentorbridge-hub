@@ -31,7 +31,7 @@ export function AdminsList() {
   const { data: admins = [], isLoading } = useGetAdmins()
   const { mutateAsync: updateRole, isPending } = useUpdateUserRole()
   const [pending, setPending] = useState<{ id: string; role: UserRole; name: string } | null>(null)
-  const [associateSections, setAssociateSections] = useState<AdminSection[]>([])
+  const [executiveSections, setExecutiveSections] = useState<AdminSection[]>([])
   const [sectionError, setSectionError] = useState<string | undefined>()
 
   async function confirmRoleChange() {
@@ -49,21 +49,21 @@ export function AdminsList() {
     }
   }
 
-  async function confirmAssociate() {
-    if (!pending || pending.role !== 'Associate') return
-    if (associateSections.length === 0) {
-      setSectionError('Select at least one section for Associate')
+  async function confirmExecutive() {
+    if (!pending || pending.role !== 'Executive') return
+    if (executiveSections.length === 0) {
+      setSectionError('Select at least one section for Executive')
       return
     }
     try {
       await updateRole({
         id: pending.id,
-        role: 'Associate',
-        sectionPermissions: associateSections,
+        role: 'Executive',
+        sectionPermissions: executiveSections,
       })
-      toast.success(`${pending.name} is now an Associate`)
+      toast.success(`${pending.name} is now an Executive`)
       setPending(null)
-      setAssociateSections([])
+      setExecutiveSections([])
       setSectionError(undefined)
     } catch (error: unknown) {
       toast.error(getErrorMessage(error))
@@ -72,7 +72,7 @@ export function AdminsList() {
 
   function openRoleChange(id: string, role: UserRole, name: string) {
     setPending({ id, role, name })
-    setAssociateSections([])
+    setExecutiveSections([])
     setSectionError(undefined)
   }
 
@@ -144,31 +144,31 @@ export function AdminsList() {
     )
   }
 
-  const associateOpen = !!pending && pending.role === 'Associate'
-  const confirmOpen = !!pending && pending.role !== 'Associate'
+  const executiveOpen = !!pending && pending.role === 'Executive'
+  const confirmOpen = !!pending && pending.role !== 'Executive'
 
   return (
     <>
       <DataTable data={admins} columns={columns} keyExtractor={(r) => r.id} />
 
       <FormDialog
-        open={associateOpen}
+        open={executiveOpen}
         onOpenChange={(o) => {
           if (!o) {
             setPending(null)
-            setAssociateSections([])
+            setExecutiveSections([])
             setSectionError(undefined)
           }
         }}
-        title={`Make ${pending?.name ?? ''} an Associate`}
-        description="Choose which admin sections this Associate can access"
+        title={`Make ${pending?.name ?? ''} an Executive`}
+        description="Choose which admin sections this Executive can access"
         maxWidth="lg"
       >
         <div className="space-y-4">
           <SectionPermissionsPicker
-            value={associateSections}
+            value={executiveSections}
             onChange={(sections) => {
-              setAssociateSections(sections)
+              setExecutiveSections(sections)
               setSectionError(undefined)
             }}
             error={sectionError ? { message: sectionError } : undefined}
@@ -179,13 +179,13 @@ export function AdminsList() {
               variant="outline"
               onClick={() => {
                 setPending(null)
-                setAssociateSections([])
+                setExecutiveSections([])
                 setSectionError(undefined)
               }}
             >
               Cancel
             </Button>
-            <Button type="button" onClick={confirmAssociate} disabled={isPending}>
+            <Button type="button" onClick={confirmExecutive} disabled={isPending}>
               Confirm
             </Button>
           </div>

@@ -24,7 +24,7 @@ async function requireAdmin() {
   return { supabase, user }
 }
 
-const VALID_ROLES: UserRole[] = ['Admin', 'Associate', 'Student']
+const VALID_ROLES: UserRole[] = ['Admin', 'Executive', 'Student']
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin()
@@ -47,12 +47,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   if (role && fullName == null) {
-    if (role === 'Associate') {
+    if (role === 'Executive') {
       const perms = Array.isArray(sectionPermissions) ? sectionPermissions : []
       const valid = perms.every((p: string) => (ADMIN_SECTIONS as readonly string[]).includes(p))
       if (!valid || perms.length === 0) {
         return NextResponse.json(
-          { message: 'Associate requires at least one valid section permission' },
+          { message: 'Executive requires at least one valid section permission' },
           { status: 400 }
         )
       }
@@ -62,7 +62,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .from('profiles')
       .update({
         role: role as UserRole,
-        section_permissions: role === 'Associate' ? sectionPermissions : null,
+        section_permissions: role === 'Executive' ? sectionPermissions : null,
       })
       .eq('id', id)
       .select('id')
@@ -73,12 +73,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true })
   }
 
-  if (role === 'Associate') {
+  if (role === 'Executive') {
     const perms = Array.isArray(sectionPermissions) ? sectionPermissions : []
     const valid = perms.every((p: string) => (ADMIN_SECTIONS as readonly string[]).includes(p))
     if (!valid || perms.length === 0) {
       return NextResponse.json(
-        { message: 'Associate requires at least one valid section permission' },
+        { message: 'Executive requires at least one valid section permission' },
         { status: 400 }
       )
     }
@@ -98,7 +98,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (role && VALID_ROLES.includes(role)) {
     updates.role = role as UserRole
-    updates.section_permissions = role === 'Associate' ? sectionPermissions : null
+    updates.section_permissions = role === 'Executive' ? sectionPermissions : null
   }
 
   const { data, error } = await auth.supabase

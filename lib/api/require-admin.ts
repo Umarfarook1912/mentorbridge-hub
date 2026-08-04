@@ -7,7 +7,7 @@ export async function requireAdmin() {
   return requirePermission(null)
 }
 
-/** Pass null to require full Admin only; pass a section for Admin or Associate with that section. */
+/** Pass null to require full Admin only; pass a section for Admin or Executive with that section. */
 export async function requirePermission(section: AdminSection | null) {
   const supabase = await getSupabaseServerClient()
   const {

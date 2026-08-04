@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import {
   canAccessAdminPath,
-  canAssociateAccessStudentPath,
+  canExecutiveAccessStudentPath,
   canUseAdminShell,
   firstAllowedAdminRoute,
 } from '@/lib/permissions'
@@ -107,8 +107,8 @@ export async function proxy(request: NextRequest) {
     }
 
     if (isStudentRoute && permUser?.role !== 'Student') {
-      const associateOk = permUser?.role === 'Associate' && canAssociateAccessStudentPath(pathname)
-      if (!associateOk) {
+      const executiveOk = permUser?.role === 'Executive' && canExecutiveAccessStudentPath(pathname)
+      if (!executiveOk) {
         return NextResponse.redirect(
           new URL(
             canUseAdminShell(permUser) ? firstAllowedAdminRoute(permUser) : '/login',

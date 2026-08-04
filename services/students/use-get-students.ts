@@ -8,7 +8,7 @@ async function fetchStudents(filters: IStudentFilters) {
   let query = supabase
     .from('profiles')
     .select('*', { count: 'exact' })
-    .in('role', ['Student', 'Associate'])
+    .in('role', ['Student', 'Executive'])
     .order('created_at', { ascending: false })
 
   if (filters.search) {
@@ -54,7 +54,7 @@ export function useGetAllStudents() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .in('role', ['Student', 'Associate'])
+        .in('role', ['Student', 'Executive'])
         .order('full_name')
       if (error) throw error
       return data ?? []

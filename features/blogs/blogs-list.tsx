@@ -42,12 +42,12 @@ export function BlogsList() {
     !!user &&
     (user.id === blog.author_id ||
       user.role === 'Admin' ||
-      (user.role === 'Associate' && (user.sectionPermissions ?? []).includes('blogs')))
+      (user.role === 'Executive' && (user.sectionPermissions ?? []).includes('blogs')))
 
   const canManageCommunity = (): boolean =>
     !!user &&
     (user.role === 'Admin' ||
-      (user.role === 'Associate' && (user.sectionPermissions ?? []).includes('blogs')))
+      (user.role === 'Executive' && (user.sectionPermissions ?? []).includes('blogs')))
 
   const hasSearch = debouncedSearch.trim().length > 0
   const noMatchTitle = 'No matching blogs'
