@@ -92,6 +92,7 @@ create table public.task_submissions (
   github_url       text,
   google_doc_url   text,
   medium_blog_url  text,
+  other_url        text,
   remarks          text,
   feedback         text,
   submitted_at     timestamptz not null default now(),

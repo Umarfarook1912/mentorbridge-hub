@@ -20,6 +20,7 @@ interface SubmissionFormProps {
     github_url?: string | null
     google_doc_url?: string | null
     medium_blog_url?: string | null
+    other_url?: string | null
     remarks?: string | null
   } | null
   onSuccess: () => void
@@ -40,6 +41,7 @@ export function SubmissionForm({ taskId, existing, onSuccess }: SubmissionFormPr
       githubUrl: '',
       googleDocUrl: '',
       mediumBlogUrl: '',
+      otherUrl: '',
       remarks: '',
     },
   })
@@ -49,6 +51,7 @@ export function SubmissionForm({ taskId, existing, onSuccess }: SubmissionFormPr
       githubUrl: existing?.github_url ?? '',
       googleDocUrl: existing?.google_doc_url ?? '',
       mediumBlogUrl: existing?.medium_blog_url ?? '',
+      otherUrl: existing?.other_url ?? '',
       remarks: existing?.remarks ?? '',
     })
   }, [existing, reset])
@@ -62,6 +65,7 @@ export function SubmissionForm({ taskId, existing, onSuccess }: SubmissionFormPr
         githubUrl: data.githubUrl || undefined,
         googleDocUrl: data.googleDocUrl || undefined,
         mediumBlogUrl: data.mediumBlogUrl || undefined,
+        otherUrl: data.otherUrl || undefined,
         remarks: data.remarks || undefined,
       })
       toast.success('Submission saved!')
@@ -101,6 +105,20 @@ export function SubmissionForm({ taskId, existing, onSuccess }: SubmissionFormPr
           type="url"
           placeholder="https://medium.com/..."
           {...register('mediumBlogUrl')}
+        />
+      </FormFieldWrapper>
+
+      <FormFieldWrapper
+        label="Other links (optional)"
+        htmlFor="otherUrl"
+        error={errors.otherUrl}
+        hint="Portfolio, demo, or any other relevant URL"
+      >
+        <Input
+          id="otherUrl"
+          type="url"
+          placeholder="https://portfolio.example.com/..."
+          {...register('otherUrl')}
         />
       </FormFieldWrapper>
 

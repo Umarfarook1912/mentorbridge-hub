@@ -143,6 +143,7 @@ export interface Database {
           github_url: string | null
           google_doc_url: string | null
           medium_blog_url: string | null
+          other_url: string | null
           remarks: string | null
           feedback: string | null
           submitted_at: string
@@ -158,6 +159,7 @@ export interface Database {
           github_url?: string | null
           google_doc_url?: string | null
           medium_blog_url?: string | null
+          other_url?: string | null
           remarks?: string | null
           feedback?: string | null
           submitted_at?: string
@@ -170,6 +172,7 @@ export interface Database {
           github_url?: string | null
           google_doc_url?: string | null
           medium_blog_url?: string | null
+          other_url?: string | null
           remarks?: string | null
           feedback?: string | null
           status?: SubmissionStatus

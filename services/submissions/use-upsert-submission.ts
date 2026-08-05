@@ -16,6 +16,7 @@ export function useUpsertSubmission() {
           github_url: data.githubUrl ?? null,
           google_doc_url: data.googleDocUrl ?? null,
           medium_blog_url: data.mediumBlogUrl ?? null,
+          other_url: data.otherUrl ?? null,
           remarks: data.remarks ?? null,
           submitted_at: new Date().toISOString(),
           status: 'Pending',

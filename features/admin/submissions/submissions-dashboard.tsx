@@ -32,6 +32,7 @@ type SubmissionRow = {
   github_url: string | null
   google_doc_url: string | null
   medium_blog_url: string | null
+  other_url: string | null
   remarks: string | null
   feedback: string | null
   submitted_at: string
@@ -123,6 +124,17 @@ export function SubmissionsDashboard() {
               rel="noopener noreferrer"
               className="hover:bg-muted rounded p-1"
               title="Medium"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          )}
+          {row.other_url && (
+            <a
+              href={row.other_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:bg-muted rounded p-1"
+              title="Other link"
             >
               <ExternalLink className="h-3.5 w-3.5" />
             </a>

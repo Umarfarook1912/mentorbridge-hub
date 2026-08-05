@@ -16,6 +16,7 @@ export interface ISubmissionMutation {
   githubUrl?: string
   googleDocUrl?: string
   mediumBlogUrl?: string
+  otherUrl?: string
   remarks?: string
 }
 

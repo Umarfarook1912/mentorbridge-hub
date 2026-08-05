@@ -26,6 +26,7 @@ interface Submission {
   github_url: string | null
   google_doc_url: string | null
   medium_blog_url: string | null
+  other_url: string | null
   remarks: string | null
   feedback: string | null
   reviewed_by_name: string | null
@@ -139,7 +140,8 @@ export function StudentTasksList() {
                 {submission &&
                   (submission.github_url ||
                     submission.google_doc_url ||
-                    submission.medium_blog_url) && (
+                    submission.medium_blog_url ||
+                    submission.other_url) && (
                     <div className="border-border/60 mt-3 flex flex-wrap gap-2 border-t pt-3">
                       {submission.github_url && (
                         <a
@@ -169,6 +171,16 @@ export function StudentTasksList() {
                           className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors"
                         >
                           <ExternalLink className="h-3 w-3" /> Blog
+                        </a>
+                      )}
+                      {submission.other_url && (
+                        <a
+                          href={submission.other_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors"
+                        >
+                          <ExternalLink className="h-3 w-3" /> Other
                         </a>
                       )}
                     </div>

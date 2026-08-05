@@ -7,9 +7,10 @@ export const submissionSchema = z
     githubUrl: urlOrEmpty,
     googleDocUrl: urlOrEmpty,
     mediumBlogUrl: urlOrEmpty,
+    otherUrl: urlOrEmpty,
     remarks: z.string().max(500, 'Remarks must be under 500 characters').optional(),
   })
-  .refine((data) => data.githubUrl || data.googleDocUrl || data.mediumBlogUrl, {
+  .refine((data) => data.githubUrl || data.googleDocUrl || data.mediumBlogUrl || data.otherUrl, {
     message: 'At least one submission link is required',
     path: ['githubUrl'],
   })
