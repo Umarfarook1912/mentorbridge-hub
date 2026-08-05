@@ -109,10 +109,10 @@ export function SubmissionForm({ taskId, existing, onSuccess }: SubmissionFormPr
       </FormFieldWrapper>
 
       <FormFieldWrapper
-        label="Other links (optional)"
+        label="Other links"
         htmlFor="otherUrl"
         error={errors.otherUrl}
-        hint="Portfolio, demo, or any other relevant URL"
+        hint="Portfolio, demo, or any other URL — can be the only link you submit"
       >
         <Input
           id="otherUrl"
@@ -131,9 +131,9 @@ export function SubmissionForm({ taskId, existing, onSuccess }: SubmissionFormPr
         />
       </FormFieldWrapper>
 
-      {errors.githubUrl?.message?.includes('required') && (
-        <p className="text-destructive text-sm">Please provide at least one submission link</p>
-      )}
+      {'root' in errors && errors.root?.message ? (
+        <p className="text-destructive text-sm">{String(errors.root.message)}</p>
+      ) : null}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isPending}>
