@@ -90,14 +90,13 @@ export function MeetingCard({ meeting, onEdit, onDelete, showJoin = false }: Mee
         </div>
 
         {(onEdit || onDelete) && (
-          <div className="flex shrink-0 items-center gap-0.5">
+          <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
             {onEdit && (
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => onEdit(meeting)}
-                aria-label="Edit meeting"
               >
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
@@ -108,7 +107,6 @@ export function MeetingCard({ meeting, onEdit, onDelete, showJoin = false }: Mee
                 size="icon"
                 className="text-destructive h-8 w-8"
                 onClick={() => onDelete(meeting.id)}
-                aria-label="Delete meeting"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
