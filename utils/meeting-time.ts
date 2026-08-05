@@ -7,6 +7,12 @@ export function localToday(): string {
   return `${y}-${m}-${day}`
 }
 
+/** True only after the due calendar day is fully over (due date itself is not overdue). */
+export function isTaskOverdue(dueDate: string): boolean {
+  const dateOnly = dueDate.slice(0, 10)
+  return dateOnly < localToday()
+}
+
 /** True once the meeting's end time has passed (or the date is before today). */
 export function isMeetingCompleted(meetingDate: string, endTime: string): boolean {
   const today = localToday()

@@ -17,7 +17,7 @@ import { SubmissionForm } from './submission-form'
 import { useGetStudentTasks } from '@/services/tasks/use-get-tasks'
 import { useAuthStore } from '@/store/auth-store'
 import { formatDate } from '@/utils/format'
-import { isPast, parseISO } from 'date-fns'
+import { isTaskOverdue } from '@/utils/meeting-time'
 import type { SubmissionStatus } from '@/types/supabase.types'
 
 interface Submission {
@@ -68,7 +68,7 @@ export function StudentTasksList() {
             (s: Submission) => s.student_id === user.id
           ) as Submission | undefined
 
-          const overdue = isPast(parseISO(task.due_date))
+          const overdue = isTaskOverdue(task.due_date)
           const canEdit = !submission || (submission.status === 'Pending' && !overdue)
 
           const footer = canEdit ? (

@@ -19,8 +19,8 @@ import { useGetTasks } from '@/services/tasks/use-get-tasks'
 import { useDeleteTask } from '@/services/tasks/use-delete-task'
 import { formatDate } from '@/utils/format'
 import { formatAudience } from '@/utils/meeting-audience'
+import { isTaskOverdue } from '@/utils/meeting-time'
 import type { ITaskEntity } from '@/services/tasks'
-import { isPast, parseISO } from 'date-fns'
 
 function TaskCard({
   task,
@@ -31,7 +31,7 @@ function TaskCard({
   onEdit: (t: ITaskEntity) => void
   onDelete: (id: string) => void
 }) {
-  const overdue = isPast(parseISO(task.due_date))
+  const overdue = isTaskOverdue(task.due_date)
 
   return (
     <FeatureCard accent={overdue ? 'danger' : 'brand'} highlighted={overdue}>

@@ -12,9 +12,8 @@ import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { FeatureCard, FeatureCardDateBlock } from '@/components/shared/data-display/feature-card'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import { formatDate, formatTime } from '@/utils/format'
-import { localToday } from '@/utils/meeting-time'
+import { localToday, isTaskOverdue } from '@/utils/meeting-time'
 import { CalendarDays, CheckSquare } from 'lucide-react'
-import { isPast, parseISO } from 'date-fns'
 import { ROUTES } from '@/lib/constants'
 
 export default function StudentDashboardPage() {
@@ -92,7 +91,7 @@ export default function StudentDashboardPage() {
             />
           ) : (
             pendingTasks.slice(0, 4).map((t) => {
-              const overdue = isPast(parseISO(t.due_date))
+              const overdue = isTaskOverdue(t.due_date)
               return (
                 <FeatureCard
                   key={t.id}
