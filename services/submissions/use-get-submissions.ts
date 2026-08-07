@@ -7,6 +7,7 @@ export interface SubmissionFilters {
   taskId?: string
   studentId?: string
   department?: string
+  domainInterest?: string
   status?: SubmissionStatus
 }
 
@@ -18,7 +19,7 @@ export function useGetSubmissions(filters: SubmissionFilters = {}) {
       let query = supabase
         .from('task_submissions')
         .select(
-          '*, tasks(title, due_date), profiles:student_id(full_name, email, department, avatar_url)'
+          '*, tasks(title, due_date), profiles:student_id(full_name, email, department, domain_interest, avatar_url)'
         )
         .order('submitted_at', { ascending: false })
 
@@ -34,6 +35,14 @@ export function useGetSubmissions(filters: SubmissionFilters = {}) {
       if (filters.department) {
         result = result.filter(
           (s) => (s.profiles as { department: string | null })?.department === filters.department
+        )
+      }
+
+      if (filters.domainInterest) {
+        result = result.filter(
+          (s) =>
+            (s.profiles as { domain_interest: string | null })?.domain_interest ===
+            filters.domainInterest
         )
       }
 

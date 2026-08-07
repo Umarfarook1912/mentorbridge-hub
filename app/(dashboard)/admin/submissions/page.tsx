@@ -9,7 +9,7 @@ export default function SubmissionsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Submissions"
-        description="Review student task submissions and provide feedback"
+        description="Select a task to review student submissions and provide feedback"
       />
       <SubmissionsDashboard />
     </div>

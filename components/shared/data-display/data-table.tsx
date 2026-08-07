@@ -23,6 +23,8 @@ interface DataTableProps<T> {
   keyExtractor: (row: T) => string
   emptyState?: ReactNode
   className?: string
+  /** Use fixed column widths when columns define width classes */
+  fixedLayout?: boolean
 }
 
 export function DataTable<T>({
@@ -31,16 +33,20 @@ export function DataTable<T>({
   keyExtractor,
   emptyState,
   className,
+  fixedLayout = false,
 }: DataTableProps<T>) {
   return (
-    <div className={cn('bg-card overflow-hidden rounded-xl border', className)}>
-      <Table>
+    <div className={cn('bg-card w-full overflow-hidden rounded-xl border', className)}>
+      <Table className={fixedLayout ? 'table-fixed' : undefined}>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
             {columns.map((col) => (
               <TableHead
                 key={col.key}
-                className={cn('text-xs font-semibold tracking-wide uppercase', col.headerClassName)}
+                className={cn(
+                  'px-3 text-xs font-semibold tracking-wide uppercase',
+                  col.headerClassName
+                )}
               >
                 {col.header}
               </TableHead>
@@ -58,7 +64,7 @@ export function DataTable<T>({
             data.map((row) => (
               <TableRow key={keyExtractor(row)} className="hover:bg-muted/30">
                 {columns.map((col) => (
-                  <TableCell key={col.key} className={cn('py-3', col.className)}>
+                  <TableCell key={col.key} className={cn('px-3 py-3', col.className)}>
                     {col.cell(row)}
                   </TableCell>
                 ))}
