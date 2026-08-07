@@ -9,20 +9,24 @@ export function useUpsertSubmission() {
   return useMutation({
     mutationFn: async (data: ISubmissionMutation & { studentId: string }) => {
       const supabase = getSupabaseBrowserClient()
-      const { error } = await supabase.from('task_submissions').upsert(
-        {
-          task_id: data.taskId,
-          student_id: data.studentId,
-          github_url: data.githubUrl ?? null,
-          google_doc_url: data.googleDocUrl ?? null,
-          medium_blog_url: data.mediumBlogUrl ?? null,
-          other_url: data.otherUrl ?? null,
-          remarks: data.remarks ?? null,
-          submitted_at: new Date().toISOString(),
-          status: 'Pending',
-        },
-        { onConflict: 'task_id,student_id' }
-      )
+      const row: Record<string, unknown> = {
+        task_id: data.taskId,
+        student_id: data.studentId,
+        github_url: data.githubUrl ?? null,
+        google_doc_url: data.googleDocUrl ?? null,
+        medium_blog_url: data.mediumBlogUrl ?? null,
+        remarks: data.remarks ?? null,
+        submitted_at: new Date().toISOString(),
+        status: 'Pending',
+      }
+      // Only send when set — avoids PostgREST errors if other_url migration isn't applied yet
+      if (data.otherUrl) {
+        row.other_url = data.otherUrl
+      }
+
+      const { error } = await supabase
+        .from('task_submissions')
+        .upsert(row, { onConflict: 'task_id,student_id' })
       if (error) throw error
     },
     onSuccess: async () => {

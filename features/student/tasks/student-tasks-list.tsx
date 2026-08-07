@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, ExternalLink, BookOpen } from 'lucide-react'
+import { Calendar, BookOpen } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import {
@@ -14,6 +15,7 @@ import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { SubmissionForm } from './submission-form'
+import { TaskSubmissionLinks } from './task-submission-links'
 import { useGetStudentTasks } from '@/services/tasks/use-get-tasks'
 import { useAuthStore } from '@/store/auth-store'
 import { formatDate } from '@/utils/format'
@@ -32,6 +34,9 @@ interface Submission {
   reviewed_by_name: string | null
   reviewed_at: string | null
 }
+
+const OVERDUE_SUBMIT_MSG =
+  'This task is overdue. The due date has passed, so submissions are closed.'
 
 export function StudentTasksList() {
   const { user } = useAuthStore()
@@ -69,13 +74,26 @@ export function StudentTasksList() {
           ) as Submission | undefined
 
           const overdue = isTaskOverdue(task.due_date)
-          const canEdit = !submission || (submission.status === 'Pending' && !overdue)
+          const canEdit = !overdue && (!submission || submission.status === 'Pending')
 
-          const footer = canEdit ? (
-            <Button size="sm" className="w-full" onClick={() => setSubmitTaskId(task.id)}>
-              {submission ? 'Edit Submission' : 'Submit Task'}
-            </Button>
-          ) : undefined
+          function handleSubmitClick() {
+            if (overdue) {
+              toast.error(OVERDUE_SUBMIT_MSG)
+              return
+            }
+            setSubmitTaskId(task.id)
+          }
+
+          const footer =
+            overdue && !submission ? (
+              <Button size="sm" variant="outline" className="w-full" onClick={handleSubmitClick}>
+                Submit Task
+              </Button>
+            ) : canEdit ? (
+              <Button size="sm" className="w-full" onClick={handleSubmitClick}>
+                {submission ? 'Edit Submission' : 'Submit Task'}
+              </Button>
+            ) : undefined
 
           return (
             <FeatureCard
@@ -100,11 +118,8 @@ export function StudentTasksList() {
                 <div className="min-w-0 flex-1">
                   <div className="mb-1.5 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      {submission ? (
-                        <StatusBadge status={submission.status} />
-                      ) : overdue ? (
-                        <StatusBadge status="overdue" />
-                      ) : null}
+                      {submission ? <StatusBadge status={submission.status} /> : null}
+                      {overdue ? <StatusBadge status="overdue" /> : null}
                     </div>
                     {submission && (
                       <SubmissionReviewMeta
@@ -126,65 +141,28 @@ export function StudentTasksList() {
               <div className="grid gap-2">
                 <FeatureCardMeta
                   icon={Calendar}
-                  label={`Due ${formatDate(task.due_date)}`}
-                  tone={overdue && !submission ? 'danger' : 'default'}
+                  label={`Due ${formatDate(task.due_date)}${overdue ? ' (Overdue)' : ''}`}
+                  tone={overdue ? 'danger' : 'default'}
                 />
-
+                {overdue && !submission ? (
+                  <p className="text-destructive text-xs font-medium">
+                    Due date has passed — submissions are closed.
+                  </p>
+                ) : null}
                 {submission?.feedback && (
                   <div className="border-border/70 bg-muted/40 text-muted-foreground rounded-lg border p-2.5 text-xs">
                     <p className="text-foreground mb-1 font-medium">Feedback</p>
                     <p>{submission.feedback}</p>
                   </div>
                 )}
-
-                {submission &&
-                  (submission.github_url ||
-                    submission.google_doc_url ||
-                    submission.medium_blog_url ||
-                    submission.other_url) && (
-                    <div className="border-border/60 mt-3 flex flex-wrap gap-2 border-t pt-3">
-                      {submission.github_url && (
-                        <a
-                          href={submission.github_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors"
-                        >
-                          <ExternalLink className="h-3 w-3" /> GitHub
-                        </a>
-                      )}
-                      {submission.google_doc_url && (
-                        <a
-                          href={submission.google_doc_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors"
-                        >
-                          <ExternalLink className="h-3 w-3" /> Doc
-                        </a>
-                      )}
-                      {submission.medium_blog_url && (
-                        <a
-                          href={submission.medium_blog_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors"
-                        >
-                          <ExternalLink className="h-3 w-3" /> Blog
-                        </a>
-                      )}
-                      {submission.other_url && (
-                        <a
-                          href={submission.other_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors"
-                        >
-                          <ExternalLink className="h-3 w-3" /> Other
-                        </a>
-                      )}
-                    </div>
-                  )}
+                {submission && (
+                  <TaskSubmissionLinks
+                    githubUrl={submission.github_url}
+                    googleDocUrl={submission.google_doc_url}
+                    mediumBlogUrl={submission.medium_blog_url}
+                    otherUrl={submission.other_url}
+                  />
+                )}
               </div>
             </FeatureCard>
           )
@@ -200,14 +178,14 @@ export function StudentTasksList() {
         description={taskForSubmit?.title}
         maxWidth="lg"
       >
-        {submitTaskId && (
+        {submitTaskId && taskForSubmit && !isTaskOverdue(taskForSubmit.due_date) ? (
           <SubmissionForm
             key={submitTaskId}
             taskId={submitTaskId}
             existing={existingSubmission}
             onSuccess={() => setSubmitTaskId(null)}
           />
-        )}
+        ) : null}
       </FormDialog>
     </>
   )
