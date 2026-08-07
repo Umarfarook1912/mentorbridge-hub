@@ -21,7 +21,7 @@ export function useGetSubmissions(filters: SubmissionFilters = {}) {
         .select(
           '*, tasks(title, due_date), profiles:student_id(full_name, email, department, domain_interest, avatar_url)'
         )
-        .order('submitted_at', { ascending: false })
+        .order('submitted_at', { ascending: true })
 
       if (filters.taskId) query = query.eq('task_id', filters.taskId)
       if (filters.studentId) query = query.eq('student_id', filters.studentId)

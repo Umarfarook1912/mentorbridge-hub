@@ -9,24 +9,41 @@ export function useUpsertSubmission() {
   return useMutation({
     mutationFn: async (data: ISubmissionMutation & { studentId: string }) => {
       const supabase = getSupabaseBrowserClient()
-      const row: Record<string, unknown> = {
-        task_id: data.taskId,
-        student_id: data.studentId,
+      const payload: Record<string, unknown> = {
         github_url: data.githubUrl ?? null,
         google_doc_url: data.googleDocUrl ?? null,
         medium_blog_url: data.mediumBlogUrl ?? null,
         remarks: data.remarks ?? null,
-        submitted_at: new Date().toISOString(),
         status: 'Pending',
       }
-      // Only send when set — avoids PostgREST errors if other_url migration isn't applied yet
       if (data.otherUrl) {
-        row.other_url = data.otherUrl
+        payload.other_url = data.otherUrl
       }
 
-      const { error } = await supabase
+      const { data: existing, error: findError } = await supabase
         .from('task_submissions')
-        .upsert(row, { onConflict: 'task_id,student_id' })
+        .select('id')
+        .eq('task_id', data.taskId)
+        .eq('student_id', data.studentId)
+        .maybeSingle()
+      if (findError) throw findError
+
+      if (existing) {
+        // Keep original submitted_at so list order stays "first submitted first"
+        const { error } = await supabase
+          .from('task_submissions')
+          .update(payload)
+          .eq('id', existing.id)
+        if (error) throw error
+        return
+      }
+
+      const { error } = await supabase.from('task_submissions').insert({
+        ...payload,
+        task_id: data.taskId,
+        student_id: data.studentId,
+        submitted_at: new Date().toISOString(),
+      })
       if (error) throw error
     },
     onSuccess: async () => {
