@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Calendar, BookOpen } from 'lucide-react'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import {
@@ -23,6 +22,7 @@ import { isTaskOverdue } from '@/utils/meeting-time'
 import type { SubmissionStatus } from '@/types/supabase.types'
 
 interface Submission {
+  id: string
   student_id: string
   status: SubmissionStatus
   github_url: string | null
@@ -34,9 +34,6 @@ interface Submission {
   reviewed_by_name: string | null
   reviewed_at: string | null
 }
-
-const OVERDUE_SUBMIT_MSG =
-  'This task is overdue. The due date has passed, so submissions are closed.'
 
 export function StudentTasksList() {
   const { user } = useAuthStore()
@@ -74,26 +71,14 @@ export function StudentTasksList() {
           ) as Submission | undefined
 
           const overdue = isTaskOverdue(task.due_date)
-          const canEdit = !overdue && (!submission || submission.status === 'Pending')
+          // Within due date: submit or edit Pending. After overdue: no submit/edit button.
+          const canSubmitOrEdit = !overdue && (!submission || submission.status === 'Pending')
 
-          function handleSubmitClick() {
-            if (overdue) {
-              toast.error(OVERDUE_SUBMIT_MSG)
-              return
-            }
-            setSubmitTaskId(task.id)
-          }
-
-          const footer =
-            overdue && !submission ? (
-              <Button size="sm" variant="outline" className="w-full" onClick={handleSubmitClick}>
-                Submit Task
-              </Button>
-            ) : canEdit ? (
-              <Button size="sm" className="w-full" onClick={handleSubmitClick}>
-                {submission ? 'Edit Submission' : 'Submit Task'}
-              </Button>
-            ) : undefined
+          const footer = canSubmitOrEdit ? (
+            <Button size="sm" className="w-full" onClick={() => setSubmitTaskId(task.id)}>
+              {submission ? 'Edit Submission' : 'Submit Task'}
+            </Button>
+          ) : undefined
 
           return (
             <FeatureCard
@@ -144,9 +129,11 @@ export function StudentTasksList() {
                   label={`Due ${formatDate(task.due_date)}${overdue ? ' (Overdue)' : ''}`}
                   tone={overdue ? 'danger' : 'default'}
                 />
-                {overdue && !submission ? (
+                {overdue ? (
                   <p className="text-destructive text-xs font-medium">
-                    Due date has passed — submissions are closed.
+                    {submission
+                      ? 'Due date has passed — editing is closed.'
+                      : 'Due date has passed — submissions are closed.'}
                   </p>
                 ) : null}
                 {submission?.feedback && (
@@ -183,6 +170,7 @@ export function StudentTasksList() {
             key={submitTaskId}
             taskId={submitTaskId}
             existing={existingSubmission}
+            allowDelete={!!existingSubmission && existingSubmission.status === 'Pending'}
             onSuccess={() => setSubmitTaskId(null)}
           />
         ) : null}

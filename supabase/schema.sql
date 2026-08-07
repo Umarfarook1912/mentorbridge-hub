@@ -238,6 +238,8 @@ create policy "submissions_update_own_or_admin" on public.task_submissions for u
 
 create policy "submissions_delete_admin" on public.task_submissions for delete
   using (public.get_my_role() = 'Admin');
+create policy "submissions_delete_own" on public.task_submissions for delete
+  using (student_id = auth.uid());
 
 -- ── RLS Policies: notifications ──────────────────────────────
 create policy "notifications_own" on public.notifications for all

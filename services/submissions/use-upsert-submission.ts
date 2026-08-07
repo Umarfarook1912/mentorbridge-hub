@@ -62,3 +62,18 @@ export function useReviewSubmission() {
     },
   })
 }
+
+export function useDeleteOwnSubmission() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (submissionId: string) => {
+      const supabase = getSupabaseBrowserClient()
+      const { error } = await supabase.from('task_submissions').delete().eq('id', submissionId)
+      if (error) throw error
+    },
+    onSuccess: async () => {
+      await invalidateSubmissions(queryClient)
+    },
+  })
+}
