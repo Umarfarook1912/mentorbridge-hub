@@ -22,7 +22,7 @@ import { useGetAllStudents } from '@/services/students/use-get-students'
 import { usePagination } from '@/hooks/use-pagination'
 import { exportToCSV } from '@/utils/export'
 import { taskDetailColumns, taskSummaryColumns } from './task-completion-report-columns'
-import { TaskCompletionReportFilters } from './task-completion-report-filters'
+import { ReportFilters } from './report-filters'
 import {
   aggregateTaskByStudent,
   buildTaskChartData,
@@ -32,6 +32,7 @@ import {
 
 export function TaskCompletionReport() {
   const [department, setDepartment] = useState('')
+  const [domain, setDomain] = useState('')
   const [studentId, setStudentId] = useState('')
   const [month, setMonth] = useState(() => {
     const d = new Date()
@@ -42,7 +43,7 @@ export function TaskCompletionReport() {
   const pagination = usePagination()
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: [QUERY_KEYS.reportsTasks, month, department, studentId, students],
+    queryKey: [QUERY_KEYS.reportsTasks, month, department, domain, studentId, students],
     queryFn: async () => {
       const supabase = getSupabaseBrowserClient()
       const [year, m] = month.split('-').map(Number)
@@ -68,6 +69,7 @@ export function TaskCompletionReport() {
 
       let scopedStudents = students
       if (department) scopedStudents = scopedStudents.filter((s) => s.department === department)
+      if (domain) scopedStudents = scopedStudents.filter((s) => s.domain_interest === domain)
       if (studentId) scopedStudents = scopedStudents.filter((s) => s.id === studentId)
 
       return buildTaskDetailRows(
@@ -98,10 +100,11 @@ export function TaskCompletionReport() {
 
   return (
     <div className="space-y-4">
-      <TaskCompletionReportFilters
+      <ReportFilters
         month={month}
         studentId={studentId}
         department={department}
+        domain={domain}
         students={students}
         canExport={rows.length > 0}
         onMonthChange={(v) => {
@@ -114,6 +117,10 @@ export function TaskCompletionReport() {
         }}
         onDepartmentChange={(v) => {
           setDepartment(v)
+          pagination.reset()
+        }}
+        onDomainChange={(v) => {
+          setDomain(v)
           pagination.reset()
         }}
         onExport={handleExport}

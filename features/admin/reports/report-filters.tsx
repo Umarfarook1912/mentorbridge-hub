@@ -9,36 +9,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DEPARTMENTS } from '@/lib/constants'
+import { DEPARTMENTS, DOMAIN_INTERESTS } from '@/lib/constants'
 
 interface StudentOption {
   id: string
   full_name: string
 }
 
-interface TaskCompletionReportFiltersProps {
+interface ReportFiltersProps {
   month: string
   studentId: string
   department: string
+  domain: string
   students: StudentOption[]
   canExport: boolean
   onMonthChange: (month: string) => void
   onStudentChange: (studentId: string) => void
   onDepartmentChange: (department: string) => void
+  onDomainChange: (domain: string) => void
   onExport: () => void
 }
 
-export function TaskCompletionReportFilters({
+export function ReportFilters({
   month,
   studentId,
   department,
+  domain,
   students,
   canExport,
   onMonthChange,
   onStudentChange,
   onDepartmentChange,
+  onDomainChange,
   onExport,
-}: TaskCompletionReportFiltersProps) {
+}: ReportFiltersProps) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <input
@@ -80,6 +84,24 @@ export function TaskCompletionReportFilters({
         <SelectContent>
           <SelectItem value="all">All Departments</SelectItem>
           {DEPARTMENTS.map((d) => (
+            <SelectItem key={d} value={d}>
+              {d}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={domain || 'all'}
+        onValueChange={(v) => onDomainChange(v === 'all' ? '' : (v ?? ''))}
+      >
+        <SelectTrigger className="w-44">
+          <SelectValue placeholder="All domains">
+            {(value: string | null) => (!value || value === 'all' ? 'All Domains' : value)}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Domains</SelectItem>
+          {DOMAIN_INTERESTS.map((d) => (
             <SelectItem key={d} value={d}>
               {d}
             </SelectItem>

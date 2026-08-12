@@ -6,6 +6,7 @@ export interface AttendanceDetailRow {
   studentName: string
   email: string
   department: string
+  domainInterest: string
   meetingTitle: string
   meetingDate: string
   status: AttendanceStatus
