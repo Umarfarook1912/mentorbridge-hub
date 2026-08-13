@@ -20,9 +20,13 @@ import { StudentForm } from './student-form'
 import { useGetStudents } from '@/services/students/use-get-students'
 import { useDebounce } from '@/hooks/use-debounce'
 import { usePagination } from '@/hooks/use-pagination'
+import { useAuthStore } from '@/store/auth-store'
+import { canMutate } from '@/lib/permissions'
 import { DEPARTMENTS, DOMAIN_INTERESTS } from '@/lib/constants'
 
 export function StudentsList() {
+  const { user } = useAuthStore()
+  const canWrite = canMutate(user)
   const [search, setSearch] = useState('')
   const [department, setDepartment] = useState('')
   const [domainInterest, setDomainInterest] = useState('')
@@ -122,12 +126,14 @@ export function StudentsList() {
             ))}
           </SelectContent>
         </Select>
-        <div className="sm:ml-auto">
-          <Button onClick={() => setAddOpen(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Student
-          </Button>
-        </div>
+        {canWrite ? (
+          <div className="sm:ml-auto">
+            <Button onClick={() => setAddOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Student
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       {isLoading ? (
@@ -142,12 +148,14 @@ export function StudentsList() {
               : 'Add your first student to get started'
           }
           action={
-            !hasFilters ? { label: 'Add Student', onClick: () => setAddOpen(true) } : undefined
+            !hasFilters && canWrite
+              ? { label: 'Add Student', onClick: () => setAddOpen(true) }
+              : undefined
           }
         />
       ) : (
         <>
-          <StudentsTable data={data.data} />
+          <StudentsTable data={data.data} readOnly={!canWrite} />
           <PaginationControls
             page={page}
             totalPages={totalPages}
@@ -162,14 +170,16 @@ export function StudentsList() {
         </>
       )}
 
-      <FormDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        title="Add Student"
-        description="Enroll a new student in MentorBridge"
-      >
-        {addOpen && <StudentForm key="create-student" onSuccess={() => setAddOpen(false)} />}
-      </FormDialog>
+      {canWrite ? (
+        <FormDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          title="Add Student"
+          description="Enroll a new student in MentorBridge"
+        >
+          {addOpen && <StudentForm key="create-student" onSuccess={() => setAddOpen(false)} />}
+        </FormDialog>
+      ) : null}
     </div>
   )
 }

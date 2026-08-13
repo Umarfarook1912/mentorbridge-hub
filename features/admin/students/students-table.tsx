@@ -20,9 +20,10 @@ import { formatDate } from '@/utils/format'
 
 interface StudentsTableProps {
   data: IStudentEntity[]
+  readOnly?: boolean
 }
 
-export function StudentsTable({ data }: StudentsTableProps) {
+export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
   const [editStudent, setEditStudent] = useState<IStudentEntity | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const { mutateAsync: deleteStudent, isPending } = useDeleteStudent()
@@ -84,29 +85,33 @@ export function StudentsTable({ data }: StudentsTableProps) {
         <span className="text-muted-foreground text-sm">{formatDate(row.created_at)}</span>
       ),
     },
-    {
-      key: 'actions',
-      header: '',
-      headerClassName: 'w-12',
-      cell: (row) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="hover:bg-muted inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md outline-none">
-            <MoreHorizontal className="h-4 w-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditStudent(row)}>
-              <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setDeleteId(row.id)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+    ...(readOnly
+      ? []
+      : [
+          {
+            key: 'actions',
+            header: '',
+            headerClassName: 'w-12',
+            cell: (row: IStudentEntity) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="hover:bg-muted inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md outline-none">
+                  <MoreHorizontal className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setEditStudent(row)}>
+                    <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setDeleteId(row.id)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ),
+          } satisfies Column<IStudentEntity>,
+        ]),
   ]
 
   return (

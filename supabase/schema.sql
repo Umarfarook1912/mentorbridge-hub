@@ -7,7 +7,7 @@
 create extension if not exists "uuid-ossp";
 
 -- ── Enums ───────────────────────────────────────────────────
-create type public.user_role as enum ('Admin', 'Executive', 'Student');
+create type public.user_role as enum ('Admin', 'Executive', 'Staff', 'Student');
 create type public.attendance_status as enum ('Present', 'Absent', 'Permission');
 create type public.submission_status as enum ('Pending', 'Approved', 'Rejected');
 
@@ -161,9 +161,12 @@ as $$
 $$;
 
 -- ── RLS Policies: profiles ───────────────────────────────────
--- Admins see all; students see only their own row.
+-- Admins, Executives, and Staff see all; students see only their own row.
 create policy "profiles_select" on public.profiles for select
-  using (auth.uid() = id or public.get_my_role() = 'Admin');
+  using (
+    auth.uid() = id
+    or public.get_my_role() in ('Admin', 'Executive', 'Staff')
+  );
 
 create policy "profiles_insert_admin" on public.profiles for insert
   with check (public.get_my_role() = 'Admin');
@@ -190,7 +193,7 @@ create policy "meetings_delete_admin" on public.meetings for delete
 -- ── RLS Policies: attendance ─────────────────────────────────
 create policy "attendance_select" on public.attendance for select
   using (
-    public.get_my_role() = 'Admin'
+    public.get_my_role() in ('Admin', 'Executive', 'Staff')
     or student_id = auth.uid()
   );
 
@@ -219,7 +222,7 @@ create policy "tasks_delete_admin" on public.tasks for delete
 -- ── RLS Policies: task_submissions ───────────────────────────
 create policy "submissions_select" on public.task_submissions for select
   using (
-    public.get_my_role() = 'Admin'
+    public.get_my_role() in ('Admin', 'Executive', 'Staff')
     or student_id = auth.uid()
   );
 
@@ -251,7 +254,7 @@ create policy "blogs_select" on public.blogs for select
   using (auth.role() = 'authenticated');
 
 create policy "blogs_insert" on public.blogs for insert
-  with check (author_id = auth.uid());
+  with check (author_id = auth.uid() and public.get_my_role() <> 'Staff');
 
 create policy "blogs_update" on public.blogs for update
   using (author_id = auth.uid() or public.get_my_role() = 'Admin')

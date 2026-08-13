@@ -73,6 +73,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .eq('id', auth.user.id)
     .single()
 
+  if (profile?.role === 'Staff') {
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+  }
+
   const canModerate =
     profile?.role === 'Admin' ||
     (profile?.role === 'Executive' && (profile.section_permissions ?? []).includes('blogs'))
@@ -133,6 +137,10 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     .select('role, section_permissions')
     .eq('id', auth.user.id)
     .single()
+
+  if (profile?.role === 'Staff') {
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+  }
 
   const canModerate =
     profile?.role === 'Admin' ||

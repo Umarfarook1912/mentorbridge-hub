@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import { UserPlus, CalendarPlus, ClipboardPlus, Download } from 'lucide-react'
 import { FeatureCardSection } from '@/components/shared/data-display/feature-card'
 import { ROUTES } from '@/lib/constants'
+import { useAuthStore } from '@/store/auth-store'
+import { canMutate } from '@/lib/permissions'
 
 const QUICK_ACTIONS = [
   {
@@ -34,11 +36,15 @@ const QUICK_ACTIONS = [
 
 export function QuickActions() {
   const router = useRouter()
+  const { user } = useAuthStore()
+  const actions = canMutate(user)
+    ? QUICK_ACTIONS
+    : QUICK_ACTIONS.filter((action) => action.href === ROUTES.admin.reports)
 
   return (
     <FeatureCardSection title="Quick Actions">
       <div className="grid grid-cols-2 gap-2">
-        {QUICK_ACTIONS.map((action) => {
+        {actions.map((action) => {
           const Icon = action.icon
           return (
             <button

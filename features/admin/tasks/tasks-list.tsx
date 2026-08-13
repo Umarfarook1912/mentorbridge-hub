@@ -21,6 +21,8 @@ import { formatDate } from '@/utils/format'
 import { formatAudience } from '@/utils/meeting-audience'
 import { isTaskOverdue } from '@/utils/meeting-time'
 import type { ITaskEntity } from '@/services/tasks'
+import { useAuthStore } from '@/store/auth-store'
+import { canMutate } from '@/lib/permissions'
 
 function TaskCard({
   task,
@@ -28,8 +30,8 @@ function TaskCard({
   onDelete,
 }: {
   task: ITaskEntity
-  onEdit: (t: ITaskEntity) => void
-  onDelete: (id: string) => void
+  onEdit?: (t: ITaskEntity) => void
+  onDelete?: (id: string) => void
 }) {
   const overdue = isTaskOverdue(task.due_date)
 
@@ -51,19 +53,25 @@ function TaskCard({
             <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{task.description}</p>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)}>
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-destructive h-8 w-8"
-            onClick={() => onDelete(task.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        {(onEdit || onDelete) && (
+          <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+            {onEdit ? (
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
+            {onDelete ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive h-8 w-8"
+                onClick={() => onDelete(task.id)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
+          </div>
+        )}
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2">
@@ -82,6 +90,8 @@ function TaskCard({
 }
 
 export function TasksList() {
+  const { user } = useAuthStore()
+  const canWrite = canMutate(user)
   const [addOpen, setAddOpen] = useState(false)
   const [editTask, setEditTask] = useState<ITaskEntity | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -102,11 +112,13 @@ export function TasksList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setAddOpen(true)}>
-          <ClipboardPlus className="mr-2 h-4 w-4" /> Create Task
-        </Button>
-      </div>
+      {canWrite ? (
+        <div className="flex justify-end">
+          <Button onClick={() => setAddOpen(true)}>
+            <ClipboardPlus className="mr-2 h-4 w-4" /> Create Task
+          </Button>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <LoadingSkeleton />
@@ -115,12 +127,17 @@ export function TasksList() {
           icon={ClipboardPlus}
           title="No tasks yet"
           description="Create tasks and assign them to students"
-          action={{ label: 'Create Task', onClick: () => setAddOpen(true) }}
+          action={canWrite ? { label: 'Create Task', onClick: () => setAddOpen(true) } : undefined}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onEdit={setEditTask} onDelete={setDeleteId} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              onEdit={canWrite ? setEditTask : undefined}
+              onDelete={canWrite ? setDeleteId : undefined}
+            />
           ))}
         </div>
       )}

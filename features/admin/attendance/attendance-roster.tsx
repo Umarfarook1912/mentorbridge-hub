@@ -15,6 +15,8 @@ import { exportToCSV } from '@/utils/export'
 import { isMeetingForStudent } from '@/utils/meeting-audience'
 import type { AttendanceStatus } from '@/types/supabase.types'
 import { Users } from 'lucide-react'
+import { useAuthStore } from '@/store/auth-store'
+import { canMutate } from '@/lib/permissions'
 
 const STATUS_BUTTONS: { status: AttendanceStatus; label: string; className: string }[] = [
   {
@@ -49,6 +51,8 @@ export function AttendanceRoster({
   targetDomains,
   targetStudentIds,
 }: AttendanceRosterProps) {
+  const { user } = useAuthStore()
+  const canWrite = canMutate(user)
   const { data: allStudents = [], isLoading: loadingStudents } = useGetAllStudents()
   const { data: existing = [], isLoading: loadingAttendance } = useGetAttendanceByMeeting(meetingId)
   const { mutateAsync: markAttendance, isPending: saving } = useMarkAttendance()
@@ -140,17 +144,21 @@ export function AttendanceRoster({
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-1.5 h-3.5 w-3.5" /> Export CSV
           </Button>
-          <Button variant="outline" size="sm" onClick={markAllPresent}>
-            <CheckSquare className="mr-1.5 h-3.5 w-3.5" /> Mark All Present
-          </Button>
-          <Button size="sm" onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Save className="mr-1.5 h-3.5 w-3.5" />
-            )}
-            Save
-          </Button>
+          {canWrite ? (
+            <>
+              <Button variant="outline" size="sm" onClick={markAllPresent}>
+                <CheckSquare className="mr-1.5 h-3.5 w-3.5" /> Mark All Present
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={saving}>
+                {saving ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Save className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                Save
+              </Button>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -173,8 +181,9 @@ export function AttendanceRoster({
                     <button
                       key={status}
                       type="button"
-                      onClick={() => setStatus(student.id, status)}
-                      className={`rounded-lg border px-3 py-1 text-xs font-semibold transition-all ${className} ${current === status ? 'opacity-100 ring-2 ring-current ring-offset-1' : 'opacity-60'}`}
+                      disabled={!canWrite}
+                      onClick={() => canWrite && setStatus(student.id, status)}
+                      className={`rounded-lg border px-3 py-1 text-xs font-semibold transition-all ${className} ${current === status ? 'opacity-100 ring-2 ring-current ring-offset-1' : 'opacity-60'} ${canWrite ? '' : 'cursor-default'}`}
                     >
                       {label}
                     </button>

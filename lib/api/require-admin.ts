@@ -32,6 +32,10 @@ export async function requirePermission(section: AdminSection | null) {
   const sectionPermissions = profile.section_permissions ?? null
   const permUser = { role, sectionPermissions }
 
+  if (role === 'Staff') {
+    return { error: NextResponse.json({ message: 'Forbidden' }, { status: 403 }) }
+  }
+
   if (section === null) {
     if (role !== 'Admin') {
       return { error: NextResponse.json({ message: 'Forbidden' }, { status: 403 }) }

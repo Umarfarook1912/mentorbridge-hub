@@ -11,7 +11,7 @@ export function useGetAdmins() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('role', 'Admin')
+        .in('role', ['Admin', 'Staff'])
         .order('full_name', { ascending: true })
 
       if (error) throw error

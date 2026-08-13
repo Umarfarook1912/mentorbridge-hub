@@ -23,11 +23,13 @@ import { useAuthStore } from '@/store/auth-store'
 import { USER_ROLES } from '@/lib/constants'
 import { formatDate } from '@/utils/format'
 import { getErrorMessage } from '@/utils/form'
+import { canMutate } from '@/lib/permissions'
 import type { AdminSection } from '@/lib/permissions'
 import type { UserRole } from '@/types/supabase.types'
 
 export function AdminsList() {
   const { user } = useAuthStore()
+  const canWrite = canMutate(user)
   const { data: admins = [], isLoading } = useGetAdmins()
   const { mutateAsync: updateRole, isPending } = useUpdateUserRole()
   const [pending, setPending] = useState<{ id: string; role: UserRole; name: string } | null>(null)
@@ -38,11 +40,7 @@ export function AdminsList() {
     if (!pending) return
     try {
       await updateRole({ id: pending.id, role: pending.role })
-      toast.success(
-        pending.role === 'Admin'
-          ? `${pending.name} is now an Admin`
-          : `${pending.name} is now a Student`
-      )
+      toast.success(`${pending.name} is now a ${pending.role}`)
       setPending(null)
     } catch (error: unknown) {
       toast.error(getErrorMessage(error))
@@ -110,7 +108,7 @@ export function AdminsList() {
         return (
           <Select
             value={row.role}
-            disabled={isSelf || isPending}
+            disabled={isSelf || isPending || !canWrite}
             onValueChange={(v) => {
               if (!v || v === row.role) return
               openRoleChange(row.id, v as UserRole, row.full_name)

@@ -49,7 +49,16 @@ export function isExecutive(user: PermissionUser | null | undefined): boolean {
   return user?.role === 'Executive'
 }
 
+export function isStaff(user: PermissionUser | null | undefined): boolean {
+  return user?.role === 'Staff'
+}
+
 export function canUseAdminShell(user: PermissionUser | null | undefined): boolean {
+  return isFullAdmin(user) || isExecutive(user) || isStaff(user)
+}
+
+/** Staff can view everything but cannot create, update, or delete. */
+export function canMutate(user: PermissionUser | null | undefined): boolean {
   return isFullAdmin(user) || isExecutive(user)
 }
 
@@ -63,6 +72,15 @@ export function hasSection(
   return (user.sectionPermissions ?? []).includes(section)
 }
 
+export function canViewSection(
+  user: PermissionUser | null | undefined,
+  section: AdminSection
+): boolean {
+  if (!user) return false
+  if (user.role === 'Admin' || user.role === 'Staff') return true
+  return hasSection(user, section)
+}
+
 export function sectionForAdminPath(pathname: string): AdminSection | null {
   if (ADMIN_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) return null
   const match = SECTION_BY_PREFIX.find((s) => pathname.startsWith(s.prefix))
@@ -74,7 +92,7 @@ export function canAccessAdminPath(
   pathname: string
 ): boolean {
   if (!user) return false
-  if (user.role === 'Admin') return true
+  if (user.role === 'Admin' || user.role === 'Staff') return true
   if (user.role !== 'Executive') return false
   if (ADMIN_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) return false
   const section = sectionForAdminPath(pathname)
@@ -84,7 +102,7 @@ export function canAccessAdminPath(
 
 export function firstAllowedAdminRoute(user: PermissionUser | null | undefined): string {
   if (!user) return ROUTES.login
-  if (user.role === 'Admin') return ROUTES.admin.dashboard
+  if (user.role === 'Admin' || user.role === 'Staff') return ROUTES.admin.dashboard
   for (const section of ADMIN_SECTIONS) {
     if (hasSection(user, section)) {
       const found = SECTION_BY_PREFIX.find((s) => s.section === section)

@@ -30,8 +30,8 @@ export type SubmissionRow = {
   } | null
 }
 
-export function getSubmissionColumns(onReview: (id: string) => void): Column<SubmissionRow>[] {
-  return [
+export function getSubmissionColumns(onReview?: (id: string) => void): Column<SubmissionRow>[] {
+  const columns: Column<SubmissionRow>[] = [
     {
       key: 'student',
       header: 'Student',
@@ -91,7 +91,10 @@ export function getSubmissionColumns(onReview: (id: string) => void): Column<Sub
         </div>
       ),
     },
-    {
+  ]
+
+  if (onReview) {
+    columns.push({
       key: 'actions',
       header: '',
       className: 'w-[110px] text-right',
@@ -102,8 +105,10 @@ export function getSubmissionColumns(onReview: (id: string) => void): Column<Sub
           Review
         </Button>
       ),
-    },
-  ]
+    })
+  }
+
+  return columns
 }
 
 export function SubmissionsDataTable({
@@ -111,7 +116,7 @@ export function SubmissionsDataTable({
   onReview,
 }: {
   rows: SubmissionRow[]
-  onReview: (id: string) => void
+  onReview?: (id: string) => void
 }) {
   return (
     <DataTable

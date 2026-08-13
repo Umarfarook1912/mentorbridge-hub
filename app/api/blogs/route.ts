@@ -22,6 +22,16 @@ export async function POST(request: Request) {
   const body = await request.json()
   const { title, mediumUrl, authorName } = body
 
+  const { data: profile } = await auth.supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', auth.user.id)
+    .single()
+
+  if (profile?.role === 'Staff') {
+    return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
+  }
+
   if (!title || !mediumUrl || !authorName) {
     return NextResponse.json(
       { message: 'Title, Medium URL and author name are required' },

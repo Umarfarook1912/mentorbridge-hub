@@ -13,9 +13,13 @@ import { MeetingCard } from '@/components/shared/data-display/meeting-card'
 import { MeetingForm } from './meeting-form'
 import { useGetMeetings } from '@/services/meetings/use-get-meetings'
 import { useDeleteMeeting } from '@/services/meetings/use-delete-meeting'
+import { useAuthStore } from '@/store/auth-store'
+import { canMutate } from '@/lib/permissions'
 import type { IMeetingEntity } from '@/services/meetings'
 
 export function MeetingsList() {
+  const { user } = useAuthStore()
+  const canWrite = canMutate(user)
   const [addOpen, setAddOpen] = useState(false)
   const [editMeeting, setEditMeeting] = useState<IMeetingEntity | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -37,11 +41,13 @@ export function MeetingsList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setAddOpen(true)}>
-          <CalendarPlus className="mr-2 h-4 w-4" /> Create Meeting
-        </Button>
-      </div>
+      {canWrite ? (
+        <div className="flex justify-end">
+          <Button onClick={() => setAddOpen(true)}>
+            <CalendarPlus className="mr-2 h-4 w-4" /> Create Meeting
+          </Button>
+        </div>
+      ) : null}
 
       <Tabs defaultValue="today">
         <TabsList>
@@ -57,7 +63,9 @@ export function MeetingsList() {
               icon={CalendarDays}
               title="No meetings today"
               description="Create a meeting or check back for scheduled sessions"
-              action={{ label: 'Create Meeting', onClick: () => setAddOpen(true) }}
+              action={
+                canWrite ? { label: 'Create Meeting', onClick: () => setAddOpen(true) } : undefined
+              }
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -65,8 +73,8 @@ export function MeetingsList() {
                 <MeetingCard
                   key={m.id}
                   meeting={m}
-                  onEdit={setEditMeeting}
-                  onDelete={setDeleteId}
+                  onEdit={canWrite ? setEditMeeting : undefined}
+                  onDelete={canWrite ? setDeleteId : undefined}
                 />
               ))}
             </div>
@@ -84,8 +92,8 @@ export function MeetingsList() {
                 <MeetingCard
                   key={m.id}
                   meeting={m}
-                  onEdit={setEditMeeting}
-                  onDelete={setDeleteId}
+                  onEdit={canWrite ? setEditMeeting : undefined}
+                  onDelete={canWrite ? setDeleteId : undefined}
                 />
               ))}
             </div>

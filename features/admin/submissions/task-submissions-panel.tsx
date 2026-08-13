@@ -15,6 +15,8 @@ import { useGetAllStudents } from '@/services/students/use-get-students'
 import { usePagination } from '@/hooks/use-pagination'
 import { isAudienceForStudent } from '@/utils/meeting-audience'
 import type { SubmissionStatus } from '@/types/supabase.types'
+import { useAuthStore } from '@/store/auth-store'
+import { canMutate } from '@/lib/permissions'
 
 interface TaskSubmissionsPanelProps {
   taskId: string
@@ -27,6 +29,8 @@ export function TaskSubmissionsPanel({
   targetDomains,
   targetStudentIds,
 }: TaskSubmissionsPanelProps) {
+  const { user } = useAuthStore()
+  const canWrite = canMutate(user)
   const [statusFilter, setStatusFilter] = useState('')
   const [departmentFilter, setDepartmentFilter] = useState('')
   const [domainFilter, setDomainFilter] = useState('')
@@ -110,7 +114,10 @@ export function TaskSubmissionsPanel({
             />
           ) : (
             <>
-              <SubmissionsDataTable rows={pageRows} onReview={setFeedbackId} />
+              <SubmissionsDataTable
+                rows={pageRows}
+                onReview={canWrite ? setFeedbackId : undefined}
+              />
               <PaginationControls
                 page={page}
                 totalPages={totalPages}

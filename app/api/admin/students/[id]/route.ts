@@ -24,7 +24,7 @@ async function requireAdmin() {
   return { supabase, user }
 }
 
-const VALID_ROLES: UserRole[] = ['Admin', 'Executive', 'Student']
+const VALID_ROLES: UserRole[] = ['Admin', 'Executive', 'Staff', 'Student']
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin()
