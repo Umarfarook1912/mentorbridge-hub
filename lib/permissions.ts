@@ -57,9 +57,14 @@ export function canUseAdminShell(user: PermissionUser | null | undefined): boole
   return isFullAdmin(user) || isExecutive(user) || isStaff(user)
 }
 
-/** Staff can view everything but cannot create, update, or delete. */
+/** Admin-shell writes (students, meetings, attendance, tasks). Staff is read-only. */
 export function canMutate(user: PermissionUser | null | undefined): boolean {
   return isFullAdmin(user) || isExecutive(user)
+}
+
+/** Students, Admins, and Executives can create their own content. Staff cannot. */
+export function canAuthorContent(user: PermissionUser | null | undefined): boolean {
+  return !!user && user.role !== 'Staff'
 }
 
 export function hasSection(

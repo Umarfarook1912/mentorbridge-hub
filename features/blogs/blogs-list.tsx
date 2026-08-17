@@ -13,7 +13,7 @@ import { BlogSection } from './blog-section'
 import { useGetBlogs, type IBlogEntity } from '@/services/blogs'
 import { useAuthStore } from '@/store/auth-store'
 import { useDebounce } from '@/hooks/use-debounce'
-import { canMutate } from '@/lib/permissions'
+import { canAuthorContent } from '@/lib/permissions'
 
 export function BlogsList() {
   const { user } = useAuthStore()
@@ -39,16 +39,16 @@ export function BlogsList() {
     }
   }, [searchedBlogs, user])
 
-  const canWrite = canMutate(user)
+  const canShare = canAuthorContent(user)
   const canManage = (blog: IBlogEntity) =>
-    canWrite &&
+    canShare &&
     !!user &&
     (user.id === blog.author_id ||
       user.role === 'Admin' ||
       (user.role === 'Executive' && (user.sectionPermissions ?? []).includes('blogs')))
 
   const canManageCommunity = (): boolean =>
-    canWrite &&
+    canShare &&
     !!user &&
     (user.role === 'Admin' ||
       (user.role === 'Executive' && (user.sectionPermissions ?? []).includes('blogs')))
@@ -66,7 +66,7 @@ export function BlogsList() {
           placeholder="Search by title or author…"
           className="sm:w-72"
         />
-        {canWrite ? (
+        {canShare ? (
           <div className="sm:ml-auto">
             <Button onClick={() => setAddOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -83,7 +83,7 @@ export function BlogsList() {
           icon={Newspaper}
           title="No blogs yet"
           description="Be the first to share a Medium article with the MentorBridge community"
-          action={canWrite ? { label: 'Share Blog', onClick: () => setAddOpen(true) } : undefined}
+          action={canShare ? { label: 'Share Blog', onClick: () => setAddOpen(true) } : undefined}
         />
       ) : (
         <Tabs defaultValue="all">
@@ -112,7 +112,7 @@ export function BlogsList() {
                 hasSearch ? noMatchDescription : 'Use Share Blog to post your Medium article'
               }
               emptyAction={
-                hasSearch || !canWrite
+                hasSearch || !canShare
                   ? undefined
                   : { label: 'Share Blog', onClick: () => setAddOpen(true) }
               }
