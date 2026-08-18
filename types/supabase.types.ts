@@ -1,6 +1,7 @@
-export type UserRole = 'Admin' | 'Executive' | 'Staff' | 'Student'
-export type AttendanceStatus = 'Present' | 'Absent' | 'Permission'
-export type SubmissionStatus = 'Pending' | 'Approved' | 'Rejected'
+import type { ContentTables } from '@/types/database.content-tables'
+import type { AttendanceStatus, SubmissionStatus, UserRole } from '@/types/enums'
+
+export type { AttendanceStatus, SubmissionStatus, UserRole }
 
 export interface Database {
   public: {
@@ -135,107 +136,16 @@ export interface Database {
           target_student_ids?: string[] | null
         }
       }
-      task_submissions: {
-        Row: {
-          id: string
-          task_id: string
-          student_id: string
-          github_url: string | null
-          google_doc_url: string | null
-          medium_blog_url: string | null
-          other_url: string | null
-          remarks: string | null
-          feedback: string | null
-          submitted_at: string
-          status: SubmissionStatus
-          reviewed_by: string | null
-          reviewed_by_name: string | null
-          reviewed_at: string | null
-        }
-        Insert: {
-          id?: string
-          task_id: string
-          student_id: string
-          github_url?: string | null
-          google_doc_url?: string | null
-          medium_blog_url?: string | null
-          other_url?: string | null
-          remarks?: string | null
-          feedback?: string | null
-          submitted_at?: string
-          status?: SubmissionStatus
-          reviewed_by?: string | null
-          reviewed_by_name?: string | null
-          reviewed_at?: string | null
-        }
-        Update: {
-          github_url?: string | null
-          google_doc_url?: string | null
-          medium_blog_url?: string | null
-          other_url?: string | null
-          remarks?: string | null
-          feedback?: string | null
-          status?: SubmissionStatus
-          reviewed_by?: string | null
-          reviewed_by_name?: string | null
-          reviewed_at?: string | null
-        }
-      }
-      notifications: {
-        Row: {
-          id: string
-          user_id: string
-          title: string
-          body: string | null
-          type: string
-          is_read: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          title: string
-          body?: string | null
-          type: string
-          is_read?: boolean
-          created_at?: string
-        }
-        Update: {
-          is_read?: boolean
-        }
-      }
-      blogs: {
-        Row: {
-          id: string
-          title: string
-          medium_url: string
-          preview_image_url: string | null
-          author_id: string
-          author_name: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          medium_url: string
-          preview_image_url?: string | null
-          author_id: string
-          author_name: string
-          created_at?: string
-        }
-        Update: {
-          title?: string
-          medium_url?: string
-          preview_image_url?: string | null
-          author_name?: string
-        }
-      }
-    }
+    } & ContentTables
     Views: Record<string, never>
     Functions: {
       get_my_role: {
         Args: Record<string, never>
         Returns: UserRole
+      }
+      increment_video_views: {
+        Args: { video_id: string }
+        Returns: number
       }
     }
     Enums: {

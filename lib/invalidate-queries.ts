@@ -62,6 +62,10 @@ export function invalidateBlogs(qc: QueryClient) {
   return invalidate(qc, QUERY_KEYS.blogs)
 }
 
+export function invalidateVideos(qc: QueryClient) {
+  return invalidate(qc, QUERY_KEYS.videos)
+}
+
 export function invalidateProfile(qc: QueryClient) {
   return invalidate(qc, QUERY_KEYS.students)
 }

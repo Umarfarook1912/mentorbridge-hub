@@ -36,6 +36,10 @@ export function formatRelative(dateStr: string) {
   }
 }
 
+export function formatViewCount(count: number) {
+  return count === 1 ? '1 view' : `${count} views`
+}
+
 export function getMeetingLabel(
   dateStr: string,
   endTime?: string

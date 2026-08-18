@@ -14,7 +14,8 @@ export const STUDENT_CATEGORIES = ['SSM Student', 'Other College'] as const
 
 export const USER_ROLES = ['Student', 'Executive', 'Staff', 'Admin'] as const
 
-export const DOMAIN_INTERESTS = ['Frontend', 'Backend', 'Data Engineer'] as const
+export const DOMAIN_INTERESTS = ['General', 'Frontend', 'Backend', 'Data Engineer'] as const
+export type DomainInterest = (typeof DOMAIN_INTERESTS)[number]
 
 export const ROUTES = {
   login: '/login',
@@ -30,6 +31,7 @@ export const ROUTES = {
     tasks: '/admin/tasks',
     submissions: '/admin/submissions',
     blogs: '/admin/blogs',
+    videos: '/admin/videos',
     admins: '/admin/admins',
     reports: '/admin/reports',
   },
@@ -39,6 +41,7 @@ export const ROUTES = {
     attendance: '/student/attendance',
     tasks: '/student/tasks',
     blogs: '/student/blogs',
+    videos: '/student/videos',
     profile: '/student/profile',
   },
 } as const
@@ -55,6 +58,7 @@ export const QUERY_KEYS = {
   tasks: 'tasks',
   submissions: 'submissions',
   blogs: 'blogs',
+  videos: 'videos',
   notifications: 'notifications',
   dashboardStats: 'dashboard-stats',
   dashboardMonthlyAttendance: 'dashboard-monthly-attendance',

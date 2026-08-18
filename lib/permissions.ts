@@ -8,6 +8,7 @@ export const ADMIN_SECTIONS = [
   'tasks',
   'submissions',
   'blogs',
+  'videos',
   'reports',
 ] as const
 
@@ -20,6 +21,7 @@ export const ADMIN_SECTION_LABELS: Record<AdminSection, string> = {
   tasks: 'Tasks',
   submissions: 'Submissions',
   blogs: 'Blogs',
+  videos: 'Videos',
   reports: 'Reports',
 }
 
@@ -33,6 +35,7 @@ const SECTION_BY_PREFIX: { prefix: string; section: AdminSection }[] = [
   { prefix: ROUTES.admin.tasks, section: 'tasks' },
   { prefix: ROUTES.admin.submissions, section: 'submissions' },
   { prefix: ROUTES.admin.blogs, section: 'blogs' },
+  { prefix: ROUTES.admin.videos, section: 'videos' },
   { prefix: ROUTES.admin.reports, section: 'reports' },
 ]
 
@@ -65,6 +68,11 @@ export function canMutate(user: PermissionUser | null | undefined): boolean {
 /** Students, Admins, and Executives can create their own content. Staff cannot. */
 export function canAuthorContent(user: PermissionUser | null | undefined): boolean {
   return !!user && user.role !== 'Staff'
+}
+
+/** Admin or Executive with the videos section can add/edit/delete recordings. */
+export function canManageVideos(user: PermissionUser | null | undefined): boolean {
+  return canMutate(user) && hasSection(user, 'videos')
 }
 
 export function hasSection(
@@ -123,6 +131,7 @@ export const EXECUTIVE_STUDENT_PATHS = [
   ROUTES.student.attendance,
   ROUTES.student.tasks,
   ROUTES.student.meetings,
+  ROUTES.student.videos,
   ROUTES.student.profile,
 ] as const
 

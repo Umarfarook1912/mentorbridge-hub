@@ -8,6 +8,7 @@ import {
   UserCheck,
   BookOpen,
   Newspaper,
+  Video,
   Shield,
   User,
   type LucideIcon,
@@ -60,6 +61,7 @@ export const ADMIN_NAV: NavSection[] = [
         section: 'submissions',
       },
       { label: 'Blogs', href: ROUTES.admin.blogs, icon: Newspaper, section: 'blogs' },
+      { label: 'Videos', href: ROUTES.admin.videos, icon: Video, section: 'videos' },
     ],
   },
   {
@@ -79,6 +81,7 @@ export const STUDENT_NAV: NavSection[] = [
       { label: 'Attendance', href: ROUTES.student.attendance, icon: UserCheck },
       { label: 'Tasks', href: ROUTES.student.tasks, icon: BookOpen },
       { label: 'Blogs', href: ROUTES.student.blogs, icon: Newspaper },
+      { label: 'Videos', href: ROUTES.student.videos, icon: Video },
     ],
   },
   {
@@ -105,6 +108,7 @@ const EXECUTIVE_LEARNING_NAV: NavSection = {
     { label: 'My Attendance', href: ROUTES.student.attendance, icon: UserCheck },
     { label: 'My Tasks', href: ROUTES.student.tasks, icon: BookOpen },
     { label: 'My Meetings', href: ROUTES.student.meetings, icon: CalendarDays },
+    { label: 'Videos', href: ROUTES.student.videos, icon: Video },
     { label: 'Profile', href: ROUTES.student.profile, icon: User },
   ],
 }

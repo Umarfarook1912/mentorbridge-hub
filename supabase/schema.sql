@@ -136,6 +136,26 @@ create table public.blogs (
 create index idx_blogs_created_at on public.blogs(created_at desc);
 create index idx_blogs_author_id on public.blogs(author_id);
 
+-- ── Table: videos ───────────────────────────────────────────
+create table public.videos (
+  id              uuid primary key default uuid_generate_v4(),
+  title           text not null,
+  description     text,
+  youtube_url     text not null,
+  youtube_id      text not null,
+  thumbnail_url   text,
+  domain          text not null,
+  is_featured     boolean not null default false,
+  view_count      integer not null default 0,
+  created_by      uuid not null references public.profiles(id),
+  created_at      timestamptz not null default now(),
+  constraint videos_domain_check check (domain in ('Frontend', 'Backend', 'Data Engineer'))
+);
+
+create index idx_videos_domain_views on public.videos(domain, view_count desc);
+create index idx_videos_created_at on public.videos(created_at desc);
+create index idx_videos_featured on public.videos(domain, is_featured) where is_featured = true;
+
 -- ── Storage: avatars bucket ─────────────────────────────────
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
@@ -149,6 +169,7 @@ alter table public.tasks             enable row level security;
 alter table public.task_submissions  enable row level security;
 alter table public.notifications     enable row level security;
 alter table public.blogs             enable row level security;
+alter table public.videos            enable row level security;
 
 -- ── Helper function: get current user role ───────────────────
 create or replace function public.get_my_role()
@@ -158,6 +179,27 @@ security definer
 stable
 as $$
   select role from public.profiles where id = auth.uid()
+$$;
+
+create or replace function public.has_section_permission(perm text)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and (
+        p.role = 'Admin'
+        or (
+          p.role = 'Executive'
+          and p.section_permissions is not null
+          and perm = any (p.section_permissions)
+        )
+      )
+  );
 $$;
 
 -- ── RLS Policies: profiles ───────────────────────────────────
@@ -262,6 +304,37 @@ create policy "blogs_update" on public.blogs for update
 
 create policy "blogs_delete" on public.blogs for delete
   using (author_id = auth.uid() or public.get_my_role() = 'Admin');
+
+-- ── RLS Policies: videos ─────────────────────────────────────
+create policy "videos_select" on public.videos for select
+  using (auth.role() = 'authenticated');
+
+create policy "videos_insert" on public.videos for insert
+  with check (public.has_section_permission('videos'));
+
+create policy "videos_update" on public.videos for update
+  using (public.has_section_permission('videos'))
+  with check (public.has_section_permission('videos'));
+
+create policy "videos_delete" on public.videos for delete
+  using (public.has_section_permission('videos'));
+
+create or replace function public.increment_video_views(video_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_count integer;
+begin
+  update public.videos
+  set view_count = view_count + 1
+  where id = video_id
+  returning view_count into new_count;
+  return new_count;
+end;
+$$;
 
 -- ── Storage RLS: avatars ─────────────────────────────────────
 create policy "avatar_public_read" on storage.objects for select
