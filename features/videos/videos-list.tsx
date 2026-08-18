@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Plus, Video, Search, X } from 'lucide-react'
+import { Plus, Video } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { SearchBar } from '@/components/shared/forms/search-bar'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
@@ -65,32 +65,20 @@ export function VideosList({ basePath }: VideosListProps) {
       {/* Toolbar */}
       <div className="flex flex-col gap-3">
         {/* Search + Add */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder="Search videos…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-9"
-            />
-            {search ? (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2"
-                aria-label="Clear search"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search videos…"
+            className="sm:w-72"
+          />
           {canManage ? (
-            <Button onClick={() => setAddOpen(true)} className="shrink-0">
-              <Plus className="mr-1.5 h-4 w-4" />
-              <span className="hidden sm:inline">Add Video</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
+            <div className="sm:ml-auto">
+              <Button onClick={() => setAddOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Video
+              </Button>
+            </div>
           ) : null}
         </div>
 
