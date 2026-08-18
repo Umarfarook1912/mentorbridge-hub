@@ -32,7 +32,7 @@ export function VideosGrid({
       {!videos.length ? (
         <EmptyState icon={Video} title={emptyTitle} description={emptyDescription} />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
           {videos.map((video) => (
             <VideoCard
               key={video.id}

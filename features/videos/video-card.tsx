@@ -41,11 +41,11 @@ export function VideoCard({ video, href, canManage, onEdit, onDelete }: VideoCar
         </div>
       </Link>
 
-      <div className="space-y-1 p-3">
+      <div className="space-y-0.5 p-2 sm:p-3">
         <Link href={href} className="hover:text-primary block">
-          <h3 className="line-clamp-2 text-sm leading-snug font-semibold">{video.title}</h3>
+          <h3 className="line-clamp-2 text-xs leading-snug font-semibold sm:text-sm">{video.title}</h3>
         </Link>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-[11px] sm:text-xs">
           {video.domain} · {formatViewCount(video.view_count)}
         </p>
       </div>

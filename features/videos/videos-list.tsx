@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Video } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Plus, Video, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
@@ -14,12 +14,14 @@ import { canManageVideos } from '@/lib/permissions'
 import { DOMAIN_INTERESTS, type DomainInterest } from '@/lib/constants'
 import { getErrorMessage } from '@/utils/form'
 import { toast } from 'sonner'
-import { VideosFeaturedHero } from './videos-featured-hero'
+import { cn } from '@/utils/cn'
 import { VideosGrid } from './videos-grid'
 import { VideoForm } from './video-form'
 import { splitVideoSections } from './videos-sections'
 
 type DomainFilter = 'All' | DomainInterest
+
+const FILTERS: DomainFilter[] = ['All', ...DOMAIN_INTERESTS]
 
 interface VideosListProps {
   basePath: string
@@ -30,13 +32,20 @@ export function VideosList({ basePath }: VideosListProps) {
   const { user } = useAuthStore()
   const canManage = canManageVideos(user)
   const [domain, setDomain] = useState<DomainFilter>('All')
+  const [search, setSearch] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [editVideo, setEditVideo] = useState<IVideoEntity | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const { data: videos = [], isLoading } = useGetVideos({ domain })
-  const { mutateAsync: deleteVideo, isPending: deleting } = useDeleteVideo()
-  const { featured, mostViewed, remaining } = splitVideoSections(videos)
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return videos
+    return videos.filter((v) => v.title.toLowerCase().includes(q))
+  }, [videos, search])
+
+  const { mostViewed, remaining } = splitVideoSections(filtered)
 
   async function handleDelete() {
     if (!deleteId) return
@@ -49,58 +58,91 @@ export function VideosList({ basePath }: VideosListProps) {
     }
   }
 
+  const { mutateAsync: deleteVideo, isPending: deleting } = useDeleteVideo()
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Tabs value={domain} onValueChange={(value) => setDomain(value as DomainFilter)}>
-          <TabsList>
-            <TabsTrigger value="All">All</TabsTrigger>
-            {DOMAIN_INTERESTS.map((item) => (
-              <TabsTrigger key={item} value={item}>
-                {item}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-        {canManage ? (
-          <div className="sm:ml-auto">
-            <Button onClick={() => setAddOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Video
-            </Button>
+    <div className="space-y-5">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3">
+        {/* Search + Add */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+            <Input
+              placeholder="Search videos…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {search ? (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
           </div>
-        ) : null}
+          {canManage ? (
+            <Button onClick={() => setAddOpen(true)} className="shrink-0">
+              <Plus className="mr-1.5 h-4 w-4" />
+              <span className="hidden sm:inline">Add Video</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          ) : null}
+        </div>
+
+        {/* Domain filter pills */}
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setDomain(f)}
+              className={cn(
+                'rounded-full border px-3.5 py-1 text-sm font-medium transition-colors',
+                domain === f
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30 border-border'
+              )}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Content */}
       {isLoading ? (
         <LoadingSkeleton />
-      ) : !videos.length ? (
+      ) : !filtered.length ? (
         <EmptyState
           icon={Video}
-          title="No recordings yet"
+          title={search ? 'No results found' : 'No recordings yet'}
           description={
-            canManage
-              ? 'Add a YouTube session recording for students to watch'
-              : 'Session recordings will appear here'
+            search
+              ? `No videos match "${search}"`
+              : canManage
+                ? 'Add a YouTube session recording for students to watch'
+                : 'Session recordings will appear here'
           }
-          action={canManage ? { label: 'Add Video', onClick: () => setAddOpen(true) } : undefined}
+          action={
+            search
+              ? { label: 'Clear search', onClick: () => setSearch('') }
+              : canManage
+                ? { label: 'Add Video', onClick: () => setAddOpen(true) }
+                : undefined
+          }
         />
       ) : (
         <>
-          {featured ? (
-            <VideosFeaturedHero
-              video={featured}
-              href={detailHref(featured.id)}
-              canManage={canManage}
-              onEdit={setEditVideo}
-              onDelete={setDeleteId}
-            />
-          ) : null}
           <VideosGrid
             title="Most viewed"
             videos={mostViewed}
-            emptyTitle="No other recordings yet"
-            emptyDescription="More videos will show here as they get views"
+            emptyTitle="No recordings yet"
+            emptyDescription="Videos will appear here"
             detailHref={detailHref}
             canManage={canManage}
             onEdit={setEditVideo}
@@ -127,7 +169,7 @@ export function VideosList({ basePath }: VideosListProps) {
             open={addOpen}
             onOpenChange={setAddOpen}
             title="Add Video"
-            description="Paste a YouTube link. Title and description can be edited before saving."
+            description="Paste a YouTube link. Title can be edited before saving."
             maxWidth="lg"
           >
             {addOpen && <VideoForm key="create-video" onSuccess={() => setAddOpen(false)} />}
