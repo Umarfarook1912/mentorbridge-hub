@@ -14,6 +14,7 @@ import { meetingSchema, type MeetingInput } from '@/lib/validations/meeting'
 import { useUpsertMeeting } from '@/services/meetings/use-upsert-meeting'
 import type { IMeetingEntity } from '@/services/meetings'
 import { getErrorMessage, toDateInputValue, toTimeInputValue } from '@/utils/form'
+import { cn } from '@/utils/cn'
 import type { MeetingDomain } from '@/utils/meeting-audience'
 
 interface MeetingFormProps {
@@ -42,6 +43,7 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
       startTime: '',
       endTime: '',
       meetUrl: '',
+      attendanceMandatory: true,
       targetDomains: [],
       targetStudentIds: [],
     },
@@ -49,6 +51,7 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
 
   const targetDomains = useWatch({ control, name: 'targetDomains' }) ?? []
   const targetStudentIds = useWatch({ control, name: 'targetStudentIds' }) ?? []
+  const attendanceMandatory = useWatch({ control, name: 'attendanceMandatory' }) ?? true
 
   useEffect(() => {
     reset({
@@ -59,6 +62,7 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
       startTime: toTimeInputValue(meeting?.start_time),
       endTime: toTimeInputValue(meeting?.end_time),
       meetUrl: meeting?.meet_url ?? '',
+      attendanceMandatory: meeting?.attendance_mandatory ?? true,
       targetDomains: (meeting?.target_domains as MeetingDomain[] | null) ?? [],
       targetStudentIds: meeting?.target_student_ids ?? [],
     })
@@ -113,6 +117,40 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
           <Input id="endTime" type="time" {...register('endTime')} />
         </FormFieldWrapper>
       </div>
+
+      <FormFieldWrapper
+        label="Attendance"
+        error={errors.attendanceMandatory}
+        required
+        hint="Mandatory meetings appear in Attendance for marking"
+      >
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setValue('attendanceMandatory', true, { shouldValidate: true })}
+            className={cn(
+              'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors',
+              attendanceMandatory
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background text-muted-foreground hover:text-foreground border-border'
+            )}
+          >
+            Mandatory
+          </button>
+          <button
+            type="button"
+            onClick={() => setValue('attendanceMandatory', false, { shouldValidate: true })}
+            className={cn(
+              'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors',
+              !attendanceMandatory
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background text-muted-foreground hover:text-foreground border-border'
+            )}
+          >
+            Not mandatory
+          </button>
+        </div>
+      </FormFieldWrapper>
 
       <FormFieldWrapper label="Google Meet URL" htmlFor="meetUrl" error={errors.meetUrl}>
         <Input

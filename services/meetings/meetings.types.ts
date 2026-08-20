@@ -11,6 +11,8 @@ export interface IMeetingMutation {
   startTime: string
   endTime: string
   meetUrl?: string
+  /** When true, meeting appears in attendance marking */
+  attendanceMandatory: boolean
   /** Empty = unrestricted by domain */
   targetDomains?: MeetingDomain[]
   /** Specific invitees; empty = none */

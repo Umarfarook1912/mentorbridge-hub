@@ -16,6 +16,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     startTime,
     endTime,
     meetUrl,
+    attendanceMandatory,
     targetDomains,
     targetStudentIds,
   } = body
@@ -41,6 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       start_time: startTime,
       end_time: endTime,
       meet_url: meetUrl || null,
+      attendance_mandatory: attendanceMandatory !== false,
       target_domains: domains,
       target_student_ids: studentIds,
     })

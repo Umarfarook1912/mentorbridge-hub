@@ -16,6 +16,7 @@ export async function POST(request: Request) {
     startTime,
     endTime,
     meetUrl,
+    attendanceMandatory,
     targetDomains,
     targetStudentIds,
   } = body
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
       start_time: startTime,
       end_time: endTime,
       meet_url: meetUrl || null,
+      attendance_mandatory: attendanceMandatory !== false,
       target_domains: domains,
       target_student_ids: studentIds,
       created_by: auth.user.id,

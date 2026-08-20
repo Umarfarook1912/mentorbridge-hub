@@ -13,6 +13,7 @@ export const meetingSchema = z
       .string()
       .optional()
       .refine((v) => !v || /^https?:\/\/.+/i.test(v), 'Enter a valid meeting URL'),
+    attendanceMandatory: z.boolean(),
     targetDomains: z.array(z.enum(DOMAIN_INTERESTS)),
     targetStudentIds: z.array(z.string().uuid()),
   })

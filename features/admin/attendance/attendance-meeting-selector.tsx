@@ -17,16 +17,17 @@ export function AttendanceMeetingSelector() {
   const { data: meetings = [], isLoading } = useGetMeetings('all')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const selected = meetings.find((m) => m.id === selectedId)
+  const attendanceMeetings = meetings.filter((m) => m.attendance_mandatory)
+  const selected = attendanceMeetings.find((m) => m.id === selectedId)
 
   if (isLoading) return <LoadingSkeleton />
 
-  if (!meetings.length) {
+  if (!attendanceMeetings.length) {
     return (
       <EmptyState
         icon={CalendarDays}
-        title="No meetings yet"
-        description="Create meetings first before marking attendance"
+        title="No attendance meetings"
+        description="Only meetings marked as attendance mandatory appear here"
       />
     )
   }
@@ -35,7 +36,7 @@ export function AttendanceMeetingSelector() {
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="space-y-3">
         <p className="text-muted-foreground text-sm font-medium">Select a Meeting</p>
-        {meetings.map((meeting) => (
+        {attendanceMeetings.map((meeting) => (
           <FeatureCard
             key={meeting.id}
             highlighted={selectedId === meeting.id}
