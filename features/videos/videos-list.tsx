@@ -12,16 +12,19 @@ import { useGetVideos, useDeleteVideo, type IVideoEntity } from '@/services/vide
 import { useAuthStore } from '@/store/auth-store'
 import { canManageVideos } from '@/lib/permissions'
 import { DOMAIN_INTERESTS, type DomainInterest } from '@/lib/constants'
+import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { getErrorMessage } from '@/utils/form'
 import { toast } from 'sonner'
-import { cn } from '@/utils/cn'
 import { VideosGrid } from './videos-grid'
 import { VideoForm } from './video-form'
 import { splitVideoSections } from './videos-sections'
 
 type DomainFilter = 'All' | DomainInterest
 
-const FILTERS: DomainFilter[] = ['All', ...DOMAIN_INTERESTS]
+const DOMAIN_OPTIONS = [
+  { value: 'All' as const, label: 'All' },
+  ...DOMAIN_INTERESTS.map((d) => ({ value: d, label: d })),
+]
 
 interface VideosListProps {
   basePath: string
@@ -82,24 +85,12 @@ export function VideosList({ basePath }: VideosListProps) {
           ) : null}
         </div>
 
-        {/* Domain filter pills */}
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setDomain(f)}
-              className={cn(
-                'rounded-full border px-3.5 py-1 text-sm font-medium transition-colors',
-                domain === f
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30 border-border'
-              )}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+        <FilterPills
+          aria-label="Domain"
+          options={DOMAIN_OPTIONS}
+          value={domain}
+          onChange={setDomain}
+        />
       </div>
 
       {/* Content */}

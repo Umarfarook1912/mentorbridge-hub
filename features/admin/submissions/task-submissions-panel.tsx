@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { ClipboardList } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { PaginationControls } from '@/components/shared/data-display/pagination-controls'
@@ -24,6 +24,8 @@ interface TaskSubmissionsPanelProps {
   targetStudentIds?: string[] | null
 }
 
+type SubmissionsTab = 'submitted' | 'missing'
+
 export function TaskSubmissionsPanel({
   taskId,
   targetDomains,
@@ -31,6 +33,7 @@ export function TaskSubmissionsPanel({
 }: TaskSubmissionsPanelProps) {
   const { user } = useAuthStore()
   const canWrite = canMutate(user)
+  const [tab, setTab] = useState<SubmissionsTab>('submitted')
   const [statusFilter, setStatusFilter] = useState('')
   const [departmentFilter, setDepartmentFilter] = useState('')
   const [domainFilter, setDomainFilter] = useState('')
@@ -74,36 +77,37 @@ export function TaskSubmissionsPanel({
 
   return (
     <div className="flex w-full flex-col gap-5">
-      <Tabs defaultValue="submitted" className="w-full gap-4">
-        <TabsList className="h-9 w-full justify-start sm:w-fit">
-          <TabsTrigger value="submitted" className="px-3">
-            Submitted ({total})
-          </TabsTrigger>
-          <TabsTrigger value="missing" className="px-3">
-            Not submitted ({unsubmitted.length})
-          </TabsTrigger>
-        </TabsList>
+      <FilterPills
+        aria-label="Submission status"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: 'submitted', label: `Submitted (${total})` },
+          { value: 'missing', label: `Not submitted (${unsubmitted.length})` },
+        ]}
+      />
 
-        <SubmissionsFilters
-          statusFilter={statusFilter}
-          departmentFilter={departmentFilter}
-          domainFilter={domainFilter}
-          total={total}
-          onStatusChange={(v) => {
-            setStatusFilter(v)
-            pagination.reset()
-          }}
-          onDepartmentChange={(v) => {
-            setDepartmentFilter(v)
-            pagination.reset()
-          }}
-          onDomainChange={(v) => {
-            setDomainFilter(v)
-            pagination.reset()
-          }}
-        />
+      <SubmissionsFilters
+        statusFilter={statusFilter}
+        departmentFilter={departmentFilter}
+        domainFilter={domainFilter}
+        total={total}
+        onStatusChange={(v) => {
+          setStatusFilter(v)
+          pagination.reset()
+        }}
+        onDepartmentChange={(v) => {
+          setDepartmentFilter(v)
+          pagination.reset()
+        }}
+        onDomainChange={(v) => {
+          setDomainFilter(v)
+          pagination.reset()
+        }}
+      />
 
-        <TabsContent value="submitted" className="mt-0 w-full space-y-4">
+      {tab === 'submitted' ? (
+        <div className="w-full space-y-4">
           {isLoading ? (
             <LoadingSkeleton />
           ) : !submissions.length ? (
@@ -131,15 +135,13 @@ export function TaskSubmissionsPanel({
               />
             </>
           )}
-        </TabsContent>
-
-        <TabsContent value="missing" className="mt-0 w-full">
-          <UnsubmittedStudentsList
-            students={unsubmitted}
-            isLoading={loadingAll || loadingStudents}
-          />
-        </TabsContent>
-      </Tabs>
+        </div>
+      ) : (
+        <UnsubmittedStudentsList
+          students={unsubmitted}
+          isLoading={loadingAll || loadingStudents}
+        />
+      )}
 
       <FeedbackDialog
         submissionId={feedbackId}

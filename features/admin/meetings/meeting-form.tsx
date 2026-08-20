@@ -9,12 +9,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { FormFieldWrapper } from '@/components/shared/forms/form-field-wrapper'
+import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { MeetingAudiencePicker } from './meeting-audience-picker'
 import { meetingSchema, type MeetingInput } from '@/lib/validations/meeting'
 import { useUpsertMeeting } from '@/services/meetings/use-upsert-meeting'
 import type { IMeetingEntity } from '@/services/meetings'
 import { getErrorMessage, toDateInputValue, toTimeInputValue } from '@/utils/form'
-import { cn } from '@/utils/cn'
 import type { MeetingDomain } from '@/utils/meeting-audience'
 
 interface MeetingFormProps {
@@ -124,32 +124,17 @@ export function MeetingForm({ meeting, onSuccess }: MeetingFormProps) {
         required
         hint="Mandatory meetings appear in Attendance for marking"
       >
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setValue('attendanceMandatory', true, { shouldValidate: true })}
-            className={cn(
-              'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors',
-              attendanceMandatory
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background text-muted-foreground hover:text-foreground border-border'
-            )}
-          >
-            Mandatory
-          </button>
-          <button
-            type="button"
-            onClick={() => setValue('attendanceMandatory', false, { shouldValidate: true })}
-            className={cn(
-              'rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors',
-              !attendanceMandatory
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background text-muted-foreground hover:text-foreground border-border'
-            )}
-          >
-            Not mandatory
-          </button>
-        </div>
+        <FilterPills
+          aria-label="Attendance requirement"
+          value={attendanceMandatory ? 'mandatory' : 'optional'}
+          onChange={(v) =>
+            setValue('attendanceMandatory', v === 'mandatory', { shouldValidate: true })
+          }
+          options={[
+            { value: 'mandatory', label: 'Mandatory' },
+            { value: 'optional', label: 'Not mandatory' },
+          ]}
+        />
       </FormFieldWrapper>
 
       <FormFieldWrapper label="Google Meet URL" htmlFor="meetUrl" error={errors.meetUrl}>

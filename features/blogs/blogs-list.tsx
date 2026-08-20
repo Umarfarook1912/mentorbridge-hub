@@ -3,9 +3,9 @@
 import { useMemo, useState } from 'react'
 import { Newspaper, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { SearchBar } from '@/components/shared/forms/search-bar'
+import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { BlogForm } from './blog-form'
@@ -15,12 +15,15 @@ import { useAuthStore } from '@/store/auth-store'
 import { useDebounce } from '@/hooks/use-debounce'
 import { canAuthorContent } from '@/lib/permissions'
 
+type BlogTab = 'all' | 'mine' | 'community'
+
 export function BlogsList() {
   const { user } = useAuthStore()
   const { data: blogs = [], isLoading } = useGetBlogs()
   const [addOpen, setAddOpen] = useState(false)
   const [editBlog, setEditBlog] = useState<IBlogEntity | null>(null)
   const [search, setSearch] = useState('')
+  const [tab, setTab] = useState<BlogTab>('all')
   const debouncedSearch = useDebounce(search)
 
   const searchedBlogs = useMemo(() => {
@@ -57,6 +60,9 @@ export function BlogsList() {
   const noMatchTitle = 'No matching blogs'
   const noMatchDescription = 'Try a different search'
 
+  const section =
+    tab === 'mine' ? myBlogs : tab === 'community' ? otherBlogs : searchedBlogs
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -86,27 +92,32 @@ export function BlogsList() {
           action={canShare ? { label: 'Share Blog', onClick: () => setAddOpen(true) } : undefined}
         />
       ) : (
-        <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">All ({searchedBlogs.length})</TabsTrigger>
-            <TabsTrigger value="mine">My Blogs ({myBlogs.length})</TabsTrigger>
-            <TabsTrigger value="community">Community ({otherBlogs.length})</TabsTrigger>
-          </TabsList>
+        <div className="space-y-4">
+          <FilterPills
+            aria-label="Blog section"
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: 'all', label: `All (${searchedBlogs.length})` },
+              { value: 'mine', label: `My Blogs (${myBlogs.length})` },
+              { value: 'community', label: `Community (${otherBlogs.length})` },
+            ]}
+          />
 
-          <TabsContent value="all" className="mt-4">
+          {tab === 'all' ? (
             <BlogSection
-              blogs={searchedBlogs}
+              blogs={section}
               emptyTitle={noMatchTitle}
               emptyDescription={noMatchDescription}
               canEdit={canManage}
               canDelete={canManage}
               onEdit={setEditBlog}
             />
-          </TabsContent>
+          ) : null}
 
-          <TabsContent value="mine" className="mt-4">
+          {tab === 'mine' ? (
             <BlogSection
-              blogs={myBlogs}
+              blogs={section}
               emptyTitle={hasSearch ? noMatchTitle : "You haven't shared a blog yet"}
               emptyDescription={
                 hasSearch ? noMatchDescription : 'Use Share Blog to post your Medium article'
@@ -120,11 +131,11 @@ export function BlogsList() {
               canDelete={canManage}
               onEdit={setEditBlog}
             />
-          </TabsContent>
+          ) : null}
 
-          <TabsContent value="community" className="mt-4">
+          {tab === 'community' ? (
             <BlogSection
-              blogs={otherBlogs}
+              blogs={section}
               emptyTitle={hasSearch ? noMatchTitle : 'No community blogs yet'}
               emptyDescription={
                 hasSearch ? noMatchDescription : 'When others share blogs, they will appear here'
@@ -133,8 +144,8 @@ export function BlogsList() {
               canDelete={canManageCommunity}
               onEdit={setEditBlog}
             />
-          </TabsContent>
-        </Tabs>
+          ) : null}
+        </div>
       )}
 
       <FormDialog

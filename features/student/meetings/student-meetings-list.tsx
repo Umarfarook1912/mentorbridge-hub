@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { CalendarDays } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { MeetingCard } from '@/components/shared/data-display/meeting-card'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
@@ -10,8 +10,11 @@ import { useGetMeetings } from '@/services/meetings/use-get-meetings'
 import { useAuthStore } from '@/store/auth-store'
 import { isMeetingForStudent } from '@/utils/meeting-audience'
 
+type TimeFilter = 'today' | 'past'
+
 export function StudentMeetingsList() {
   const { user } = useAuthStore()
+  const [time, setTime] = useState<TimeFilter>('today')
   const { data: todayRaw = [], isLoading: lt } = useGetMeetings('today')
   const { data: pastRaw = [], isLoading: lp } = useGetMeetings('past')
 
@@ -36,44 +39,36 @@ export function StudentMeetingsList() {
     [pastRaw, user?.id, user?.domainInterest]
   )
 
+  const meetings = time === 'today' ? today : past
+  const isLoading = time === 'today' ? lt : lp
+
   return (
-    <Tabs defaultValue="today">
-      <TabsList>
-        <TabsTrigger value="today">Today ({today.length})</TabsTrigger>
-        <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
-      </TabsList>
+    <div className="space-y-4">
+      <FilterPills
+        aria-label="Meeting time"
+        value={time}
+        onChange={setTime}
+        options={[
+          { value: 'today', label: `Today (${today.length})` },
+          { value: 'past', label: `Past (${past.length})` },
+        ]}
+      />
 
-      <TabsContent value="today" className="mt-4">
-        {lt ? (
-          <LoadingSkeleton />
-        ) : today.length === 0 ? (
-          <EmptyState
-            icon={CalendarDays}
-            title="No meetings today"
-            description="Check back soon for new sessions"
-          />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {today.map((m) => (
-              <MeetingCard key={m.id} meeting={m} showJoin />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="past" className="mt-4">
-        {lp ? (
-          <LoadingSkeleton />
-        ) : past.length === 0 ? (
-          <EmptyState icon={CalendarDays} title="No past meetings" />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {past.map((m) => (
-              <MeetingCard key={m.id} meeting={m} showJoin />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-    </Tabs>
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : meetings.length === 0 ? (
+        <EmptyState
+          icon={CalendarDays}
+          title={time === 'today' ? 'No meetings today' : 'No past meetings'}
+          description={time === 'today' ? 'Check back soon for new sessions' : undefined}
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {meetings.map((m) => (
+            <MeetingCard key={m.id} meeting={m} showJoin />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

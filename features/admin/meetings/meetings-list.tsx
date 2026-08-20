@@ -1,21 +1,54 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CalendarDays, CalendarPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { MeetingCard } from '@/components/shared/data-display/meeting-card'
 import { MeetingForm } from './meeting-form'
+import {
+  MeetingsFilters,
+  type MeetingsFiltersState,
+} from './meetings-filters'
 import { useGetMeetings } from '@/services/meetings/use-get-meetings'
 import { useDeleteMeeting } from '@/services/meetings/use-delete-meeting'
 import { useAuthStore } from '@/store/auth-store'
 import { canMutate } from '@/lib/permissions'
 import type { IMeetingEntity } from '@/services/meetings'
+
+function matchesDomain(meeting: IMeetingEntity, domain: MeetingsFiltersState['domain']) {
+  if (domain === 'All') return true
+  const targets = meeting.target_domains ?? []
+  if (targets.length === 0) return true
+  return targets.includes(domain)
+}
+
+function matchesAttendance(
+  meeting: IMeetingEntity,
+  attendance: MeetingsFiltersState['attendance']
+) {
+  if (attendance === 'all') return true
+  if (attendance === 'mandatory') return meeting.attendance_mandatory
+  return !meeting.attendance_mandatory
+}
+
+function matchesSearch(meeting: IMeetingEntity, search: string) {
+  const q = search.trim().toLowerCase()
+  if (!q) return true
+  return (
+    meeting.title.toLowerCase().includes(q) || meeting.handled_by.toLowerCase().includes(q)
+  )
+}
+
+function matchesDateRange(meeting: IMeetingEntity, from: string, to: string) {
+  if (from && meeting.meeting_date < from) return false
+  if (to && meeting.meeting_date > to) return false
+  return true
+}
 
 export function MeetingsList() {
   const { user } = useAuthStore()
@@ -23,10 +56,50 @@ export function MeetingsList() {
   const [addOpen, setAddOpen] = useState(false)
   const [editMeeting, setEditMeeting] = useState<IMeetingEntity | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [filters, setFilters] = useState<MeetingsFiltersState>({
+    time: 'today',
+    domain: 'All',
+    attendance: 'all',
+    search: '',
+    dateFrom: '',
+    dateTo: '',
+  })
 
   const { data: today = [], isLoading: loadingToday } = useGetMeetings('today')
   const { data: past = [], isLoading: loadingPast } = useGetMeetings('past')
   const { mutateAsync: deleteMeeting, isPending: deleting } = useDeleteMeeting()
+
+  function updateFilter<K extends keyof MeetingsFiltersState>(
+    key: K,
+    value: MeetingsFiltersState[K]
+  ) {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const filteredToday = useMemo(
+    () =>
+      today.filter(
+        (m) =>
+          matchesDomain(m, filters.domain) &&
+          matchesAttendance(m, filters.attendance) &&
+          matchesSearch(m, filters.search) &&
+          matchesDateRange(m, filters.dateFrom, filters.dateTo)
+      ),
+    [today, filters]
+  )
+  const filteredPast = useMemo(
+    () =>
+      past.filter(
+        (m) =>
+          matchesDomain(m, filters.domain) &&
+          matchesAttendance(m, filters.attendance) &&
+          matchesSearch(m, filters.search) &&
+          matchesDateRange(m, filters.dateFrom, filters.dateTo)
+      ),
+    [past, filters]
+  )
+  const meetings = filters.time === 'today' ? filteredToday : filteredPast
+  const isLoading = filters.time === 'today' ? loadingToday : loadingPast
 
   async function handleDelete() {
     if (!deleteId) return
@@ -41,65 +114,54 @@ export function MeetingsList() {
 
   return (
     <div className="space-y-4">
-      {canWrite ? (
-        <div className="flex justify-end">
-          <Button onClick={() => setAddOpen(true)}>
-            <CalendarPlus className="mr-2 h-4 w-4" /> Create Meeting
-          </Button>
-        </div>
-      ) : null}
+      <div className="flex flex-col gap-3">
+        {canWrite ? (
+          <div className="flex justify-end">
+            <Button onClick={() => setAddOpen(true)}>
+              <CalendarPlus className="mr-2 h-4 w-4" /> Create Meeting
+            </Button>
+          </div>
+        ) : null}
 
-      <Tabs defaultValue="today">
-        <TabsList>
-          <TabsTrigger value="today">Today ({today.length})</TabsTrigger>
-          <TabsTrigger value="past">Past ({past.length})</TabsTrigger>
-        </TabsList>
+        <MeetingsFilters
+          filters={filters}
+          todayCount={filteredToday.length}
+          pastCount={filteredPast.length}
+          onChange={updateFilter}
+        />
+      </div>
 
-        <TabsContent value="today" className="mt-4">
-          {loadingToday ? (
-            <LoadingSkeleton />
-          ) : today.length === 0 ? (
-            <EmptyState
-              icon={CalendarDays}
-              title="No meetings today"
-              description="Create a meeting or check back for scheduled sessions"
-              action={
-                canWrite ? { label: 'Create Meeting', onClick: () => setAddOpen(true) } : undefined
-              }
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : meetings.length === 0 ? (
+        <EmptyState
+          icon={CalendarDays}
+          title={filters.time === 'today' ? 'No meetings today' : 'No past meetings'}
+          description={
+            filters.search || filters.domain !== 'All' || filters.attendance !== 'all'
+              ? 'Try adjusting your filters'
+              : filters.time === 'today'
+                ? 'Create a meeting or check back for scheduled sessions'
+                : undefined
+          }
+          action={
+            canWrite && filters.time === 'today'
+              ? { label: 'Create Meeting', onClick: () => setAddOpen(true) }
+              : undefined
+          }
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {meetings.map((m) => (
+            <MeetingCard
+              key={m.id}
+              meeting={m}
+              onEdit={canWrite ? setEditMeeting : undefined}
+              onDelete={canWrite ? setDeleteId : undefined}
             />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {today.map((m) => (
-                <MeetingCard
-                  key={m.id}
-                  meeting={m}
-                  onEdit={canWrite ? setEditMeeting : undefined}
-                  onDelete={canWrite ? setDeleteId : undefined}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="past" className="mt-4">
-          {loadingPast ? (
-            <LoadingSkeleton />
-          ) : past.length === 0 ? (
-            <EmptyState icon={CalendarDays} title="No past meetings" />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {past.map((m) => (
-                <MeetingCard
-                  key={m.id}
-                  meeting={m}
-                  onEdit={canWrite ? setEditMeeting : undefined}
-                  onDelete={canWrite ? setDeleteId : undefined}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          ))}
+        </div>
+      )}
 
       <FormDialog open={addOpen} onOpenChange={setAddOpen} title="Create Meeting" maxWidth="2xl">
         {addOpen && <MeetingForm key="create-meeting" onSuccess={() => setAddOpen(false)} />}
