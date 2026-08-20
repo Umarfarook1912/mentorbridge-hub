@@ -47,8 +47,8 @@ export function MeetingFields<T extends FieldValues = FieldValues>({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-      {/* Left: core details & schedule */}
-      <div className="space-y-4">
+      {/* Left: only this column scrolls when content is tall */}
+      <div className="min-w-0 space-y-4 lg:max-h-[min(70vh,640px)] lg:overflow-y-auto lg:pr-1">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormFieldWrapper
             label="Meeting Title"
@@ -150,20 +150,22 @@ export function MeetingFields<T extends FieldValues = FieldValues>({
         </FormFieldWrapper>
       </div>
 
-      {/* Right: audience */}
-      <div className="bg-muted/30 rounded-lg border p-4 lg:sticky lg:top-0">
-        <MeetingAudiencePicker
-          domains={targetDomains}
-          studentIds={targetStudentIds}
-          onDomainsChange={(domains) =>
-            setValue(path('targetDomains'), domains as never, { shouldValidate: true })
-          }
-          onStudentIdsChange={(ids) =>
-            setValue(path('targetStudentIds'), ids as never, { shouldValidate: true })
-          }
-          error={errors?.targetDomains ?? errors?.targetStudentIds}
-        />
-      </div>
+      {/* Right: fixed — no scroll */}
+      <aside className="lg:self-start">
+        <div className="bg-muted/30 rounded-lg border p-4">
+          <MeetingAudiencePicker
+            domains={targetDomains}
+            studentIds={targetStudentIds}
+            onDomainsChange={(domains) =>
+              setValue(path('targetDomains'), domains as never, { shouldValidate: true })
+            }
+            onStudentIdsChange={(ids) =>
+              setValue(path('targetStudentIds'), ids as never, { shouldValidate: true })
+            }
+            error={errors?.targetDomains ?? errors?.targetStudentIds}
+          />
+        </div>
+      </aside>
     </div>
   )
 }
