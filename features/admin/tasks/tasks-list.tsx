@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ClipboardPlus, Pencil, Trash2, Calendar, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
+import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import {
@@ -23,6 +24,8 @@ import { isTaskOverdue } from '@/utils/meeting-time'
 import type { ITaskEntity } from '@/services/tasks'
 import { useAuthStore } from '@/store/auth-store'
 import { canMutate } from '@/lib/permissions'
+
+type TaskTimeFilter = 'active' | 'overdue'
 
 function TaskCard({
   task,
@@ -92,12 +95,17 @@ function TaskCard({
 export function TasksList() {
   const { user } = useAuthStore()
   const canWrite = canMutate(user)
+  const [time, setTime] = useState<TaskTimeFilter>('active')
   const [addOpen, setAddOpen] = useState(false)
   const [editTask, setEditTask] = useState<ITaskEntity | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const { data: tasks = [], isLoading } = useGetTasks()
   const { mutateAsync: deleteTask, isPending: deleting } = useDeleteTask()
+
+  const active = useMemo(() => tasks.filter((t) => !isTaskOverdue(t.due_date)), [tasks])
+  const overdue = useMemo(() => tasks.filter((t) => isTaskOverdue(t.due_date)), [tasks])
+  const visible = time === 'active' ? active : overdue
 
   async function handleDelete() {
     if (!deleteId) return
@@ -112,13 +120,22 @@ export function TasksList() {
 
   return (
     <div className="space-y-4">
-      {canWrite ? (
-        <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <FilterPills
+          aria-label="Task time"
+          value={time}
+          onChange={setTime}
+          options={[
+            { value: 'active', label: `Active (${active.length})` },
+            { value: 'overdue', label: `Overdue (${overdue.length})` },
+          ]}
+        />
+        {canWrite ? (
           <Button onClick={() => setAddOpen(true)}>
             <ClipboardPlus className="mr-2 h-4 w-4" /> Create Task
           </Button>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       {isLoading ? (
         <LoadingSkeleton />
@@ -129,9 +146,19 @@ export function TasksList() {
           description="Create tasks and assign them to students"
           action={canWrite ? { label: 'Create Task', onClick: () => setAddOpen(true) } : undefined}
         />
+      ) : !visible.length ? (
+        <EmptyState
+          icon={ClipboardPlus}
+          title={time === 'active' ? 'No active tasks' : 'No overdue tasks'}
+          description={
+            time === 'active'
+              ? 'All tasks are past due — switch to Overdue to view them'
+              : 'No overdue tasks yet'
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {tasks.map((task) => (
+          {visible.map((task) => (
             <TaskCard
               key={task.id}
               task={task}
