@@ -29,3 +29,9 @@ export const meetingSchema = z
   )
 
 export type MeetingInput = z.infer<typeof meetingSchema>
+
+export const multiMeetingSchema = z.object({
+  meetings: z.array(meetingSchema).min(1, 'Add at least one meeting'),
+})
+
+export type MultiMeetingInput = z.infer<typeof multiMeetingSchema>

@@ -33,3 +33,19 @@ export function useUpsertMeeting() {
     },
   })
 }
+
+/** Creates each meeting as its own record, then refreshes the list once. */
+export function useCreateMeetings() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (items: IMeetingMutation[]) => {
+      for (const data of items) {
+        await upsertMeeting({ data })
+      }
+    },
+    onSuccess: async () => {
+      await invalidateMeetings(queryClient)
+    },
+  })
+}

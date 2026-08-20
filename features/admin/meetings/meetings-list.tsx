@@ -4,16 +4,13 @@ import { useMemo, useState } from 'react'
 import { CalendarDays, CalendarPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { MeetingCard } from '@/components/shared/data-display/meeting-card'
-import { MeetingForm } from './meeting-form'
-import {
-  MeetingsFilters,
-  type MeetingsFiltersState,
-} from './meetings-filters'
+import { MeetingsFilters, type MeetingsFiltersState } from './meetings-filters'
+import { MeetingCreateSheet } from './meeting-create-sheet'
+import { MeetingEditSheet } from './meeting-edit-sheet'
 import { useGetMeetings } from '@/services/meetings/use-get-meetings'
 import { useDeleteMeeting } from '@/services/meetings/use-delete-meeting'
 import { useAuthStore } from '@/store/auth-store'
@@ -163,24 +160,12 @@ export function MeetingsList() {
         </div>
       )}
 
-      <FormDialog open={addOpen} onOpenChange={setAddOpen} title="Create Meeting" maxWidth="2xl">
-        {addOpen && <MeetingForm key="create-meeting" onSuccess={() => setAddOpen(false)} />}
-      </FormDialog>
-
-      <FormDialog
+      <MeetingCreateSheet open={addOpen} onOpenChange={setAddOpen} />
+      <MeetingEditSheet
+        meeting={editMeeting}
         open={!!editMeeting}
-        onOpenChange={(o) => !o && setEditMeeting(null)}
-        title="Edit Meeting"
-        maxWidth="2xl"
-      >
-        {editMeeting && (
-          <MeetingForm
-            key={editMeeting.id}
-            meeting={editMeeting}
-            onSuccess={() => setEditMeeting(null)}
-          />
-        )}
-      </FormDialog>
+        onOpenChange={(open) => !open && setEditMeeting(null)}
+      />
 
       <ConfirmDialog
         open={!!deleteId}
