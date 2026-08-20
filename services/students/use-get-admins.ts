@@ -3,6 +3,8 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { QUERY_KEYS, STALE_TIME } from '@/lib/constants'
 import type { IStudentEntity } from './students.types'
 
+const TEAM_ROLES = ['Admin', 'Staff', 'Executive'] as const
+
 export function useGetAdmins() {
   return useQuery({
     queryKey: [QUERY_KEYS.admins],
@@ -11,7 +13,7 @@ export function useGetAdmins() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .in('role', ['Admin', 'Staff'])
+        .in('role', [...TEAM_ROLES])
         .order('full_name', { ascending: true })
 
       if (error) throw error

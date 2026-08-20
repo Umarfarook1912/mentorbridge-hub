@@ -1,209 +1,94 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield } from 'lucide-react'
-import { toast } from 'sonner'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
-import { DataTable, type Column } from '@/components/shared/data-display/data-table'
-import { UserAvatar } from '@/components/shared/data-display/user-avatar'
+import { useMemo, useState } from 'react'
+import { UsersRound } from 'lucide-react'
+import { DataTable } from '@/components/shared/data-display/data-table'
+import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
-import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
-import { FormDialog } from '@/components/shared/forms/form-dialog'
-import { SectionPermissionsPicker } from '@/features/admin/students/section-permissions-picker'
-import { useGetAdmins, useUpdateUserRole, type IStudentEntity } from '@/services/students'
+import { useGetAdmins } from '@/services/students'
 import { useAuthStore } from '@/store/auth-store'
-import { USER_ROLES } from '@/lib/constants'
-import { formatDate } from '@/utils/format'
-import { getErrorMessage } from '@/utils/form'
 import { canMutate } from '@/lib/permissions'
-import type { AdminSection } from '@/lib/permissions'
-import type { UserRole } from '@/types/supabase.types'
+import { AdminRoleDialogs } from './admin-role-dialogs'
+import { buildTeamColumns } from './team-columns'
+import { useAdminRoleChange } from './use-admin-role-change'
+
+type RoleFilter = 'all' | 'Admin' | 'Staff' | 'Executive'
 
 export function AdminsList() {
   const { user } = useAuthStore()
   const canWrite = canMutate(user)
-  const { data: admins = [], isLoading } = useGetAdmins()
-  const { mutateAsync: updateRole, isPending } = useUpdateUserRole()
-  const [pending, setPending] = useState<{ id: string; role: UserRole; name: string } | null>(null)
-  const [executiveSections, setExecutiveSections] = useState<AdminSection[]>([])
-  const [sectionError, setSectionError] = useState<string | undefined>()
+  const { data: members = [], isLoading } = useGetAdmins()
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all')
+  const roleChange = useAdminRoleChange()
 
-  async function confirmRoleChange() {
-    if (!pending) return
-    try {
-      await updateRole({ id: pending.id, role: pending.role })
-      toast.success(`${pending.name} is now a ${pending.role}`)
-      setPending(null)
-    } catch (error: unknown) {
-      toast.error(getErrorMessage(error))
-    }
-  }
+  const admins = useMemo(() => members.filter((m) => m.role === 'Admin'), [members])
+  const staff = useMemo(() => members.filter((m) => m.role === 'Staff'), [members])
+  const executives = useMemo(() => members.filter((m) => m.role === 'Executive'), [members])
+  const visible =
+    roleFilter === 'all'
+      ? members
+      : roleFilter === 'Admin'
+        ? admins
+        : roleFilter === 'Staff'
+          ? staff
+          : executives
 
-  async function confirmExecutive() {
-    if (!pending || pending.role !== 'Executive') return
-    if (executiveSections.length === 0) {
-      setSectionError('Select at least one section for Executive')
-      return
-    }
-    try {
-      await updateRole({
-        id: pending.id,
-        role: 'Executive',
-        sectionPermissions: executiveSections,
-      })
-      toast.success(`${pending.name} is now an Executive`)
-      setPending(null)
-      setExecutiveSections([])
-      setSectionError(undefined)
-    } catch (error: unknown) {
-      toast.error(getErrorMessage(error))
-    }
-  }
-
-  function openRoleChange(id: string, role: UserRole, name: string) {
-    setPending({ id, role, name })
-    setExecutiveSections([])
-    setSectionError(undefined)
-  }
-
-  const columns: Column<IStudentEntity>[] = [
-    {
-      key: 'name',
-      header: 'Admin',
-      cell: (row) => (
-        <div className="flex items-center gap-3">
-          <UserAvatar name={row.full_name} avatarUrl={row.avatar_url} size="sm" />
-          <div>
-            <p className="text-sm font-medium">
-              {row.full_name}
-              {user?.id === row.id ? (
-                <span className="text-muted-foreground ml-1 text-xs">(you)</span>
-              ) : null}
-            </p>
-            <p className="text-muted-foreground text-xs">{row.email}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'joined',
-      header: 'Joined',
-      cell: (row) => (
-        <span className="text-muted-foreground text-sm">{formatDate(row.created_at)}</span>
-      ),
-    },
-    {
-      key: 'role',
-      header: 'Role',
-      cell: (row) => {
-        const isSelf = user?.id === row.id
-        return (
-          <Select
-            value={row.role}
-            disabled={isSelf || isPending || !canWrite}
-            onValueChange={(v) => {
-              if (!v || v === row.role) return
-              openRoleChange(row.id, v as UserRole, row.full_name)
-            }}
-          >
-            <SelectTrigger className="h-8 w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {USER_ROLES.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {r}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )
-      },
-    },
-  ]
+  const columns = buildTeamColumns({
+    currentUserId: user?.id,
+    canWrite,
+    isPending: roleChange.isPending,
+    onRoleChange: roleChange.openRoleChange,
+    onEditAccess: roleChange.openEditAccess,
+  })
 
   if (isLoading) return <LoadingSkeleton />
 
-  if (!admins.length) {
+  if (!members.length) {
     return (
       <EmptyState
-        icon={Shield}
-        title="No admins found"
-        description="Promote a student to Admin from the Students page"
+        icon={UsersRound}
+        title="No team members yet"
+        description="Promote a student to Admin, Staff, or Executive from the Students page"
       />
     )
   }
 
-  const executiveOpen = !!pending && pending.role === 'Executive'
-  const confirmOpen = !!pending && pending.role !== 'Executive'
-
   return (
-    <>
-      <DataTable data={admins} columns={columns} keyExtractor={(r) => r.id} />
-
-      <FormDialog
-        open={executiveOpen}
-        onOpenChange={(o) => {
-          if (!o) {
-            setPending(null)
-            setExecutiveSections([])
-            setSectionError(undefined)
-          }
-        }}
-        title={`Make ${pending?.name ?? ''} an Executive`}
-        description="Choose which admin sections this Executive can access"
-        maxWidth="lg"
-      >
-        <div className="space-y-4">
-          <SectionPermissionsPicker
-            value={executiveSections}
-            onChange={(sections) => {
-              setExecutiveSections(sections)
-              setSectionError(undefined)
-            }}
-            error={sectionError ? { message: sectionError } : undefined}
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setPending(null)
-                setExecutiveSections([])
-                setSectionError(undefined)
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="button" onClick={confirmExecutive} disabled={isPending}>
-              Confirm
-            </Button>
-          </div>
-        </div>
-      </FormDialog>
-
-      <ConfirmDialog
-        open={confirmOpen}
-        onOpenChange={(o) => !o && setPending(null)}
-        title={pending?.role === 'Student' ? 'Demote to Student' : 'Change Role'}
-        description={
-          pending?.role === 'Student'
-            ? `Change ${pending.name}'s role to Student? They will lose admin access.`
-            : `Confirm role change for ${pending?.name}.`
-        }
-        confirmLabel={pending?.role === 'Student' ? 'Demote' : 'Confirm'}
-        variant={pending?.role === 'Student' ? 'destructive' : 'default'}
-        loading={isPending}
-        onConfirm={confirmRoleChange}
+    <div className="space-y-4">
+      <FilterPills
+        aria-label="Team role"
+        value={roleFilter}
+        onChange={setRoleFilter}
+        options={[
+          { value: 'all', label: `All (${members.length})` },
+          { value: 'Admin', label: `Admin (${admins.length})` },
+          { value: 'Staff', label: `Staff (${staff.length})` },
+          { value: 'Executive', label: `Executive (${executives.length})` },
+        ]}
       />
-    </>
+
+      {!visible.length ? (
+        <EmptyState
+          icon={UsersRound}
+          title={`No ${roleFilter} members`}
+          description="Try another filter to see team members"
+        />
+      ) : (
+        <DataTable data={visible} columns={columns} keyExtractor={(r) => r.id} />
+      )}
+
+      <AdminRoleDialogs
+        pending={roleChange.pending}
+        executiveSections={roleChange.executiveSections}
+        sectionError={roleChange.sectionError}
+        isPending={roleChange.isPending}
+        onExecutiveSectionsChange={roleChange.setExecutiveSections}
+        onClearSectionError={roleChange.clearSectionError}
+        onClose={roleChange.closeDialogs}
+        onConfirmRoleChange={roleChange.confirmRoleChange}
+        onConfirmExecutive={roleChange.confirmExecutive}
+      />
+    </div>
   )
 }

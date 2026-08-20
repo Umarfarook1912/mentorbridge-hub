@@ -25,8 +25,11 @@ export const ADMIN_SECTION_LABELS: Record<AdminSection, string> = {
   reports: 'Reports',
 }
 
-/** Admin-only paths Executives cannot access */
-const ADMIN_ONLY_PREFIXES = [ROUTES.admin.students, ROUTES.admin.admins] as const
+/** Paths only Admin can open (Staff and Executive blocked). */
+const ADMIN_ROLE_ONLY_PREFIXES = [ROUTES.admin.admins] as const
+
+/** Admin/Staff paths Executives cannot access */
+const ADMIN_ONLY_PREFIXES = [ROUTES.admin.students, ...ADMIN_ROLE_ONLY_PREFIXES] as const
 
 const SECTION_BY_PREFIX: { prefix: string; section: AdminSection }[] = [
   { prefix: ROUTES.admin.dashboard, section: 'dashboard' },
@@ -105,6 +108,9 @@ export function canAccessAdminPath(
   pathname: string
 ): boolean {
   if (!user) return false
+  if (ADMIN_ROLE_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) {
+    return user.role === 'Admin'
+  }
   if (user.role === 'Admin' || user.role === 'Staff') return true
   if (user.role !== 'Executive') return false
   if (ADMIN_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) return false

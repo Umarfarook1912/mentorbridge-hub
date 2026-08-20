@@ -9,8 +9,8 @@ import {
   BookOpen,
   Newspaper,
   Video,
-  Shield,
   User,
+  UsersRound,
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/lib/constants'
@@ -22,7 +22,7 @@ export interface NavItem {
   href: string
   icon: LucideIcon
   badge?: string
-  section?: AdminSection | 'adminOnly'
+  section?: AdminSection | 'adminOnly' | 'adminRoleOnly'
 }
 
 export interface NavSection {
@@ -45,7 +45,7 @@ export const ADMIN_NAV: NavSection[] = [
     title: 'Management',
     items: [
       { label: 'Students', href: ROUTES.admin.students, icon: Users, section: 'adminOnly' },
-      { label: 'Admins', href: ROUTES.admin.admins, icon: Shield, section: 'adminOnly' },
+      { label: 'Team', href: ROUTES.admin.admins, icon: UsersRound, section: 'adminRoleOnly' },
       { label: 'Meetings', href: ROUTES.admin.meetings, icon: CalendarDays, section: 'meetings' },
       {
         label: 'Attendance',
@@ -95,6 +95,7 @@ function filterAdminNav(user: PermissionUser): NavSection[] {
     ...section,
     items: section.items.filter((item) => {
       if (!item.section) return true
+      if (item.section === 'adminRoleOnly') return user.role === 'Admin'
       if (item.section === 'adminOnly') return user.role === 'Admin' || user.role === 'Staff'
       return canViewSection(user, item.section)
     }),
