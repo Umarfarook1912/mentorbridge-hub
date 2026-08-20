@@ -91,15 +91,12 @@ export function MeetingCreateSheet({ open, onOpenChange }: MeetingCreateSheetPro
           </div>
         ))}
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => append({ ...EMPTY_MEETING })}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add another meeting
-        </Button>
+        <div className="flex justify-end">
+          <Button type="button" onClick={() => append({ ...EMPTY_MEETING })}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add another meeting
+          </Button>
+        </div>
       </form>
     </MeetingSheet>
   )
