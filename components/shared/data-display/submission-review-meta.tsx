@@ -5,21 +5,35 @@ interface SubmissionReviewMetaProps {
   status: SubmissionStatus
   reviewedByName?: string | null
   reviewedAt?: string | null
+  /** Compact single-line for tight spaces; default is stacked. */
+  compact?: boolean
 }
 
 export function SubmissionReviewMeta({
   status,
   reviewedByName,
   reviewedAt,
+  compact = false,
 }: SubmissionReviewMetaProps) {
   if (status === 'Pending' || (!reviewedByName && !reviewedAt)) return null
 
-  const action = status === 'Rejected' ? 'Rejected' : 'Approved'
+  const verb = status === 'Rejected' ? 'Rejected' : 'Approved'
+
+  if (compact) {
+    return (
+      <p className="text-muted-foreground text-xs">
+        {reviewedByName ? `${verb} by ${reviewedByName}` : verb}
+        {reviewedAt ? ` · ${formatDateTime(reviewedAt)}` : ''}
+      </p>
+    )
+  }
 
   return (
-    <p className="text-muted-foreground text-xs">
-      {reviewedByName ? `${action} by ${reviewedByName}` : action}
-      {reviewedAt ? ` · ${formatDateTime(reviewedAt)}` : ''}
-    </p>
+    <div className="text-muted-foreground space-y-0.5 text-xs">
+      <p>
+        {verb} by {reviewedByName ?? '—'}
+      </p>
+      {reviewedAt ? <p>{formatDateTime(reviewedAt)}</p> : null}
+    </div>
   )
 }

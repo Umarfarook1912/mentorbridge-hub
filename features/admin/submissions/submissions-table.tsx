@@ -1,11 +1,10 @@
 'use client'
 
-import { MessageSquare } from 'lucide-react'
+import { Eye, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/shared/data-display/data-table'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import { UserAvatar } from '@/components/shared/data-display/user-avatar'
-import { SubmissionReviewMeta } from '@/components/shared/data-display/submission-review-meta'
 import { SubmissionLinkIcons } from '@/components/shared/data-display/submission-link-icons'
 import { formatDateTime } from '@/utils/format'
 import type { SubmissionStatus } from '@/types/supabase.types'
@@ -19,6 +18,7 @@ export type SubmissionRow = {
   other_url: string | null
   submitted_at: string
   status: SubmissionStatus
+  feedback: string | null
   reviewed_by_name: string | null
   reviewed_at: string | null
   profiles: {
@@ -30,8 +30,16 @@ export type SubmissionRow = {
   } | null
 }
 
-export function getSubmissionColumns(onReview?: (id: string) => void): Column<SubmissionRow>[] {
-  const columns: Column<SubmissionRow>[] = [
+interface GetColumnsArgs {
+  onOpenReview: (row: SubmissionRow) => void
+  canWrite: boolean
+}
+
+export function getSubmissionColumns({
+  onOpenReview,
+  canWrite,
+}: GetColumnsArgs): Column<SubmissionRow>[] {
+  return [
     {
       key: 'student',
       header: 'Student',
@@ -78,50 +86,70 @@ export function getSubmissionColumns(onReview?: (id: string) => void): Column<Su
     {
       key: 'status',
       header: 'Status',
-      className: 'w-[140px]',
-      headerClassName: 'w-[140px]',
-      cell: (row) => (
-        <div className="space-y-1">
-          <StatusBadge status={row.status} />
-          <SubmissionReviewMeta
-            status={row.status}
-            reviewedByName={row.reviewed_by_name}
-            reviewedAt={row.reviewed_at}
-          />
-        </div>
-      ),
+      className: 'w-[110px]',
+      headerClassName: 'w-[110px]',
+      cell: (row) => <StatusBadge status={row.status} />,
     },
-  ]
-
-  if (onReview) {
-    columns.push({
+    {
+      key: 'reviewed',
+      header: 'Reviewed',
+      className: 'min-w-[160px] max-w-[220px]',
+      headerClassName: 'min-w-[160px] max-w-[220px]',
+      cell: (row) => {
+        if (row.status === 'Pending' || (!row.reviewed_by_name && !row.reviewed_at)) {
+          return <span className="text-muted-foreground text-sm">—</span>
+        }
+        return (
+          <div className="min-w-0">
+            {row.reviewed_by_name ? (
+              <p className="truncate text-sm font-medium">{row.reviewed_by_name}</p>
+            ) : null}
+            {row.reviewed_at ? (
+              <p className="text-muted-foreground text-xs">{formatDateTime(row.reviewed_at)}</p>
+            ) : null}
+            {row.feedback?.trim() ? (
+              <p className="text-muted-foreground mt-0.5 truncate text-xs italic">
+                “{row.feedback.trim()}”
+              </p>
+            ) : null}
+          </div>
+        )
+      },
+    },
+    {
       key: 'actions',
       header: '',
       className: 'w-[110px] text-right',
       headerClassName: 'w-[110px]',
-      cell: (row) => (
-        <Button variant="ghost" size="sm" onClick={() => onReview(row.id)}>
-          <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
-          Review
-        </Button>
-      ),
-    })
-  }
-
-  return columns
+      cell: (row) => {
+        const isPending = row.status === 'Pending'
+        if (!canWrite && isPending) return null
+        const label = !canWrite || !isPending ? 'View' : 'Review'
+        const Icon = !canWrite || !isPending ? Eye : MessageSquare
+        return (
+          <Button variant="ghost" size="sm" onClick={() => onOpenReview(row)}>
+            <Icon className="mr-1.5 h-3.5 w-3.5" />
+            {label}
+          </Button>
+        )
+      },
+    },
+  ]
 }
 
 export function SubmissionsDataTable({
   rows,
-  onReview,
+  onOpenReview,
+  canWrite,
 }: {
   rows: SubmissionRow[]
-  onReview?: (id: string) => void
+  onOpenReview: (row: SubmissionRow) => void
+  canWrite: boolean
 }) {
   return (
     <DataTable
       data={rows}
-      columns={getSubmissionColumns(onReview)}
+      columns={getSubmissionColumns({ onOpenReview, canWrite })}
       keyExtractor={(r) => r.id}
       className="w-full"
       fixedLayout

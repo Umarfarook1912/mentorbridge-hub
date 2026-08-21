@@ -37,7 +37,7 @@ export function TaskSubmissionsPanel({
   const [statusFilter, setStatusFilter] = useState('')
   const [departmentFilter, setDepartmentFilter] = useState('')
   const [domainFilter, setDomainFilter] = useState('')
-  const [feedbackId, setFeedbackId] = useState<string | null>(null)
+  const [selected, setSelected] = useState<SubmissionRow | null>(null)
   const pagination = usePagination()
 
   const { data: allSubmissions = [], isLoading: loadingAll } = useGetSubmissions({ taskId })
@@ -120,7 +120,8 @@ export function TaskSubmissionsPanel({
             <>
               <SubmissionsDataTable
                 rows={pageRows}
-                onReview={canWrite ? setFeedbackId : undefined}
+                canWrite={canWrite}
+                onOpenReview={setSelected}
               />
               <PaginationControls
                 page={page}
@@ -144,10 +145,22 @@ export function TaskSubmissionsPanel({
       )}
 
       <FeedbackDialog
-        submissionId={feedbackId}
-        open={!!feedbackId}
+        submission={
+          selected
+            ? {
+                id: selected.id,
+                status: selected.status,
+                feedback: selected.feedback,
+                reviewed_by_name: selected.reviewed_by_name,
+                reviewed_at: selected.reviewed_at,
+                studentName: selected.profiles?.full_name,
+              }
+            : null
+        }
+        open={!!selected}
+        canWrite={canWrite}
         onOpenChange={(o) => {
-          if (!o) setFeedbackId(null)
+          if (!o) setSelected(null)
         }}
       />
     </div>
