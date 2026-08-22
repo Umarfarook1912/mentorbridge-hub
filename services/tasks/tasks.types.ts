@@ -6,6 +6,7 @@ export type ITaskEntity = Database['public']['Tables']['tasks']['Row']
 export interface ITaskMutation {
   title: string
   description?: string
+  assignedBy: string
   dueDate: string
   targetDomains?: MeetingDomain[]
   targetStudentIds?: string[]

@@ -8,10 +8,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params
   const body = await request.json()
-  const { title, description, dueDate, targetDomains, targetStudentIds } = body
+  const { title, description, assignedBy, dueDate, targetDomains, targetStudentIds } = body
 
-  if (!title || !dueDate) {
-    return NextResponse.json({ message: 'Title and due date are required' }, { status: 400 })
+  if (!title || !dueDate || !assignedBy) {
+    return NextResponse.json(
+      { message: 'Title, assigned by, and due date are required' },
+      { status: 400 }
+    )
   }
 
   const domains = toDbTargetDomains(
@@ -26,6 +29,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .update({
       title,
       description: description || null,
+      assigned_by: assignedBy,
       due_date: dueDate,
       target_domains: domains,
       target_student_ids: studentIds,

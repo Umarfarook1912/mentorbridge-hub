@@ -47,6 +47,7 @@ export function SubmissionsDashboard() {
             <h2 className="text-xl leading-snug font-semibold break-words">{selectedTask.title}</h2>
             <p className="text-muted-foreground mt-1 text-sm">
               Due {formatDate(selectedTask.due_date)}
+              {selectedTask.assigned_by ? ` · Assigned by ${selectedTask.assigned_by}` : ''}
             </p>
           </div>
         </div>

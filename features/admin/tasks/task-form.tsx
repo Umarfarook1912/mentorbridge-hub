@@ -37,6 +37,7 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
     defaultValues: {
       title: '',
       description: '',
+      assignedBy: '',
       dueDate: '',
       targetDomains: [],
       targetStudentIds: [],
@@ -50,6 +51,7 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
     reset({
       title: task?.title ?? '',
       description: task?.description ?? '',
+      assignedBy: task?.assigned_by ?? '',
       dueDate: toDateInputValue(task?.due_date),
       targetDomains: (task?.target_domains as MeetingDomain[] | null) ?? [],
       targetStudentIds: task?.target_student_ids ?? [],
@@ -68,9 +70,24 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <FormFieldWrapper label="Task Title" htmlFor="title" error={errors.title} required>
-        <Input id="title" placeholder="Build a React Todo App" {...register('title')} />
-      </FormFieldWrapper>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormFieldWrapper label="Task Title" htmlFor="title" error={errors.title} required>
+          <Input id="title" placeholder="Build a React Todo App" {...register('title')} />
+        </FormFieldWrapper>
+
+        <FormFieldWrapper
+          label="Assigned By"
+          htmlFor="assignedBy"
+          error={errors.assignedBy}
+          required
+        >
+          <Input
+            id="assignedBy"
+            placeholder="Senthil Kumar"
+            {...register('assignedBy')}
+          />
+        </FormFieldWrapper>
+      </div>
 
       <FormFieldWrapper label="Description" htmlFor="description" error={errors.description}>
         <Textarea

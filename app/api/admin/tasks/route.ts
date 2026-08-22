@@ -8,10 +8,13 @@ export async function POST(request: Request) {
   if ('error' in auth && auth.error) return auth.error
 
   const body = await request.json()
-  const { title, description, dueDate, targetDomains, targetStudentIds } = body
+  const { title, description, assignedBy, dueDate, targetDomains, targetStudentIds } = body
 
-  if (!title || !dueDate) {
-    return NextResponse.json({ message: 'Title and due date are required' }, { status: 400 })
+  if (!title || !dueDate || !assignedBy) {
+    return NextResponse.json(
+      { message: 'Title, assigned by, and due date are required' },
+      { status: 400 }
+    )
   }
 
   const domains = toDbTargetDomains(
@@ -26,6 +29,7 @@ export async function POST(request: Request) {
     .insert({
       title,
       description: description || null,
+      assigned_by: assignedBy,
       due_date: dueDate,
       target_domains: domains,
       target_student_ids: studentIds,
@@ -40,7 +44,7 @@ export async function POST(request: Request) {
     targetDomains: domains,
     targetStudentIds: studentIds,
     title: `New task: ${title}`,
-    body: `Due ${dueDate}`,
+    body: `Due ${dueDate} · Assigned by ${assignedBy}`,
     type: 'task',
   })
 

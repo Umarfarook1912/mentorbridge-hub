@@ -115,6 +115,7 @@ export interface Database {
           id: string
           title: string
           description: string | null
+          assigned_by: string
           due_date: string
           target_domains: string[] | null
           target_student_ids: string[] | null
@@ -125,6 +126,7 @@ export interface Database {
           id?: string
           title: string
           description?: string | null
+          assigned_by: string
           due_date: string
           target_domains?: string[] | null
           target_student_ids?: string[] | null
@@ -134,6 +136,7 @@ export interface Database {
         Update: {
           title?: string
           description?: string | null
+          assigned_by?: string
           due_date?: string
           target_domains?: string[] | null
           target_student_ids?: string[] | null

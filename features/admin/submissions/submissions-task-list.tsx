@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Calendar, ChevronRight, ClipboardList } from 'lucide-react'
+import { Calendar, ChevronRight, ClipboardList, User } from 'lucide-react'
 import {
   FeatureCard,
   FeatureCardDateBlock,
@@ -118,6 +118,9 @@ export function SubmissionsTaskList({ tasks, isLoading, onSelect }: SubmissionsT
                   label={`Due ${formatDate(task.due_date)}${overdue ? ' (Overdue)' : ''}`}
                   tone={overdue ? 'danger' : 'default'}
                 />
+                {task.assigned_by ? (
+                  <FeatureCardMeta icon={User} label={`Assigned by ${task.assigned_by}`} />
+                ) : null}
               </FeatureCard>
             )
           })}

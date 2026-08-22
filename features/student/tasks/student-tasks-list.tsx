@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, BookOpen } from 'lucide-react'
+import { Calendar, BookOpen, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import {
@@ -129,6 +129,9 @@ export function StudentTasksList() {
                   label={`Due ${formatDate(task.due_date)}${overdue ? ' (Overdue)' : ''}`}
                   tone={overdue ? 'danger' : 'default'}
                 />
+                {task.assigned_by ? (
+                  <FeatureCardMeta icon={User} label={`Assigned by ${task.assigned_by}`} />
+                ) : null}
                 {overdue ? (
                   <p className="text-destructive text-xs font-medium">
                     {submission
