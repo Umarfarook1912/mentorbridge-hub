@@ -92,7 +92,21 @@ export function AttendanceReport() {
 
   function handleExport() {
     if (studentId) exportToCSV(rows, `attendance-${studentId}-${month}`)
-    else exportToCSV(summary, `attendance-summary-${month}`)
+    else {
+      const exportRows = summary.map((s) => ({
+        rank: s.rank,
+        studentName: s.studentName,
+        email: s.email,
+        department: s.department,
+        present: s.present,
+        absent: s.absent,
+        permission: s.permission,
+        total: s.total,
+        'Attended %': s.attendedRate,
+        'Permission %': s.permissionRate,
+      }))
+      exportToCSV(exportRows, `attendance-summary-${month}`)
+    }
   }
 
   function resetPage() {
@@ -164,10 +178,15 @@ export function AttendanceReport() {
             <div className="space-y-3">
               {selectedStudent && (
                 <p className="text-muted-foreground text-sm">
-                  {selectedStudent.studentName} · {selectedStudent.present}/{selectedStudent.total}{' '}
-                  present ·{' '}
-                  <span className="text-foreground font-semibold">{selectedStudent.rate}%</span>{' '}
-                  attendance
+                  {selectedStudent.studentName} · {selectedStudent.present} present ·{' '}
+                  {selectedStudent.permission} permission · {selectedStudent.absent} absent ·{' '}
+                  {selectedStudent.total} total ·{' '}
+                  <span className="text-foreground font-semibold">
+                    {selectedStudent.attendedRate}% attended
+                  </span>
+                  {selectedStudent.permission > 0 && (
+                    <span> (-{selectedStudent.permissionRate}% permission)</span>
+                  )}
                 </p>
               )}
               <DataTable

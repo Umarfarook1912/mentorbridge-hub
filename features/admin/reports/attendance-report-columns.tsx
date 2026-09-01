@@ -20,6 +20,11 @@ export const attendanceSummaryColumns: Column<StudentAttendanceSummary>[] = [
     cell: (r) => <span className="text-sm">{r.department}</span>,
   },
   {
+    key: 'total',
+    header: 'Total',
+    cell: (r) => <span className="text-sm font-medium">{r.total}</span>,
+  },
+  {
     key: 'present',
     header: 'Present',
     cell: (r) => <span className="text-sm">{r.present}</span>,
@@ -31,9 +36,18 @@ export const attendanceSummaryColumns: Column<StudentAttendanceSummary>[] = [
     cell: (r) => <span className="text-sm">{r.permission}</span>,
   },
   {
-    key: 'rate',
-    header: 'Attendance %',
-    cell: (r) => <span className="text-sm font-semibold tabular-nums">{r.rate}%</span>,
+    key: 'attendedRate',
+    header: 'Attended %',
+    cell: (r) => (
+      <span className="text-sm font-semibold tabular-nums">
+        {r.attendedRate}%
+        {r.permission > 0 && (
+          <span className="text-muted-foreground ml-1 text-xs font-normal">
+            (-{r.permissionRate}% permission)
+          </span>
+        )}
+      </span>
+    ),
   },
 ]
 

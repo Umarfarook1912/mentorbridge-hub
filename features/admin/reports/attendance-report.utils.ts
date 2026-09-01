@@ -21,7 +21,9 @@ export interface StudentAttendanceSummary {
   absent: number
   permission: number
   total: number
-  rate: number
+  presentRate: number
+  permissionRate: number
+  attendedRate: number
   rank: number
 }
 
@@ -39,7 +41,9 @@ export function aggregateByStudent(rows: AttendanceDetailRow[]): StudentAttendan
         absent: 0,
         permission: 0,
         total: 0,
-        rate: 0,
+        presentRate: 0,
+        permissionRate: 0,
+        attendedRate: 0,
         rank: 0,
       }
     }
@@ -53,12 +57,17 @@ export function aggregateByStudent(rows: AttendanceDetailRow[]): StudentAttendan
   return Object.values(byStudent)
     .map((s) => ({
       ...s,
-      rate: s.total > 0 ? Math.round((s.present / s.total) * 100) : 0,
+      presentRate: s.total > 0 ? Math.round((s.present / s.total) * 100) : 0,
+      permissionRate: s.total > 0 ? Math.round((s.permission / s.total) * 100) : 0,
+      attendedRate:
+        s.total > 0 ? Math.round(((s.present + s.permission) / s.total) * 100) : 0,
       rank: 0,
     }))
     .sort(
       (a, b) =>
-        b.rate - a.rate || b.present - a.present || a.studentName.localeCompare(b.studentName)
+        b.attendedRate - a.attendedRate ||
+        b.present - a.present ||
+        a.studentName.localeCompare(b.studentName)
     )
     .map((s, i) => ({ ...s, rank: i + 1 }))
 }
