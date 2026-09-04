@@ -1,15 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { CalendarDays, Clock, User } from 'lucide-react'
-import {
-  FeatureCard,
-  FeatureCardDateBlock,
-  FeatureCardMeta,
-} from '@/components/shared/data-display/feature-card'
+import { CalendarDays } from 'lucide-react'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { AttendanceRoster } from './attendance-roster'
+import { AttendanceMeetingList } from './attendance-meeting-list'
+import { AttendanceMobileRoster } from './attendance-mobile-roster'
 import {
   AttendanceMeetingFilters,
   type AttendanceFiltersState,
@@ -70,16 +67,9 @@ export function AttendanceMeetingSelector() {
   })
 
   const mandatory = useMemo(() => meetings.filter((m) => m.attendance_mandatory), [meetings])
-
   const filteredAll = useMemo(() => applyFilters(mandatory, filters), [mandatory, filters])
-  const todayMeetings = useMemo(
-    () => filteredAll.filter(isTodayMeeting),
-    [filteredAll]
-  )
-  const pastMeetings = useMemo(
-    () => filteredAll.filter(isPastMeeting),
-    [filteredAll]
-  )
+  const todayMeetings = useMemo(() => filteredAll.filter(isTodayMeeting), [filteredAll])
+  const pastMeetings = useMemo(() => filteredAll.filter(isPastMeeting), [filteredAll])
 
   const visibleMeetings = filters.time === 'today' ? todayMeetings : pastMeetings
   const selected = visibleMeetings.find((m) => m.id === selectedId)
@@ -89,6 +79,11 @@ export function AttendanceMeetingSelector() {
     value: AttendanceFiltersState[K]
   ) {
     setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function selectMeeting(id: string) {
+    setSelectedId(id)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   if (isLoading) return <LoadingSkeleton />
@@ -105,57 +100,42 @@ export function AttendanceMeetingSelector() {
 
   const hasActiveFilters =
     !!filters.search || filters.domain !== 'All' || !!filters.dateFrom || !!filters.dateTo
+  const emptyTitle = filters.time === 'today' ? 'No meetings today' : 'No past meetings'
+  const emptyDescription = hasActiveFilters ? 'Try adjusting your filters' : undefined
 
   return (
     <div className="space-y-4">
-      <AttendanceMeetingFilters
-        filters={filters}
-        todayCount={todayMeetings.length}
-        pastCount={pastMeetings.length}
-        onChange={updateFilter}
-      />
+      {/* Mobile: hide filters while marking so roster is the only surface */}
+      <div className={selected ? 'hidden lg:block' : undefined}>
+        <AttendanceMeetingFilters
+          filters={filters}
+          todayCount={todayMeetings.length}
+          pastCount={pastMeetings.length}
+          onChange={updateFilter}
+        />
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Mobile: full takeover roster — no meeting cards to mis-tap */}
+      {selected && (
+        <div className="lg:hidden">
+          <AttendanceMobileRoster meeting={selected} onBack={() => setSelectedId(null)} />
+        </div>
+      )}
+
+      {/* Desktop always; mobile only when no meeting selected */}
+      <div className={selected ? 'hidden lg:grid lg:grid-cols-3 lg:gap-6' : 'grid gap-6 lg:grid-cols-3'}>
         <div className="space-y-3">
           <p className="text-muted-foreground text-sm font-medium">Select a Meeting</p>
-          {!visibleMeetings.length ? (
-            <EmptyState
-              icon={CalendarDays}
-              title={filters.time === 'today' ? 'No meetings today' : 'No past meetings'}
-              description={hasActiveFilters ? 'Try adjusting your filters' : undefined}
-            />
-          ) : (
-            visibleMeetings.map((meeting) => (
-              <FeatureCard
-                key={meeting.id}
-                highlighted={selectedId === meeting.id}
-                onClick={() => setSelectedId(meeting.id)}
-                contentClassName="space-y-3"
-              >
-                <div className="flex items-start gap-3">
-                  <FeatureCardDateBlock
-                    day={formatDate(meeting.meeting_date, 'dd')}
-                    month={formatDate(meeting.meeting_date, 'MMM')}
-                    weekday={formatDate(meeting.meeting_date, 'EEE')}
-                    tone={selectedId === meeting.id ? 'brand' : 'secondary'}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{meeting.title}</p>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <FeatureCardMeta
-                        icon={Clock}
-                        label={`${formatTime(meeting.start_time)} – ${formatTime(meeting.end_time)}`}
-                      />
-                      <FeatureCardMeta icon={User} label={meeting.handled_by} />
-                    </div>
-                  </div>
-                </div>
-              </FeatureCard>
-            ))
-          )}
+          <AttendanceMeetingList
+            meetings={visibleMeetings}
+            selectedId={selectedId}
+            emptyTitle={emptyTitle}
+            emptyDescription={emptyDescription}
+            onSelect={selectMeeting}
+          />
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="hidden lg:col-span-2 lg:block">
           {selected ? (
             <div className="space-y-4">
               <div>
