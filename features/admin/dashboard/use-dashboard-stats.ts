@@ -24,7 +24,8 @@ export function useDashboardStats() {
         supabase
           .from('profiles')
           .select('id', { count: 'exact' })
-          .in('role', ['Student', 'Executive']),
+          .in('role', ['Student', 'Executive'])
+          .eq('is_active', true),
         supabase.from('meetings').select('id').eq('meeting_date', today),
         supabase.from('tasks').select('id', { count: 'exact' }).gte('due_date', today),
         supabase.from('task_submissions').select('id', { count: 'exact' }).eq('status', 'Pending'),

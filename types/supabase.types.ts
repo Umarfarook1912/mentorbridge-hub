@@ -18,6 +18,8 @@ export interface Database {
           role: UserRole
           section_permissions: string[] | null
           avatar_url: string | null
+          is_active: boolean
+          inactive_at: string | null
           created_at: string
         }
         Insert: {
@@ -31,6 +33,8 @@ export interface Database {
           role?: UserRole
           section_permissions?: string[] | null
           avatar_url?: string | null
+          is_active?: boolean
+          inactive_at?: string | null
           created_at?: string
         }
         Update: {
@@ -43,6 +47,8 @@ export interface Database {
           role?: UserRole
           section_permissions?: string[] | null
           avatar_url?: string | null
+          is_active?: boolean
+          inactive_at?: string | null
         }
       }
       meetings: {

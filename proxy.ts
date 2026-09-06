@@ -6,6 +6,7 @@ import {
   canUseAdminShell,
   firstAllowedAdminRoute,
 } from '@/lib/permissions'
+import { isInactiveStudent } from '@/lib/account-status'
 import type { UserRole } from '@/types/supabase.types'
 
 const PUBLIC_ROUTES = [
@@ -14,6 +15,7 @@ const PUBLIC_ROUTES = [
   '/forgot-password',
   '/reset-password',
   '/auth/callback',
+  '/account-inactive',
 ]
 const ADMIN_ROUTES = ['/admin']
 const STUDENT_ROUTES = ['/student']
@@ -63,18 +65,25 @@ export async function proxy(request: NextRequest) {
   async function loadPermUser() {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, section_permissions')
+      .select('role, section_permissions, is_active')
       .eq('id', user!.id)
       .single()
     if (!profile) return null
     return {
       role: profile.role as UserRole,
       sectionPermissions: profile.section_permissions ?? null,
+      isActive: profile.is_active ?? true,
     }
   }
 
   if (user && isPublicRoute(pathname)) {
+    if (pathname.startsWith('/account-inactive') || pathname.startsWith('/reset-password')) {
+      return response
+    }
     const permUser = await loadPermUser()
+    if (isInactiveStudent({ role: permUser?.role, is_active: permUser?.isActive })) {
+      return NextResponse.redirect(new URL('/account-inactive', request.url))
+    }
     const dest =
       permUser?.role === 'Student'
         ? '/student/dashboard'
@@ -94,6 +103,9 @@ export async function proxy(request: NextRequest) {
       STUDENT_ROUTES.some((r) => pathname.startsWith(r)))
   ) {
     const permUser = await loadPermUser()
+    if (isInactiveStudent({ role: permUser?.role, is_active: permUser?.isActive })) {
+      return NextResponse.redirect(new URL('/account-inactive', request.url))
+    }
     const isAdminRoute = ADMIN_ROUTES.some((r) => pathname.startsWith(r))
     const isStudentRoute = STUDENT_ROUTES.some((r) => pathname.startsWith(r))
 
@@ -122,6 +134,9 @@ export async function proxy(request: NextRequest) {
   if (pathname === '/') {
     if (!user) return NextResponse.redirect(new URL('/login', request.url))
     const permUser = await loadPermUser()
+    if (isInactiveStudent({ role: permUser?.role, is_active: permUser?.isActive })) {
+      return NextResponse.redirect(new URL('/account-inactive', request.url))
+    }
     const dest =
       permUser?.role === 'Student'
         ? '/student/dashboard'

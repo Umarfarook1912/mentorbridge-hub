@@ -31,6 +31,8 @@ export const updateStudentSchema = z
     domainInterest: z.string(),
     role: z.enum(USER_ROLES, { message: 'Select a role' }),
     sectionPermissions: z.array(z.enum(ADMIN_SECTIONS)),
+    isActive: z.boolean(),
+    inactiveAt: z.string().optional().or(z.literal('')),
   })
   .superRefine((data, ctx) => {
     if (data.role === 'Executive' && data.sectionPermissions.length === 0) {
@@ -38,6 +40,13 @@ export const updateStudentSchema = z
         code: 'custom',
         message: 'Select at least one section for Executive',
         path: ['sectionPermissions'],
+      })
+    }
+    if (!data.isActive && !data.inactiveAt) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Select the inactive date',
+        path: ['inactiveAt'],
       })
     }
   })

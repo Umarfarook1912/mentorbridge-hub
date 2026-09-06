@@ -9,6 +9,8 @@ export interface TaskDetailRow {
   studentName: string
   email: string
   department: string
+  isActive: boolean
+  inactiveAt: string | null
   taskId: string
   taskTitle: string
   dueDate: string
@@ -21,6 +23,8 @@ export interface StudentTaskSummary {
   studentName: string
   email: string
   department: string
+  isActive: boolean
+  inactiveAt: string | null
   assigned: number
   approved: number
   rejected: number
@@ -36,6 +40,8 @@ interface StudentInput {
   email: string
   department: string | null
   domain_interest: string | null
+  is_active?: boolean | null
+  inactive_at?: string | null
 }
 
 interface TaskInput {
@@ -85,6 +91,8 @@ export function buildTaskDetailRows(
         studentName: student.full_name,
         email: student.email,
         department: student.department ?? '',
+        isActive: student.is_active ?? true,
+        inactiveAt: student.inactive_at ?? null,
         taskId: task.id,
         taskTitle: task.title,
         dueDate: task.due_date,
@@ -107,6 +115,8 @@ export function aggregateTaskByStudent(rows: TaskDetailRow[]): StudentTaskSummar
         studentName: row.studentName,
         email: row.email,
         department: row.department,
+        isActive: row.isActive,
+        inactiveAt: row.inactiveAt,
         assigned: 0,
         approved: 0,
         rejected: 0,

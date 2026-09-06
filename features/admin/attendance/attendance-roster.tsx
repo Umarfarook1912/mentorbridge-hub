@@ -61,11 +61,13 @@ export function AttendanceRoster({
 
   const students = useMemo(
     () =>
-      allStudents.filter((s) =>
-        isMeetingForStudent(
-          { targetDomains, targetStudentIds },
-          { id: s.id, domainInterest: s.domain_interest }
-        )
+      allStudents.filter(
+        (s) =>
+          s.is_active !== false &&
+          isMeetingForStudent(
+            { targetDomains, targetStudentIds },
+            { id: s.id, domainInterest: s.domain_interest }
+          )
       ),
     [allStudents, targetDomains, targetStudentIds]
   )

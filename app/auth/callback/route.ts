@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { ROUTES } from '@/lib/constants'
 import { canUseAdminShell, firstAllowedAdminRoute } from '@/lib/permissions'
+import { isInactiveStudent } from '@/lib/account-status'
 import type { UserRole } from '@/types/supabase.types'
 
 export async function GET(request: Request) {
@@ -25,9 +26,14 @@ export async function GET(request: Request) {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role, section_permissions')
+          .select('role, section_permissions, is_active')
           .eq('id', user.id)
           .single()
+
+        if (isInactiveStudent(profile)) {
+          await supabase.auth.signOut()
+          return NextResponse.redirect(`${origin}${ROUTES.accountInactive}`)
+        }
 
         const permUser = profile
           ? {

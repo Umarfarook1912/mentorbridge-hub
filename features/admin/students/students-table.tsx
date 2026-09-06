@@ -17,6 +17,7 @@ import { StudentForm } from './student-form'
 import { useDeleteStudent } from '@/services/students/use-delete-student'
 import type { IStudentEntity } from '@/services/students'
 import { formatDate } from '@/utils/format'
+import { StatusBadge } from '@/components/shared/data-display/status-badge'
 
 interface StudentsTableProps {
   data: IStudentEntity[]
@@ -77,6 +78,18 @@ export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
       key: 'phone',
       header: 'Phone',
       cell: (row) => <span className="text-muted-foreground text-sm">{row.phone ?? '—'}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (row) => (
+        <div className="space-y-0.5">
+          <StatusBadge status={row.is_active ? 'Active' : 'Inactive'} />
+          {!row.is_active && row.inactive_at && (
+            <p className="text-muted-foreground text-xs">{formatDate(row.inactive_at)}</p>
+          )}
+        </div>
+      ),
     },
     {
       key: 'joined',

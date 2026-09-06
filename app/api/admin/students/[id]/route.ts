@@ -32,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params
   const body = await request.json()
-  const { fullName, phone, department, domainInterest, studentCategory, role, sectionPermissions } =
+  const { fullName, phone, department, domainInterest, studentCategory, role, sectionPermissions, isActive, inactiveAt } =
     body
 
   if (role && !VALID_ROLES.includes(role)) {
@@ -94,6 +94,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     department: department || null,
     domain_interest: domainInterest || null,
     student_category: studentCategory || null,
+  }
+
+  if (typeof isActive === 'boolean') {
+    if (!isActive && !inactiveAt) {
+      return NextResponse.json({ message: 'Inactive date is required' }, { status: 400 })
+    }
+    updates.is_active = isActive
+    updates.inactive_at = isActive ? null : inactiveAt || null
   }
 
   if (role && VALID_ROLES.includes(role)) {

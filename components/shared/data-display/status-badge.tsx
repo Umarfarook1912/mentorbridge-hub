@@ -3,7 +3,14 @@ import { cn } from '@/utils/cn'
 import type { AttendanceStatus, SubmissionStatus } from '@/types/supabase.types'
 
 type StatusValue =
-  AttendanceStatus | SubmissionStatus | 'upcoming' | 'completed' | 'overdue' | 'missing'
+  | AttendanceStatus
+  | SubmissionStatus
+  | 'upcoming'
+  | 'completed'
+  | 'overdue'
+  | 'missing'
+  | 'Active'
+  | 'Inactive'
 
 const STATUS_CONFIG: Record<StatusValue, { label: string; className: string }> = {
   Present: {
@@ -45,6 +52,14 @@ const STATUS_CONFIG: Record<StatusValue, { label: string; className: string }> =
   missing: {
     label: 'Not Submitted',
     className: 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/20',
+  },
+  Active: {
+    label: 'Active',
+    className: 'bg-success/10 text-success border-success/20 hover:bg-success/20',
+  },
+  Inactive: {
+    label: 'Inactive',
+    className: 'bg-muted text-muted-foreground border-border hover:bg-muted/80',
   },
 }
 

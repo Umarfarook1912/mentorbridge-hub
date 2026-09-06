@@ -69,6 +69,8 @@ export async function POST(request: Request) {
       domain_interest: domainInterest || null,
       student_category: studentCategory || null,
       role: 'Student' as const,
+      is_active: true,
+      inactive_at: null,
     } as Record<string, unknown>)
     .eq('id', newUser.user.id)
 

@@ -23,6 +23,7 @@ export const ROUTES = {
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
   authCallback: '/auth/callback',
+  accountInactive: '/account-inactive',
   admin: {
     dashboard: '/admin/dashboard',
     students: '/admin/students',

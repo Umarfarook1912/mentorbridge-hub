@@ -20,6 +20,8 @@ export interface IStudentUpdateMutation {
   domainInterest?: string
   role?: UserRole
   sectionPermissions?: string[]
+  isActive?: boolean
+  inactiveAt?: string | null
 }
 
 export interface IStudentFilters {
@@ -27,6 +29,7 @@ export interface IStudentFilters {
   department?: string
   domainInterest?: string
   studentCategory?: string
+  isActive?: boolean
   page?: number
   pageSize?: number
 }

@@ -27,6 +27,10 @@ async function fetchStudents(filters: IStudentFilters) {
     query = query.eq('student_category', filters.studentCategory)
   }
 
+  if (typeof filters.isActive === 'boolean') {
+    query = query.eq('is_active', filters.isActive)
+  }
+
   const pageSize = filters.pageSize ?? PAGE_SIZE
   const page = filters.page ?? 1
   const from = (page - 1) * pageSize

@@ -52,7 +52,7 @@ export function AttendanceReport() {
       let query = supabase
         .from('attendance')
         .select(
-          '*, meetings!inner(title, meeting_date), profiles:student_id(full_name, email, department, domain_interest)'
+          '*, meetings!inner(title, meeting_date), profiles:student_id(full_name, email, department, domain_interest, is_active, inactive_at)'
         )
         .gte('meetings.meeting_date', start)
         .lte('meetings.meeting_date', end)
@@ -62,18 +62,31 @@ export function AttendanceReport() {
       const { data: rows, error } = await query
       if (error) throw error
 
-      const result: AttendanceDetailRow[] = (rows ?? []).map((r) => ({
-        id: r.id,
-        studentId: r.student_id,
-        studentName: (r.profiles as { full_name: string } | null)?.full_name ?? '',
-        email: (r.profiles as { email: string } | null)?.email ?? '',
-        department: (r.profiles as { department: string | null } | null)?.department ?? '',
-        domainInterest:
-          (r.profiles as { domain_interest: string | null } | null)?.domain_interest ?? '',
-        meetingTitle: (r.meetings as { title: string } | null)?.title ?? '',
-        meetingDate: (r.meetings as { meeting_date: string } | null)?.meeting_date ?? '',
-        status: r.status,
-      }))
+      type ProfileJoin = {
+        full_name: string
+        email: string
+        department: string | null
+        domain_interest: string | null
+        is_active: boolean | null
+        inactive_at: string | null
+      }
+
+      const result: AttendanceDetailRow[] = (rows ?? []).map((r) => {
+        const profile = r.profiles as ProfileJoin | null
+        return {
+          id: r.id,
+          studentId: r.student_id,
+          studentName: profile?.full_name ?? '',
+          email: profile?.email ?? '',
+          department: profile?.department ?? '',
+          domainInterest: profile?.domain_interest ?? '',
+          isActive: profile?.is_active ?? true,
+          inactiveAt: profile?.inactive_at ?? null,
+          meetingTitle: (r.meetings as { title: string } | null)?.title ?? '',
+          meetingDate: (r.meetings as { meeting_date: string } | null)?.meeting_date ?? '',
+          status: r.status,
+        }
+      })
 
       return result.filter((r) => {
         if (department && r.department !== department) return false
@@ -98,6 +111,8 @@ export function AttendanceReport() {
         studentName: s.studentName,
         email: s.email,
         department: s.department,
+        Status: s.isActive ? 'Active' : 'Inactive',
+        'Inactive Date': s.inactiveAt ?? '',
         present: s.present,
         absent: s.absent,
         permission: s.permission,

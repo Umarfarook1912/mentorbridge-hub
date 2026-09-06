@@ -88,12 +88,16 @@ export function hasSection(
   return (user.sectionPermissions ?? []).includes(section)
 }
 
+/** Sections Staff can open in the admin shell (Videos excluded). */
+const STAFF_HIDDEN_SECTIONS: AdminSection[] = ['videos']
+
 export function canViewSection(
   user: PermissionUser | null | undefined,
   section: AdminSection
 ): boolean {
   if (!user) return false
-  if (user.role === 'Admin' || user.role === 'Staff') return true
+  if (user.role === 'Admin') return true
+  if (user.role === 'Staff') return !STAFF_HIDDEN_SECTIONS.includes(section)
   return hasSection(user, section)
 }
 
@@ -111,7 +115,12 @@ export function canAccessAdminPath(
   if (ADMIN_ROLE_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) {
     return user.role === 'Admin'
   }
-  if (user.role === 'Admin' || user.role === 'Staff') return true
+  if (user.role === 'Admin') return true
+  if (user.role === 'Staff') {
+    const section = sectionForAdminPath(pathname)
+    if (section && STAFF_HIDDEN_SECTIONS.includes(section)) return false
+    return true
+  }
   if (user.role !== 'Executive') return false
   if (ADMIN_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) return false
   const section = sectionForAdminPath(pathname)

@@ -95,7 +95,23 @@ export function TaskCompletionReport() {
 
   function handleExport() {
     if (studentId) exportToCSV(rows, `tasks-${studentId}-${month}`)
-    else exportToCSV(summary, `tasks-summary-${month}`)
+    else {
+      const exportRows = summary.map((s) => ({
+        rank: s.rank,
+        studentName: s.studentName,
+        email: s.email,
+        department: s.department,
+        Status: s.isActive ? 'Active' : 'Inactive',
+        'Inactive Date': s.inactiveAt ?? '',
+        assigned: s.assigned,
+        approved: s.approved,
+        pending: s.pending,
+        rejected: s.rejected,
+        missing: s.missing,
+        'Completion %': s.rate,
+      }))
+      exportToCSV(exportRows, `tasks-summary-${month}`)
+    }
   }
 
   return (

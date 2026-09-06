@@ -7,6 +7,8 @@ export interface AttendanceDetailRow {
   email: string
   department: string
   domainInterest: string
+  isActive: boolean
+  inactiveAt: string | null
   meetingTitle: string
   meetingDate: string
   status: AttendanceStatus
@@ -17,6 +19,8 @@ export interface StudentAttendanceSummary {
   studentName: string
   email: string
   department: string
+  isActive: boolean
+  inactiveAt: string | null
   present: number
   absent: number
   permission: number
@@ -37,6 +41,8 @@ export function aggregateByStudent(rows: AttendanceDetailRow[]): StudentAttendan
         studentName: row.studentName,
         email: row.email,
         department: row.department,
+        isActive: row.isActive,
+        inactiveAt: row.inactiveAt,
         present: 0,
         absent: 0,
         permission: 0,

@@ -15,6 +15,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { loginSchema, type LoginInput } from '@/lib/validations/auth'
 import { ROUTES } from '@/lib/constants'
 import { canUseAdminShell, firstAllowedAdminRoute } from '@/lib/permissions'
+import { ACCOUNT_INACTIVE_MESSAGE, isInactiveStudent } from '@/lib/account-status'
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -41,8 +42,14 @@ export function LoginForm() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, section_permissions')
+      .select('role, section_permissions, is_active')
       .single()
+
+    if (isInactiveStudent(profile)) {
+      await supabase.auth.signOut()
+      toast.error(ACCOUNT_INACTIVE_MESSAGE)
+      return
+    }
 
     const permUser = profile
       ? {

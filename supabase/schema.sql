@@ -23,6 +23,8 @@ create table public.profiles (
   role        public.user_role not null default 'Student',
   section_permissions text[],
   avatar_url  text,
+  is_active   boolean not null default true,
+  inactive_at date,
   created_at  timestamptz not null default now()
 );
 
@@ -31,6 +33,7 @@ create index idx_profiles_email      on public.profiles(email);
 create index idx_profiles_department on public.profiles(department);
 create index idx_profiles_domain_interest on public.profiles(domain_interest);
 create index idx_profiles_student_category on public.profiles(student_category);
+create index idx_profiles_is_active on public.profiles(is_active);
 
 -- ── Table: meetings ─────────────────────────────────────────
 create table public.meetings (

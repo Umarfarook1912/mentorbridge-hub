@@ -12,7 +12,17 @@ export const taskSummaryColumns: Column<StudentTaskSummary>[] = [
   {
     key: 'student',
     header: 'Student',
-    cell: (r) => <span className="text-sm font-medium">{r.studentName}</span>,
+    cell: (r) => (
+      <div className="space-y-1">
+        <span className="text-sm font-medium">{r.studentName}</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge status={r.isActive ? 'Active' : 'Inactive'} />
+          {!r.isActive && r.inactiveAt && (
+            <span className="text-muted-foreground text-xs">{formatDate(r.inactiveAt)}</span>
+          )}
+        </div>
+      </div>
+    ),
   },
   {
     key: 'dept',
