@@ -1,5 +1,6 @@
 'use client'
 
+import { type FieldError } from 'react-hook-form'
 import { SectionPermissionsPicker } from './section-permissions-picker'
 import { StudentStatusFields } from './student-status-fields'
 import type { AdminSection } from '@/lib/permissions'
@@ -9,7 +10,7 @@ interface StudentFormEditExtrasProps {
   inactiveAt: string
   roleValue: string
   sectionPermissions: AdminSection[]
-  inactiveAtError?: { message?: string }
+  inactiveAtError?: FieldError
   sectionPermissionsError?: { message?: string }
   onIsActiveChange: (active: boolean) => void
   onInactiveAtChange: (date: string) => void

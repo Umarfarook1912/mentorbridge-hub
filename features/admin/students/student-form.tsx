@@ -165,12 +165,10 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
           onSectionPermissionsChange={(sections) =>
             setValue('sectionPermissions', sections, { shouldValidate: true })
           }
-          inactiveAtError={
-            'inactiveAt' in errors ? (errors.inactiveAt as { message?: string }) : undefined
-          }
+          inactiveAtError={'inactiveAt' in errors ? errors.inactiveAt : undefined}
           sectionPermissionsError={
             'sectionPermissions' in errors
-              ? (errors.sectionPermissions as { message?: string })
+              ? (errors.sectionPermissions as { message?: string } | undefined)
               : undefined
           }
         />

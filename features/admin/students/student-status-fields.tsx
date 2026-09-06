@@ -1,5 +1,6 @@
 'use client'
 
+import { type FieldError } from 'react-hook-form'
 import {
   Select,
   SelectContent,
@@ -15,7 +16,7 @@ interface StudentStatusFieldsProps {
   inactiveAt: string
   onIsActiveChange: (active: boolean) => void
   onInactiveAtChange: (date: string) => void
-  inactiveAtError?: { message?: string }
+  inactiveAtError?: FieldError
 }
 
 export function StudentStatusFields({
