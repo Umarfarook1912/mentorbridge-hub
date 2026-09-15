@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient, getSupabaseAdminClient } from '@/lib/supabase/server'
-import { ADMIN_SECTIONS } from '@/lib/permissions'
+import { ADMIN_SECTIONS, isFullAdmin } from '@/lib/permissions'
 import type { UserRole } from '@/types/supabase.types'
 
 async function requireAdmin() {
@@ -17,14 +17,14 @@ async function requireAdmin() {
     .eq('id', user.id)
     .single()
 
-  if ((profile as { role?: string } | null)?.role !== 'Admin') {
+  if (!isFullAdmin({ role: (profile as { role?: UserRole } | null)?.role as UserRole })) {
     return { error: NextResponse.json({ message: 'Forbidden' }, { status: 403 }) }
   }
 
   return { supabase, user }
 }
 
-const VALID_ROLES: UserRole[] = ['Admin', 'Executive', 'Staff', 'Student']
+const VALID_ROLES: UserRole[] = ['Admin', 'SuperAdmin', 'Executive', 'Staff', 'Student']
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin()
@@ -39,7 +39,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ message: 'Invalid role' }, { status: 400 })
   }
 
-  if (role && role !== 'Admin' && id === auth.user.id) {
+  if (role && role !== 'Admin' && role !== 'SuperAdmin' && id === auth.user.id) {
     return NextResponse.json(
       { message: 'You cannot demote your own admin account' },
       { status: 400 }

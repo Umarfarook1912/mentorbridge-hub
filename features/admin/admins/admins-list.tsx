@@ -13,7 +13,7 @@ import { AdminRoleDialogs } from './admin-role-dialogs'
 import { buildTeamColumns } from './team-columns'
 import { useAdminRoleChange } from './use-admin-role-change'
 
-type RoleFilter = 'all' | 'Admin' | 'Staff' | 'Executive'
+type RoleFilter = 'all' | 'Admin' | 'SuperAdmin' | 'Staff' | 'Executive'
 
 export function AdminsList() {
   const { user } = useAuthStore()
@@ -23,6 +23,7 @@ export function AdminsList() {
   const roleChange = useAdminRoleChange()
 
   const admins = useMemo(() => members.filter((m) => m.role === 'Admin'), [members])
+  const superAdmins = useMemo(() => members.filter((m) => m.role === 'SuperAdmin'), [members])
   const staff = useMemo(() => members.filter((m) => m.role === 'Staff'), [members])
   const executives = useMemo(() => members.filter((m) => m.role === 'Executive'), [members])
   const visible =
@@ -30,9 +31,11 @@ export function AdminsList() {
       ? members
       : roleFilter === 'Admin'
         ? admins
-        : roleFilter === 'Staff'
-          ? staff
-          : executives
+        : roleFilter === 'SuperAdmin'
+          ? superAdmins
+          : roleFilter === 'Staff'
+            ? staff
+            : executives
 
   const columns = buildTeamColumns({
     currentUserId: user?.id,
@@ -49,7 +52,7 @@ export function AdminsList() {
       <EmptyState
         icon={UsersRound}
         title="No team members yet"
-        description="Promote a student to Admin, Staff, or Executive from the Students page"
+        description="Promote a student to Admin, SuperAdmin, Staff, or Executive from the Students page"
       />
     )
   }
@@ -62,6 +65,7 @@ export function AdminsList() {
         onChange={setRoleFilter}
         options={[
           { value: 'all', label: `All (${members.length})` },
+          { value: 'SuperAdmin', label: `SuperAdmin (${superAdmins.length})` },
           { value: 'Admin', label: `Admin (${admins.length})` },
           { value: 'Staff', label: `Staff (${staff.length})` },
           { value: 'Executive', label: `Executive (${executives.length})` },

@@ -79,6 +79,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const canModerate =
     profile?.role === 'Admin' ||
+    profile?.role === 'SuperAdmin' ||
     (profile?.role === 'Executive' && (profile.section_permissions ?? []).includes('blogs'))
   if (existing.author_id !== auth.user.id && !canModerate) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
@@ -144,6 +145,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   const canModerate =
     profile?.role === 'Admin' ||
+    profile?.role === 'SuperAdmin' ||
     (profile?.role === 'Executive' && (profile.section_permissions ?? []).includes('blogs'))
   if (existing.author_id !== auth.user.id && !canModerate) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })

@@ -14,7 +14,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { ROUTES } from '@/lib/constants'
-import { canViewSection, type AdminSection, type PermissionUser } from '@/lib/permissions'
+import { canViewSection, isFullAdmin, type AdminSection, type PermissionUser } from '@/lib/permissions'
 import type { UserRole } from '@/types/supabase.types'
 
 export interface NavItem {
@@ -95,8 +95,8 @@ function filterAdminNav(user: PermissionUser): NavSection[] {
     ...section,
     items: section.items.filter((item) => {
       if (!item.section) return true
-      if (item.section === 'adminRoleOnly') return user.role === 'Admin'
-      if (item.section === 'adminOnly') return user.role === 'Admin' || user.role === 'Staff'
+      if (item.section === 'adminRoleOnly') return isFullAdmin(user)
+      if (item.section === 'adminOnly') return isFullAdmin(user) || user.role === 'Staff'
       return canViewSection(user, item.section)
     }),
   })).filter((section) => section.items.length > 0)

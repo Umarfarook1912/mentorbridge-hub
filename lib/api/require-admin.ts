@@ -1,13 +1,23 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
-import { hasSection, type AdminSection } from '@/lib/permissions'
+import { hasSection, isFullAdmin, isSuperAdmin, type AdminSection } from '@/lib/permissions'
 import type { UserRole } from '@/types/supabase.types'
 
 export async function requireAdmin() {
   return requirePermission(null)
 }
 
-/** Pass null to require full Admin only; pass a section for Admin or Executive with that section. */
+/** SuperAdmin only — used for student notes. */
+export async function requireSuperAdmin() {
+  const result = await requirePermission(null)
+  if ('error' in result) return result
+  if (!isSuperAdmin({ role: result.role })) {
+    return { error: NextResponse.json({ message: 'Forbidden' }, { status: 403 }) }
+  }
+  return result
+}
+
+/** Pass null to require full Admin/SuperAdmin; pass a section for Admin/SuperAdmin or Executive with that section. */
 export async function requirePermission(section: AdminSection | null) {
   const supabase = await getSupabaseServerClient()
   const {
@@ -37,7 +47,7 @@ export async function requirePermission(section: AdminSection | null) {
   }
 
   if (section === null) {
-    if (role !== 'Admin') {
+    if (!isFullAdmin(permUser)) {
       return { error: NextResponse.json({ message: 'Forbidden' }, { status: 403 }) }
     }
   } else if (!hasSection(permUser, section)) {

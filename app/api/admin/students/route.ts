@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient, getSupabaseAdminClient } from '@/lib/supabase/server'
+import { isFullAdmin } from '@/lib/permissions'
+import type { UserRole } from '@/types/supabase.types'
 
 export async function POST(request: Request) {
   const supabase = await getSupabaseServerClient()
@@ -15,7 +17,7 @@ export async function POST(request: Request) {
     .eq('id', user.id)
     .single()
 
-  if ((profile as { role?: string } | null)?.role !== 'Admin') {
+  if (!isFullAdmin({ role: (profile as { role?: UserRole } | null)?.role as UserRole })) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }
 

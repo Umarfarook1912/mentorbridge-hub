@@ -134,4 +134,29 @@ export interface ContentTables {
       view_count?: number
     }
   }
+  student_notes: {
+    Row: {
+      id: string
+      student_id: string
+      author_id: string | null
+      body: string
+      category: string
+      created_at: string
+      updated_at: string
+    }
+    Insert: {
+      id?: string
+      student_id: string
+      author_id?: string | null
+      body: string
+      category?: string
+      created_at?: string
+      updated_at?: string
+    }
+    Update: {
+      body?: string
+      category?: string
+      updated_at?: string
+    }
+  }
 }

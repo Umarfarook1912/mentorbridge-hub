@@ -13,11 +13,15 @@ import { DataTable, type Column } from '@/components/shared/data-display/data-ta
 import { UserAvatar } from '@/components/shared/data-display/user-avatar'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
+import { StatusBadge } from '@/components/shared/data-display/status-badge'
 import { StudentForm } from './student-form'
+import { StudentNotesSheet } from './student-notes-sheet'
+import { StudentNotesButton } from './student-notes-button'
 import { useDeleteStudent } from '@/services/students/use-delete-student'
 import type { IStudentEntity } from '@/services/students'
 import { formatDate } from '@/utils/format'
-import { StatusBadge } from '@/components/shared/data-display/status-badge'
+import { useAuthStore } from '@/store/auth-store'
+import { isSuperAdmin } from '@/lib/permissions'
 
 interface StudentsTableProps {
   data: IStudentEntity[]
@@ -25,7 +29,10 @@ interface StudentsTableProps {
 }
 
 export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
+  const { user } = useAuthStore()
+  const canNotes = isSuperAdmin(user)
   const [editStudent, setEditStudent] = useState<IStudentEntity | null>(null)
+  const [notesStudent, setNotesStudent] = useState<IStudentEntity | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const { mutateAsync: deleteStudent, isPending } = useDeleteStudent()
 
@@ -47,9 +54,9 @@ export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
       cell: (row) => (
         <div className="flex items-center gap-3">
           <UserAvatar name={row.full_name} avatarUrl={row.avatar_url} size="sm" />
-          <div>
-            <p className="text-sm font-medium">{row.full_name}</p>
-            <p className="text-muted-foreground text-xs">{row.email}</p>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{row.full_name}</p>
+            <p className="text-muted-foreground truncate text-xs">{row.email}</p>
           </div>
         </div>
       ),
@@ -75,11 +82,6 @@ export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
       cell: (row) => <span className="text-sm">{row.domain_interest ?? '—'}</span>,
     },
     {
-      key: 'phone',
-      header: 'Phone',
-      cell: (row) => <span className="text-muted-foreground text-sm">{row.phone ?? '—'}</span>,
-    },
-    {
       key: 'status',
       header: 'Status',
       cell: (row) => (
@@ -98,13 +100,27 @@ export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
         <span className="text-muted-foreground text-sm">{formatDate(row.created_at)}</span>
       ),
     },
-    ...(readOnly
-      ? []
-      : [
+    ...(canNotes
+      ? [
+          {
+            key: 'notes',
+            header: '',
+            headerClassName: 'w-10',
+            cell: (row: IStudentEntity) => (
+              <StudentNotesButton
+                studentName={row.full_name}
+                onClick={() => setNotesStudent(row)}
+              />
+            ),
+          } satisfies Column<IStudentEntity>,
+        ]
+      : []),
+    ...(!readOnly
+      ? [
           {
             key: 'actions',
             header: '',
-            headerClassName: 'w-12',
+            headerClassName: 'w-10',
             cell: (row: IStudentEntity) => (
               <DropdownMenu>
                 <DropdownMenuTrigger className="hover:bg-muted inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md outline-none">
@@ -124,7 +140,8 @@ export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
               </DropdownMenu>
             ),
           } satisfies Column<IStudentEntity>,
-        ]),
+        ]
+      : []),
   ]
 
   return (
@@ -146,6 +163,12 @@ export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
           />
         )}
       </FormDialog>
+
+      <StudentNotesSheet
+        student={notesStudent}
+        open={!!notesStudent}
+        onOpenChange={(o) => !o && setNotesStudent(null)}
+      />
 
       <ConfirmDialog
         open={!!deleteId}

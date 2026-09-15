@@ -25,7 +25,7 @@ export const ADMIN_SECTION_LABELS: Record<AdminSection, string> = {
   reports: 'Reports',
 }
 
-/** Paths only Admin can open (Staff and Executive blocked). */
+/** Paths only Admin/SuperAdmin can open (Staff and Executive blocked). */
 const ADMIN_ROLE_ONLY_PREFIXES = [ROUTES.admin.admins] as const
 
 /** Admin/Staff paths Executives cannot access */
@@ -47,8 +47,12 @@ export interface PermissionUser {
   sectionPermissions?: string[] | null
 }
 
+export function isSuperAdmin(user: PermissionUser | null | undefined): boolean {
+  return user?.role === 'SuperAdmin'
+}
+
 export function isFullAdmin(user: PermissionUser | null | undefined): boolean {
-  return user?.role === 'Admin'
+  return user?.role === 'Admin' || user?.role === 'SuperAdmin'
 }
 
 export function isExecutive(user: PermissionUser | null | undefined): boolean {
@@ -83,7 +87,7 @@ export function hasSection(
   section: AdminSection
 ): boolean {
   if (!user) return false
-  if (user.role === 'Admin') return true
+  if (isFullAdmin(user)) return true
   if (user.role !== 'Executive') return false
   return (user.sectionPermissions ?? []).includes(section)
 }
@@ -96,7 +100,7 @@ export function canViewSection(
   section: AdminSection
 ): boolean {
   if (!user) return false
-  if (user.role === 'Admin') return true
+  if (isFullAdmin(user)) return true
   if (user.role === 'Staff') return !STAFF_HIDDEN_SECTIONS.includes(section)
   return hasSection(user, section)
 }
@@ -113,9 +117,9 @@ export function canAccessAdminPath(
 ): boolean {
   if (!user) return false
   if (ADMIN_ROLE_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) {
-    return user.role === 'Admin'
+    return isFullAdmin(user)
   }
-  if (user.role === 'Admin') return true
+  if (isFullAdmin(user)) return true
   if (user.role === 'Staff') {
     const section = sectionForAdminPath(pathname)
     if (section && STAFF_HIDDEN_SECTIONS.includes(section)) return false
@@ -130,14 +134,13 @@ export function canAccessAdminPath(
 
 export function firstAllowedAdminRoute(user: PermissionUser | null | undefined): string {
   if (!user) return ROUTES.login
-  if (user.role === 'Admin' || user.role === 'Staff') return ROUTES.admin.dashboard
+  if (isFullAdmin(user) || user.role === 'Staff') return ROUTES.admin.dashboard
   for (const section of ADMIN_SECTIONS) {
     if (hasSection(user, section)) {
       const found = SECTION_BY_PREFIX.find((s) => s.section === section)
       if (found) return found.prefix
     }
   }
-  // Executives always keep student-style learning routes
   return ROUTES.student.attendance
 }
 

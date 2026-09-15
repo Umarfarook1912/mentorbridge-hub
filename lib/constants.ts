@@ -12,7 +12,7 @@ export const DEPARTMENTS = [
 
 export const STUDENT_CATEGORIES = ['SSM Student', 'Other College'] as const
 
-export const USER_ROLES = ['Student', 'Executive', 'Staff', 'Admin'] as const
+export const USER_ROLES = ['Student', 'Executive', 'Staff', 'Admin', 'SuperAdmin'] as const
 
 export const DOMAIN_INTERESTS = ['General', 'Frontend', 'Backend', 'Data Engineer'] as const
 export type DomainInterest = (typeof DOMAIN_INTERESTS)[number]
@@ -66,6 +66,7 @@ export const QUERY_KEYS = {
   studentStats: 'student-stats',
   reportsAttendance: 'reports-attendance',
   reportsTasks: 'reports-tasks',
+  studentNotes: 'student-notes',
 } as const
 
 export const STALE_TIME = {

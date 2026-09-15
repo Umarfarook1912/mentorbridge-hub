@@ -3,7 +3,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { QUERY_KEYS, STALE_TIME } from '@/lib/constants'
 import type { IStudentEntity } from './students.types'
 
-const TEAM_ROLES = ['Admin', 'Staff', 'Executive'] as const
+const TEAM_ROLES = ['Admin', 'SuperAdmin', 'Staff', 'Executive'] as const
 
 export function useGetAdmins() {
   return useQuery({

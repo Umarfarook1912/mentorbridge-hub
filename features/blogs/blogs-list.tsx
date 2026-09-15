@@ -13,7 +13,7 @@ import { BlogSection } from './blog-section'
 import { useGetBlogs, type IBlogEntity } from '@/services/blogs'
 import { useAuthStore } from '@/store/auth-store'
 import { useDebounce } from '@/hooks/use-debounce'
-import { canAuthorContent } from '@/lib/permissions'
+import { canAuthorContent, isFullAdmin } from '@/lib/permissions'
 
 type BlogTab = 'all' | 'mine' | 'community'
 
@@ -47,13 +47,13 @@ export function BlogsList() {
     canShare &&
     !!user &&
     (user.id === blog.author_id ||
-      user.role === 'Admin' ||
+      isFullAdmin(user) ||
       (user.role === 'Executive' && (user.sectionPermissions ?? []).includes('blogs')))
 
   const canManageCommunity = (): boolean =>
     canShare &&
     !!user &&
-    (user.role === 'Admin' ||
+    (isFullAdmin(user) ||
       (user.role === 'Executive' && (user.sectionPermissions ?? []).includes('blogs')))
 
   const hasSearch = debouncedSearch.trim().length > 0
