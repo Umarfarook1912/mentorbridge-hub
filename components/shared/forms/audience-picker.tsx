@@ -26,7 +26,8 @@ export function AudiencePicker({
   onDomainsChange,
   onStudentIdsChange,
   label = 'Audience',
-  description = 'All students, domain groups, and/or specific people. Groups and people combine.',
+  description =
+    'All students, General (everyone), domain groups, and/or specific people. Groups and people combine.',
   error,
 }: AudiencePickerProps) {
   const { data: students = [], isLoading } = useGetAllStudents()
@@ -61,9 +62,14 @@ export function AudiencePicker({
   function toggleDomain(domain: MeetingDomain) {
     if (domains.includes(domain)) {
       onDomainsChange(domains.filter((d) => d !== domain))
-    } else {
-      onDomainsChange([...domains, domain])
+      return
     }
+    // General = everyone; don't mix with other domain chips
+    if (domain === 'General') {
+      onDomainsChange(['General'])
+      return
+    }
+    onDomainsChange([...domains.filter((d) => d !== 'General'), domain])
   }
 
   function addStudent(id: string) {
@@ -111,7 +117,7 @@ export function AudiencePicker({
                   : 'border-border bg-background hover:bg-muted'
               )}
             >
-              {domain}
+              {domain === 'General' ? 'General (all)' : domain}
             </button>
           )
         })}

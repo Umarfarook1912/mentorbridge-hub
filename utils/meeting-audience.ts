@@ -12,7 +12,12 @@ export interface MeetingAudienceStudent {
   domainInterest?: string | null
 }
 
-/** Both empty = all students; else match domain OR explicit invite */
+/** General domain means the meeting/task is for every student. */
+export function includesGeneralAudience(domains: string[] | null | undefined): boolean {
+  return (domains ?? []).includes('General')
+}
+
+/** Both empty OR General = all students; else match domain OR explicit invite */
 export function isMeetingForStudent(
   audience: MeetingAudience,
   student: MeetingAudienceStudent
@@ -20,6 +25,7 @@ export function isMeetingForStudent(
   const domains = audience.targetDomains ?? []
   const ids = audience.targetStudentIds ?? []
   if (domains.length === 0 && ids.length === 0) return true
+  if (includesGeneralAudience(domains)) return true
   if (ids.includes(student.id)) return true
   if (domains.length > 0 && student.domainInterest && domains.includes(student.domainInterest)) {
     return true
@@ -33,15 +39,24 @@ export function formatMeetingAudience(
 ): string {
   const domains = targetDomains ?? []
   const people = targetStudentIds?.length ?? 0
-  if (domains.length === 0 && people === 0) return 'All students'
+  if ((domains.length === 0 || includesGeneralAudience(domains)) && people === 0) {
+    return includesGeneralAudience(domains) ? 'General (all students)' : 'All students'
+  }
   const parts: string[] = []
-  if (domains.length) parts.push(domains.join(', '))
+  if (domains.length) {
+    parts.push(
+      includesGeneralAudience(domains)
+        ? 'General (all students)'
+        : domains.join(', ')
+    )
+  }
   if (people) parts.push(people === 1 ? '1 person' : `${people} people`)
   return parts.join(' + ')
 }
 
 export function toDbTargetDomains(domains: string[] | undefined): string[] | null {
   if (!domains || domains.length === 0) return null
+  // General alone (or with other domains) still stores General for display/filtering
   return domains
 }
 

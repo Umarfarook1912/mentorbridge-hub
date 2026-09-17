@@ -10,7 +10,7 @@ interface NotifyStudentsParams {
 
 /**
  * Fan-out in-app notifications.
- * Both empty = all students; else domain OR explicit student ids (union).
+ * Both empty OR General = all students; else domain OR explicit student ids (union).
  * Fail soft — callers should not fail the primary action if this errors.
  */
 export async function notifyStudentsByDomains({
@@ -25,8 +25,9 @@ export async function notifyStudentsByDomains({
     const domains = targetDomains ?? []
     const ids = targetStudentIds ?? []
     const recipientIds = new Set<string>()
+    const isEveryone = (domains.length === 0 && ids.length === 0) || domains.includes('General')
 
-    if (domains.length === 0 && ids.length === 0) {
+    if (isEveryone) {
       const { data } = await admin
         .from('profiles')
         .select('id')
