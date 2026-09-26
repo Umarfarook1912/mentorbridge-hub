@@ -96,7 +96,10 @@ export function AttendanceReport() {
     },
   })
 
-  const rows = data ?? []
+  const rows = [...(data ?? [])].sort(
+    (a, b) =>
+      a.meetingDate.localeCompare(b.meetingDate) || a.meetingTitle.localeCompare(b.meetingTitle)
+  )
   const summary = aggregateByStudent(rows)
   const chartData = buildSessionChartData(rows)
   const selectedStudent = studentId ? summary[0] : null

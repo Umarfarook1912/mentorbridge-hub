@@ -10,7 +10,8 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "report:attendance": "node scripts/attendance-report/generate.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
