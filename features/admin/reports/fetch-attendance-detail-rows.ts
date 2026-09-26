@@ -21,12 +21,19 @@ type ProfileJoin = {
   inactive_at: string | null
 }
 
-type AttendanceJoinRow = {
+type MeetingJoin = { title: string; meeting_date: string }
+
+type RawAttendanceRow = {
   id: string
   student_id: string
   status: AttendanceDetailRow['status']
-  meetings: { title: string; meeting_date: string } | null
-  profiles: ProfileJoin | null
+  meetings: MeetingJoin | MeetingJoin[] | null
+  profiles: ProfileJoin | ProfileJoin[] | null
+}
+
+function unwrapOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? (value[0] ?? null) : value
 }
 
 async function fetchAllAttendanceRows(
@@ -35,10 +42,10 @@ async function fetchAllAttendanceRows(
   fromMonth: string,
   toMonth: string,
   studentId: string
-): Promise<AttendanceJoinRow[]> {
+): Promise<RawAttendanceRow[]> {
   const pageSize = 1000
   let from = 0
-  const rows: AttendanceJoinRow[] = []
+  const rows: RawAttendanceRow[] = []
   const bounds = fullReport ? null : monthRangeBounds(fromMonth, toMonth)
 
   for (;;) {
@@ -58,7 +65,7 @@ async function fetchAllAttendanceRows(
 
     const { data, error } = await query
     if (error) throw error
-    rows.push(...((data as AttendanceJoinRow[] | null) ?? []))
+    rows.push(...((data as unknown as RawAttendanceRow[] | null) ?? []))
     if (!data || data.length < pageSize) break
     from += pageSize
   }
@@ -79,7 +86,8 @@ export async function fetchAttendanceDetailRows({
 
   return raw
     .map((r) => {
-      const profile = r.profiles
+      const profile = unwrapOne(r.profiles)
+      const meeting = unwrapOne(r.meetings)
       return {
         id: r.id,
         studentId: r.student_id,
@@ -89,8 +97,8 @@ export async function fetchAttendanceDetailRows({
         domainInterest: profile?.domain_interest ?? '',
         isActive: profile?.is_active ?? true,
         inactiveAt: profile?.inactive_at ?? null,
-        meetingTitle: r.meetings?.title ?? '',
-        meetingDate: r.meetings?.meeting_date ?? '',
+        meetingTitle: meeting?.title ?? '',
+        meetingDate: meeting?.meeting_date ?? '',
         status: r.status,
       }
     })
