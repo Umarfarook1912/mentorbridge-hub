@@ -23,6 +23,7 @@ import { usePagination } from '@/hooks/use-pagination'
 import { exportToCSV } from '@/utils/export'
 import { taskDetailColumns, taskSummaryColumns } from './task-completion-report-columns'
 import { ReportFilters } from './report-filters'
+import { currentMonthValue, monthRangeBounds, reportPeriodLabel } from './report-date-range'
 import {
   aggregateTaskByStudent,
   buildTaskChartData,
@@ -34,27 +35,28 @@ export function TaskCompletionReport() {
   const [department, setDepartment] = useState('')
   const [domain, setDomain] = useState('')
   const [studentId, setStudentId] = useState('')
-  const [month, setMonth] = useState(() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-  })
+  const [fullReport, setFullReport] = useState(false)
+  const [fromMonth, setFromMonth] = useState(currentMonthValue)
+  const [toMonth, setToMonth] = useState(currentMonthValue)
 
   const { data: students = [], isLoading: loadingStudents } = useGetAllStudents()
   const pagination = usePagination()
+  const periodKey = reportPeriodLabel(fullReport, fromMonth, toMonth)
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: [QUERY_KEYS.reportsTasks, month, department, domain, studentId, students],
+    queryKey: [QUERY_KEYS.reportsTasks, periodKey, department, domain, studentId, students],
     queryFn: async () => {
       const supabase = getSupabaseBrowserClient()
-      const [year, m] = month.split('-').map(Number)
-      const start = `${year}-${String(m).padStart(2, '0')}-01`
-      const end = new Date(year, m, 0).toISOString().split('T')[0]
-
-      const { data: tasks, error: tasksError } = await supabase
+      let tasksQuery = supabase
         .from('tasks')
         .select('id, title, due_date, target_domains, target_student_ids')
-        .gte('due_date', start)
-        .lte('due_date', end)
+
+      if (!fullReport) {
+        const { start, end } = monthRangeBounds(fromMonth, toMonth)
+        tasksQuery = tasksQuery.gte('due_date', start).lte('due_date', end)
+      }
+
+      const { data: tasks, error: tasksError } = await tasksQuery
       if (tasksError) throw tasksError
       if (!tasks?.length) return [] as TaskDetailRow[]
 
@@ -94,7 +96,7 @@ export function TaskCompletionReport() {
   const { page, totalPages, canPrev, canNext } = pagination.getState(total)
 
   function handleExport() {
-    if (studentId) exportToCSV(rows, `tasks-${studentId}-${month}`)
+    if (studentId) exportToCSV(rows, `tasks-${studentId}-${periodKey}`)
     else {
       const exportRows = summary.map((s) => ({
         rank: s.rank,
@@ -110,21 +112,32 @@ export function TaskCompletionReport() {
         missing: s.missing,
         'Completion %': s.rate,
       }))
-      exportToCSV(exportRows, `tasks-summary-${month}`)
+      exportToCSV(exportRows, `tasks-summary-${periodKey}`)
     }
   }
 
   return (
     <div className="space-y-4">
       <ReportFilters
-        month={month}
+        fullReport={fullReport}
+        fromMonth={fromMonth}
+        toMonth={toMonth}
         studentId={studentId}
         department={department}
         domain={domain}
         students={students}
         canExport={rows.length > 0}
-        onMonthChange={(v) => {
-          setMonth(v)
+        onFullReportChange={(v) => {
+          setFullReport(v)
+          pagination.reset()
+        }}
+        onFromMonthChange={(v) => {
+          setFromMonth(v)
+          if (toMonth < v) setToMonth(v)
+          pagination.reset()
+        }}
+        onToMonthChange={(v) => {
+          setToMonth(v < fromMonth ? fromMonth : v)
           pagination.reset()
         }}
         onStudentChange={(v) => {

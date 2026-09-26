@@ -23,77 +23,34 @@ import { usePagination } from '@/hooks/use-pagination'
 import { exportToCSV } from '@/utils/export'
 import { attendanceDetailColumns, attendanceSummaryColumns } from './attendance-report-columns'
 import { ReportFilters } from './report-filters'
-import {
-  aggregateByStudent,
-  buildSessionChartData,
-  type AttendanceDetailRow,
-} from './attendance-report.utils'
+import { currentMonthValue, reportPeriodLabel } from './report-date-range'
+import { aggregateByStudent, buildSessionChartData } from './attendance-report.utils'
+import { fetchAttendanceDetailRows } from './fetch-attendance-detail-rows'
 
 export function AttendanceReport() {
   const [department, setDepartment] = useState('')
   const [domain, setDomain] = useState('')
   const [studentId, setStudentId] = useState('')
-  const [month, setMonth] = useState(() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-  })
+  const [fullReport, setFullReport] = useState(false)
+  const [fromMonth, setFromMonth] = useState(currentMonthValue)
+  const [toMonth, setToMonth] = useState(currentMonthValue)
 
   const { data: students = [] } = useGetAllStudents()
   const pagination = usePagination()
+  const periodKey = reportPeriodLabel(fullReport, fromMonth, toMonth)
 
   const { data, isLoading } = useQuery({
-    queryKey: [QUERY_KEYS.reportsAttendance, month, department, domain, studentId],
-    queryFn: async () => {
-      const supabase = getSupabaseBrowserClient()
-      const [year, m] = month.split('-').map(Number)
-      const start = `${year}-${String(m).padStart(2, '0')}-01`
-      const end = new Date(year, m, 0).toISOString().split('T')[0]
-
-      let query = supabase
-        .from('attendance')
-        .select(
-          '*, meetings!inner(title, meeting_date), profiles:student_id(full_name, email, department, domain_interest, is_active, inactive_at)'
-        )
-        .gte('meetings.meeting_date', start)
-        .lte('meetings.meeting_date', end)
-
-      if (studentId) query = query.eq('student_id', studentId)
-
-      const { data: rows, error } = await query
-      if (error) throw error
-
-      type ProfileJoin = {
-        full_name: string
-        email: string
-        department: string | null
-        domain_interest: string | null
-        is_active: boolean | null
-        inactive_at: string | null
-      }
-
-      const result: AttendanceDetailRow[] = (rows ?? []).map((r) => {
-        const profile = r.profiles as ProfileJoin | null
-        return {
-          id: r.id,
-          studentId: r.student_id,
-          studentName: profile?.full_name ?? '',
-          email: profile?.email ?? '',
-          department: profile?.department ?? '',
-          domainInterest: profile?.domain_interest ?? '',
-          isActive: profile?.is_active ?? true,
-          inactiveAt: profile?.inactive_at ?? null,
-          meetingTitle: (r.meetings as { title: string } | null)?.title ?? '',
-          meetingDate: (r.meetings as { meeting_date: string } | null)?.meeting_date ?? '',
-          status: r.status,
-        }
-      })
-
-      return result.filter((r) => {
-        if (department && r.department !== department) return false
-        if (domain && r.domainInterest !== domain) return false
-        return true
-      })
-    },
+    queryKey: [QUERY_KEYS.reportsAttendance, periodKey, department, domain, studentId],
+    queryFn: () =>
+      fetchAttendanceDetailRows({
+        supabase: getSupabaseBrowserClient(),
+        fullReport,
+        fromMonth,
+        toMonth,
+        studentId,
+        department,
+        domain,
+      }),
   })
 
   const rows = [...(data ?? [])].sort(
@@ -106,42 +63,55 @@ export function AttendanceReport() {
   const total = studentId ? rows.length : summary.length
   const { page, totalPages, canPrev, canNext } = pagination.getState(total)
 
-  function handleExport() {
-    if (studentId) exportToCSV(rows, `attendance-${studentId}-${month}`)
-    else {
-      const exportRows = summary.map((s) => ({
-        rank: s.rank,
-        studentName: s.studentName,
-        email: s.email,
-        department: s.department,
-        Status: s.isActive ? 'Active' : 'Inactive',
-        'Inactive Date': s.inactiveAt ?? '',
-        present: s.present,
-        absent: s.absent,
-        permission: s.permission,
-        total: s.total,
-        'Attended %': s.attendedRate,
-        'Permission %': s.permissionRate,
-      }))
-      exportToCSV(exportRows, `attendance-summary-${month}`)
-    }
-  }
-
   function resetPage() {
     pagination.reset()
+  }
+
+  function handleExport() {
+    if (studentId) exportToCSV(rows, `attendance-${studentId}-${periodKey}`)
+    else {
+      exportToCSV(
+        summary.map((s) => ({
+          rank: s.rank,
+          studentName: s.studentName,
+          email: s.email,
+          department: s.department,
+          Status: s.isActive ? 'Active' : 'Inactive',
+          'Inactive Date': s.inactiveAt ?? '',
+          present: s.present,
+          absent: s.absent,
+          permission: s.permission,
+          total: s.total,
+          'Attended %': s.attendedRate,
+          'Permission %': s.permissionRate,
+        })),
+        `attendance-summary-${periodKey}`
+      )
+    }
   }
 
   return (
     <div className="space-y-4">
       <ReportFilters
-        month={month}
+        fullReport={fullReport}
+        fromMonth={fromMonth}
+        toMonth={toMonth}
         studentId={studentId}
         department={department}
         domain={domain}
         students={students}
         canExport={rows.length > 0}
-        onMonthChange={(v) => {
-          setMonth(v)
+        onFullReportChange={(v) => {
+          setFullReport(v)
+          resetPage()
+        }}
+        onFromMonthChange={(v) => {
+          setFromMonth(v)
+          if (toMonth < v) setToMonth(v)
+          resetPage()
+        }}
+        onToMonthChange={(v) => {
+          setToMonth(v < fromMonth ? fromMonth : v)
           resetPage()
         }}
         onStudentChange={(v) => {
@@ -168,12 +138,7 @@ export function AttendanceReport() {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis
-                    dataKey="meeting"
-                    tick={{ fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
+                  <XAxis dataKey="meeting" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip
                     contentStyle={{
