@@ -75,47 +75,66 @@ async function fetchAll(supabase, table, columns, options = {}) {
   return rows
 }
 
+function toMeetingItem(meeting, status) {
+  return {
+    id: meeting.id,
+    title: meeting.title,
+    meeting_date: meeting.meeting_date,
+    start_time: meeting.start_time,
+    end_time: meeting.end_time,
+    handled_by: meeting.handled_by,
+    status,
+  }
+}
+
+function byDateThenTime(a, b) {
+  return (
+    a.meeting_date.localeCompare(b.meeting_date) ||
+    String(a.start_time ?? '').localeCompare(String(b.start_time ?? ''))
+  )
+}
+
 function buildStudentReports(students, meetings, attendanceRows) {
   const attendanceByPair = new Map()
   for (const row of attendanceRows) {
     attendanceByPair.set(`${row.student_id}:${row.meeting_id}`, row.status)
   }
 
+  const mandatoryMeetings = meetings.filter((m) => m.attendance_mandatory !== false)
+  const optionalMeetings = meetings.filter((m) => m.attendance_mandatory === false)
+
   return students
     .map((student) => {
-      const expected = meetings.filter((m) => isMeetingForStudent(m, student))
+      const expectedMandatory = mandatoryMeetings.filter((m) => isMeetingForStudent(m, student))
+      const expectedOptional = optionalMeetings.filter((m) => isMeetingForStudent(m, student))
+
       const presentMeetings = []
       const absentMeetings = []
       const permissionMeetings = []
 
-      for (const meeting of expected) {
+      for (const meeting of expectedMandatory) {
         const status = attendanceByPair.get(`${student.id}:${meeting.id}`) ?? 'Absent'
-        const item = {
-          id: meeting.id,
-          title: meeting.title,
-          meeting_date: meeting.meeting_date,
-          start_time: meeting.start_time,
-          end_time: meeting.end_time,
-          handled_by: meeting.handled_by,
-          status,
-        }
+        const item = toMeetingItem(meeting, status)
         if (status === 'Present') presentMeetings.push(item)
         else if (status === 'Permission') permissionMeetings.push(item)
         else absentMeetings.push(item)
       }
 
-      const byDateThenTime = (a, b) =>
-        a.meeting_date.localeCompare(b.meeting_date) ||
-        String(a.start_time ?? '').localeCompare(String(b.start_time ?? ''))
+      const nonMandatoryMeetings = expectedOptional
+        .map((m) => toMeetingItem(m, 'Non-mandatory'))
+        .sort(byDateThenTime)
 
       presentMeetings.sort(byDateThenTime)
       absentMeetings.sort(byDateThenTime)
       permissionMeetings.sort(byDateThenTime)
 
-      const total = expected.length
+      const total = expectedMandatory.length
       const present = presentMeetings.length
       const absent = absentMeetings.length
       const permission = permissionMeetings.length
+      const nonMandatory = nonMandatoryMeetings.length
+      const allMeetings = total + nonMandatory
+      const rate = (n) => (total > 0 ? Math.round((n / total) * 100) : 0)
 
       return {
         ...student,
@@ -124,18 +143,21 @@ function buildStudentReports(students, meetings, attendanceRows) {
           present,
           absent,
           permission,
-          presentRate: total > 0 ? Math.round((present / total) * 100) : 0,
-          attendedRate:
-            total > 0 ? Math.round(((present + permission) / total) * 100) : 0,
+          nonMandatory,
+          allMeetings,
+          presentRate: rate(present),
+          absentRate: rate(absent),
+          permissionRate: rate(permission),
         },
         presentMeetings,
         absentMeetings,
         permissionMeetings,
+        nonMandatoryMeetings,
       }
     })
     .sort(
       (a, b) =>
-        b.stats.attendedRate - a.stats.attendedRate ||
+        b.stats.presentRate - a.stats.presentRate ||
         b.stats.present - a.stats.present ||
         a.full_name.localeCompare(b.full_name)
     )
@@ -175,7 +197,6 @@ async function main() {
       'meetings',
       'id, title, handled_by, meeting_date, start_time, end_time, target_domains, target_student_ids, attendance_mandatory',
       {
-        eq: { attendance_mandatory: true },
         order: [
           { column: 'meeting_date', ascending: true },
           { column: 'start_time', ascending: true },
@@ -185,9 +206,10 @@ async function main() {
     fetchAll(supabase, 'attendance', 'meeting_id, student_id, status'),
   ])
 
-  // Keep attendance only for tracked meetings
-  const meetingIds = new Set(meetings.map((m) => m.id))
-  const relevantAttendance = attendanceRows.filter((r) => meetingIds.has(r.meeting_id))
+  const mandatoryMeetings = meetings.filter((m) => m.attendance_mandatory !== false)
+  const optionalMeetings = meetings.filter((m) => m.attendance_mandatory === false)
+  const mandatoryIds = new Set(mandatoryMeetings.map((m) => m.id))
+  const relevantAttendance = attendanceRows.filter((r) => mandatoryIds.has(r.meeting_id))
 
   const studentReports = buildStudentReports(students, meetings, relevantAttendance)
 
@@ -202,6 +224,8 @@ async function main() {
   const html = buildHtmlReport({
     generatedAt,
     meetings,
+    mandatoryCount: mandatoryMeetings.length,
+    nonMandatoryCount: optionalMeetings.length,
     students: studentReports,
   })
 
@@ -213,7 +237,7 @@ async function main() {
   await writeFile(outFile, html, 'utf8')
   await writeFile(latestFile, html, 'utf8')
 
-  console.log(`Meetings analysed: ${meetings.length}`)
+  console.log(`Meetings analysed: ${meetings.length} (mandatory ${mandatoryMeetings.length}, optional ${optionalMeetings.length})`)
   console.log(`Students analysed: ${studentReports.length}`)
   console.log(`Wrote: ${outFile}`)
   console.log(`Also:  ${latestFile}`)

@@ -1,5 +1,6 @@
 /**
- * Builds a self-contained interactive HTML attendance report.
+ * Builds a self-contained interactive HTML attendance report
+ * styled to match the MentorBridge app theme.
  */
 
 function escapeHtml(value) {
@@ -11,8 +12,13 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;')
 }
 
-export function buildHtmlReport({ generatedAt, meetings, students }) {
-  const totalMeetings = meetings.length
+export function buildHtmlReport({
+  generatedAt,
+  meetings,
+  mandatoryCount,
+  nonMandatoryCount,
+  students,
+}) {
   const payload = students.map((s) => ({
     id: s.id,
     name: s.full_name,
@@ -20,15 +26,19 @@ export function buildHtmlReport({ generatedAt, meetings, students }) {
     department: s.department ?? '—',
     domain: s.domain_interest ?? '—',
     active: s.is_active !== false,
+    allMeetings: s.stats.allMeetings,
     total: s.stats.total,
+    nonMandatory: s.stats.nonMandatory,
     present: s.stats.present,
     absent: s.stats.absent,
     permission: s.stats.permission,
     presentRate: s.stats.presentRate,
-    attendedRate: s.stats.attendedRate,
+    absentRate: s.stats.absentRate,
+    permissionRate: s.stats.permissionRate,
     presentMeetings: s.presentMeetings,
     absentMeetings: s.absentMeetings,
     permissionMeetings: s.permissionMeetings,
+    nonMandatoryMeetings: s.nonMandatoryMeetings,
   }))
 
   return `<!DOCTYPE html>
@@ -37,176 +47,361 @@ export function buildHtmlReport({ generatedAt, meetings, students }) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MentorBridge Attendance Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f7f8fa;
+      --bg: #faf7fb;
       --card: #ffffff;
-      --text: #1a1a1a;
-      --muted: #667085;
-      --border: #e5e7eb;
+      --text: #171717;
+      --muted: #6b7280;
+      --border: #efe4ec;
       --primary: #d53f8c;
-      --present: #15803d;
-      --absent: #b91c1c;
-      --permission: #a16207;
-      --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.04);
+      --primary-soft: #fce7f3;
+      --secondary: #00c5fa;
+      --secondary-soft: #e0f7fe;
+      --present: #16a34a;
+      --present-soft: #dcfce7;
+      --absent: #dc2626;
+      --absent-soft: #fee2e2;
+      --permission: #ca8a04;
+      --permission-soft: #fef9c3;
+      --optional: #0284c7;
+      --optional-soft: #e0f2fe;
+      --shadow: 0 1px 2px rgb(213 63 140 / 0.06), 0 10px 28px rgb(15 23 42 / 0.06);
+      --radius: 14px;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Segoe UI", system-ui, sans-serif;
+      font-family: Inter, system-ui, sans-serif;
       color: var(--text);
-      background: linear-gradient(180deg, #fff 0%, var(--bg) 220px);
+      background:
+        radial-gradient(900px 420px at 0% -10%, rgb(213 63 140 / 0.14), transparent 60%),
+        radial-gradient(700px 380px at 100% 0%, rgb(0 197 250 / 0.16), transparent 55%),
+        linear-gradient(180deg, #fff 0%, var(--bg) 280px);
+      min-height: 100vh;
     }
-    .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 20px 64px; }
-    header h1 { margin: 0 0 6px; font-size: 1.75rem; }
-    header p { margin: 0; color: var(--muted); }
+    .wrap { max-width: none; width: 100%; margin: 0; padding: 20px 16px 64px; }
+
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-end;
+      margin-bottom: 22px;
+      padding: 22px 24px;
+      border: 1px solid rgb(213 63 140 / 0.14);
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 0.92), rgb(252 231 243 / 0.55) 45%, rgb(224 247 254 / 0.5));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.04em;
+      background: linear-gradient(145deg, var(--primary), #9d174d 70%, var(--secondary));
+      box-shadow: 0 8px 20px rgb(213 63 140 / 0.35);
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+      letter-spacing: -0.03em;
+      background: linear-gradient(90deg, var(--primary), #be185d 55%, #0891b2);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+    .hero-meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid rgb(213 63 140 / 0.18);
+    }
+    .pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--secondary);
+      box-shadow: 0 0 0 3px rgb(0 197 250 / 0.25);
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
-      margin: 24px 0;
+      margin-bottom: 18px;
     }
     .stat {
+      position: relative;
+      overflow: hidden;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
+      border-radius: var(--radius);
+      padding: 16px 16px 14px;
       box-shadow: var(--shadow);
     }
-    .stat .label { color: var(--muted); font-size: 0.8rem; }
-    .stat .value { font-size: 1.5rem; font-weight: 700; margin-top: 4px; }
+    .stat::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--primary), var(--secondary));
+    }
+    .stat.mandatory::before { background: var(--primary); }
+    .stat.optional::before { background: var(--secondary); }
+    .stat.students::before { background: #8b5cf6; }
+    .stat .label { color: var(--muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat .value { font-size: 1.7rem; font-weight: 800; margin-top: 6px; letter-spacing: -0.03em; color: var(--text); }
+
     .toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 14px;
       align-items: center;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgb(255 255 255 / 0.75);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
     }
     .toolbar input, .toolbar select {
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 12px;
+      border-radius: 10px;
+      padding: 10px 12px;
       font: inherit;
       background: #fff;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .toolbar input { min-width: min(320px, 100%); flex: 1; }
+    .toolbar input:focus, .toolbar select:focus {
+      border-color: rgb(213 63 140 / 0.45);
+      box-shadow: 0 0 0 3px rgb(213 63 140 / 0.12);
+    }
+    .toolbar input { min-width: min(340px, 100%); flex: 1; }
+
+    .table-shell {
+      overflow: auto;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
+      min-width: 100%;
     }
     th, td {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 12px;
+      border-bottom: 1px solid rgb(239 228 236 / 0.9);
       text-align: left;
-      vertical-align: top;
-      font-size: 0.92rem;
+      vertical-align: middle;
+      font-size: 0.9rem;
     }
     th {
-      background: #fafafa;
-      color: var(--muted);
-      font-size: 0.75rem;
+      background: linear-gradient(180deg, #fff7fb, #f8fafc);
+      color: #7a5a6d;
+      font-size: 0.7rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
       position: sticky;
       top: 0;
       z-index: 1;
+      white-space: nowrap;
     }
     tr:last-child td { border-bottom: 0; }
-    tr:hover td { background: #fcfcfd; }
-    .name { font-weight: 600; }
-    .sub { color: var(--muted); font-size: 0.8rem; }
+    tbody tr { transition: background 0.15s; }
+    tbody tr:nth-child(even) td { background: rgb(252 231 243 / 0.18); }
+    tbody tr:hover td { background: rgb(224 247 254 / 0.45); }
+    .idx { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+    .name { font-weight: 700; letter-spacing: -0.01em; }
+    .sub { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+    .domain-pill {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #0e7490;
+      background: var(--secondary-soft);
+      border: 1px solid rgb(0 197 250 / 0.25);
+      white-space: nowrap;
+    }
     .badge {
       display: inline-flex;
-      align-items: center;
+      margin-top: 6px;
       border-radius: 999px;
       padding: 2px 8px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 700;
+      border: 1px solid rgb(220 38 38 / 0.25);
+      color: var(--absent);
+      background: var(--absent-soft);
     }
-    .badge.inactive { color: var(--absent); border-color: color-mix(in srgb, var(--absent) 30%, white); background: color-mix(in srgb, var(--absent) 8%, white); }
     button.chip {
-      border: 1px solid var(--border);
-      background: #fff;
+      border: 1px solid transparent;
       border-radius: 999px;
-      padding: 4px 10px;
+      padding: 5px 11px;
       font: inherit;
       font-size: 0.82rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      transition: 0.15s ease;
+      transition: transform 0.15s, box-shadow 0.15s;
     }
     button.chip:hover, button.chip:focus-visible {
       outline: none;
       transform: translateY(-1px);
-      box-shadow: var(--shadow);
+      box-shadow: 0 6px 16px rgb(15 23 42 / 0.1);
     }
-    button.chip.present { color: var(--present); border-color: color-mix(in srgb, var(--present) 35%, white); background: color-mix(in srgb, var(--present) 8%, white); }
-    button.chip.absent { color: var(--absent); border-color: color-mix(in srgb, var(--absent) 35%, white); background: color-mix(in srgb, var(--absent) 8%, white); }
-    button.chip.permission { color: var(--permission); border-color: color-mix(in srgb, var(--permission) 35%, white); background: color-mix(in srgb, var(--permission) 8%, white); }
-    .rate { font-variant-numeric: tabular-nums; color: var(--muted); }
+    button.chip.meetings { color: var(--primary); background: var(--primary-soft); border-color: rgb(213 63 140 / 0.2); }
+    button.chip.optional { color: var(--optional); background: var(--optional-soft); border-color: rgb(2 132 199 / 0.2); }
+    button.chip.present { color: var(--present); background: var(--present-soft); border-color: rgb(22 163 74 / 0.2); }
+    button.chip.absent { color: var(--absent); background: var(--absent-soft); border-color: rgb(220 38 38 / 0.2); }
+    button.chip.permission { color: #a16207; background: var(--permission-soft); border-color: rgb(202 138 4 / 0.25); }
+    .rate-cell { min-width: 78px; }
+    .rate {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+    .rate-bar {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      overflow: hidden;
+      min-width: 42px;
+    }
+    .rate-bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+    }
+    .rate.present { color: var(--present); }
+    .rate.present .rate-bar > span { background: linear-gradient(90deg, #4ade80, var(--present)); }
+    .rate.absent { color: var(--absent); }
+    .rate.absent .rate-bar > span { background: linear-gradient(90deg, #f87171, var(--absent)); }
+    .rate.permission { color: #a16207; }
+    .rate.permission .rate-bar > span { background: linear-gradient(90deg, #facc15, #ca8a04); }
+
     dialog {
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      border: 0;
+      border-radius: 20px;
       padding: 0;
-      width: min(640px, calc(100vw - 24px));
-      box-shadow: 0 20px 50px rgb(0 0 0 / 0.18);
+      width: min(680px, calc(100vw - 24px));
+      box-shadow: 0 24px 60px rgb(213 63 140 / 0.2);
+      background: #fff;
     }
-    dialog::backdrop { background: rgb(15 23 42 / 0.45); }
+    dialog::backdrop {
+      background: linear-gradient(145deg, rgb(213 63 140 / 0.28), rgb(0 197 250 / 0.22));
+      backdrop-filter: blur(3px);
+    }
     .dialog-head {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       align-items: start;
-      padding: 18px 18px 12px;
+      padding: 18px 18px 14px;
       border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #fff7fb, #ecfeff);
     }
-    .dialog-head h2 { margin: 0; font-size: 1.1rem; }
+    .dialog-head h2 { margin: 0; font-size: 1.1rem; color: var(--primary); }
     .dialog-body { padding: 14px 18px 18px; max-height: min(60vh, 480px); overflow: auto; }
     .close {
       border: 0;
-      background: transparent;
-      font-size: 1.2rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgb(213 63 140 / 0.08);
+      font-size: 1.15rem;
       cursor: pointer;
-      color: var(--muted);
+      color: var(--primary);
     }
     .meeting-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
     .meeting-list li {
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      background: #fafafa;
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, #fff, #f8fafc);
     }
-    .meeting-title { font-weight: 600; }
+    .meeting-title { font-weight: 700; }
     .meeting-meta { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
-    .empty { color: var(--muted); margin: 8px 0; }
-    footer { margin-top: 18px; color: var(--muted); font-size: 0.8rem; }
+    .empty { color: var(--muted); margin: 8px 0; text-align: center; padding: 24px; }
+    footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgb(255 255 255 / 0.7);
+      border: 1px solid var(--border);
+    }
     @media print {
       body { background: #fff; }
-      .toolbar, .close { display: none !important; }
+      .toolbar, .close, .hero { box-shadow: none; }
       button.chip { box-shadow: none; }
-      table { box-shadow: none; }
+      .table-shell { box-shadow: none; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header>
-      <h1>MentorBridge Attendance Report</h1>
-      <p>All meetings from the start of records through now · Generated ${escapeHtml(generatedAt)}</p>
+    <header class="hero">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">MB</div>
+        <div>
+          <h1>MentorBridge Attendance Report</h1>
+          <p>Complete student meeting &amp; attendance overview</p>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <div>Generated ${escapeHtml(generatedAt)}</div>
+        <div class="pill">From start through now</div>
+      </div>
     </header>
 
     <div class="stats">
-      <div class="stat"><div class="label">Meetings (attendance tracked)</div><div class="value">${totalMeetings}</div></div>
-      <div class="stat"><div class="label">Students</div><div class="value">${students.length}</div></div>
-      <div class="stat"><div class="label">Marked present (all)</div><div class="value">${students.reduce((n, s) => n + s.stats.present, 0)}</div></div>
-      <div class="stat"><div class="label">Marked absent (all)</div><div class="value">${students.reduce((n, s) => n + s.stats.absent, 0)}</div></div>
+      <div class="stat"><div class="label">All meetings</div><div class="value">${meetings.length}</div></div>
+      <div class="stat mandatory"><div class="label">Mandatory</div><div class="value">${mandatoryCount}</div></div>
+      <div class="stat optional"><div class="label">Non-mandatory</div><div class="value">${nonMandatoryCount}</div></div>
+      <div class="stat students"><div class="label">Students</div><div class="value">${students.length}</div></div>
     </div>
 
     <div class="toolbar">
@@ -218,19 +413,22 @@ export function buildHtmlReport({ generatedAt, meetings, students }) {
       </select>
     </div>
 
-    <div style="overflow:auto;">
+    <div class="table-shell">
       <table>
         <thead>
           <tr>
             <th>#</th>
             <th>Student</th>
             <th>Domain</th>
-            <th>Total</th>
+            <th>Meetings</th>
+            <th>Non-mandatory</th>
+            <th>Mandatory</th>
             <th>Present</th>
             <th>Absent</th>
             <th>Permission</th>
             <th>Present %</th>
-            <th>Attended %</th>
+            <th>Absent %</th>
+            <th>Permission %</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -238,9 +436,9 @@ export function buildHtmlReport({ generatedAt, meetings, students }) {
     </div>
 
     <footer>
-      Click Present / Absent / Permission to see which meetings and who conducted them.
-      Total = meetings this student was expected to attend (audience match) with attendance tracked.
-      Unmarked expected meetings count as Absent.
+      Click any count to open meeting details (title, date, conducted by).
+      Meetings = mandatory + non-mandatory for that student (audience match).
+      Present / Absent / Permission rates are based on mandatory meetings only — kept separate, never combined.
     </footer>
   </div>
 
@@ -288,11 +486,24 @@ export function buildHtmlReport({ generatedAt, meetings, students }) {
         .replaceAll("'", '&#39;');
     }
 
+    function rateCell(kind, value) {
+      const width = Math.max(0, Math.min(100, Number(value) || 0));
+      return '<div class="rate-cell"><div class="rate ' + kind + '"><span>' + width + '%</span>' +
+        '<div class="rate-bar" aria-hidden="true"><span style="width:' + width + '%"></span></div></div></div>';
+    }
+
     function openDetails(student, kind) {
       const map = {
+        meetings: {
+          title: 'All meetings',
+          list: [...student.presentMeetings, ...student.absentMeetings, ...student.permissionMeetings, ...student.nonMandatoryMeetings]
+            .sort((a, b) => (a.meeting_date || '').localeCompare(b.meeting_date || '') || String(a.start_time || '').localeCompare(String(b.start_time || ''))),
+          empty: 'No meetings for this student.',
+        },
         present: { title: 'Present meetings', list: student.presentMeetings, empty: 'No present records.' },
         absent: { title: 'Absent meetings', list: student.absentMeetings, empty: 'No absent records.' },
         permission: { title: 'Permission meetings', list: student.permissionMeetings, empty: 'No permission records.' },
+        optional: { title: 'Non-mandatory meetings', list: student.nonMandatoryMeetings, empty: 'No non-mandatory meetings.' },
       };
       const info = map[kind];
       dialogTitle.textContent = info.title + ' · ' + student.name;
@@ -313,21 +524,24 @@ export function buildHtmlReport({ generatedAt, meetings, students }) {
 
       rowsEl.innerHTML = filtered.map((s, i) => \`
         <tr>
-          <td>\${i + 1}</td>
+          <td class="idx">\${i + 1}</td>
           <td>
             <div class="name">\${escapeHtml(s.name)}</div>
             <div class="sub">\${escapeHtml(s.email)}</div>
-            \${s.active ? '' : '<span class="badge inactive">Inactive</span>'}
+            \${s.active ? '' : '<span class="badge">Inactive</span>'}
           </td>
-          <td>\${escapeHtml(s.domain)}</td>
+          <td><span class="domain-pill">\${escapeHtml(s.domain)}</span></td>
+          <td><button class="chip meetings" data-id="\${s.id}" data-kind="meetings" title="View all meetings">\${s.allMeetings}</button></td>
+          <td><button class="chip optional" data-id="\${s.id}" data-kind="optional" title="View non-mandatory meetings">\${s.nonMandatory}</button></td>
           <td>\${s.total}</td>
           <td><button class="chip present" data-id="\${s.id}" data-kind="present" title="View present meetings">\${s.present}</button></td>
           <td><button class="chip absent" data-id="\${s.id}" data-kind="absent" title="View absent meetings">\${s.absent}</button></td>
           <td><button class="chip permission" data-id="\${s.id}" data-kind="permission" title="View permission meetings">\${s.permission}</button></td>
-          <td class="rate">\${s.presentRate}%</td>
-          <td class="rate">\${s.attendedRate}%</td>
+          <td>\${rateCell('present', s.presentRate)}</td>
+          <td>\${rateCell('absent', s.absentRate)}</td>
+          <td>\${rateCell('permission', s.permissionRate)}</td>
         </tr>
-      \`).join('') || '<tr><td colspan="9" class="empty">No students match your filters.</td></tr>';
+      \`).join('') || '<tr><td colspan="12" class="empty">No students match your filters.</td></tr>';
     }
 
     rowsEl.addEventListener('click', (e) => {
