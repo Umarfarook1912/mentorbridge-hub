@@ -141,6 +141,7 @@ export interface ContentTables {
       author_id: string | null
       body: string
       category: string
+      percentage: number | null
       created_at: string
       updated_at: string
     }
@@ -150,12 +151,14 @@ export interface ContentTables {
       author_id?: string | null
       body: string
       category?: string
+      percentage?: number | null
       created_at?: string
       updated_at?: string
     }
     Update: {
       body?: string
       category?: string
+      percentage?: number | null
       updated_at?: string
     }
   }

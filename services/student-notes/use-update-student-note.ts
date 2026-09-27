@@ -36,6 +36,7 @@ export function useUpdateStudentNote(studentId: string) {
                 ...note,
                 body: data.body,
                 category: data.category,
+                percentage: data.percentage,
                 updated_at: new Date().toISOString(),
               }
             : note

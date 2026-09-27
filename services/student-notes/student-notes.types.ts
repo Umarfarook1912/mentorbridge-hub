@@ -6,6 +6,7 @@ export interface IStudentNote {
   author_id: string | null
   body: string
   category: StudentNoteCategory
+  percentage: number | null
   created_at: string
   updated_at: string
   author?: { full_name: string } | null
@@ -14,4 +15,5 @@ export interface IStudentNote {
 export interface IStudentNoteMutation {
   body: string
   category: StudentNoteCategory
+  percentage: number | null
 }

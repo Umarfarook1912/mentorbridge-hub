@@ -23,12 +23,13 @@ export async function PATCH(
     .update({
       body: parsed.data.body,
       category: parsed.data.category,
+      percentage: parsed.data.percentage,
       updated_at: new Date().toISOString(),
     })
     .eq('id', noteId)
     .eq('student_id', studentId)
     .select(
-      'id, student_id, author_id, body, category, created_at, updated_at, author:author_id(full_name)'
+      'id, student_id, author_id, body, category, percentage, created_at, updated_at, author:author_id(full_name)'
     )
     .maybeSingle()
 

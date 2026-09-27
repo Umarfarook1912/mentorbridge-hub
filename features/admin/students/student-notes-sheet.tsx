@@ -12,6 +12,9 @@ import { UserAvatar } from '@/components/shared/data-display/user-avatar'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { StudentNoteForm } from './student-note-form'
 import { StudentNotesList } from './student-notes-list'
+import { StudentCategoryScores } from './student-category-scores'
+import { StudentNoteDialogs } from './student-note-dialogs'
+import { useStudentNoteActions } from './use-student-note-actions'
 import { useGetStudentNotes, useCreateStudentNote } from '@/services/student-notes'
 import type { IStudentEntity } from '@/services/students'
 import { getErrorMessage } from '@/utils/form'
@@ -28,6 +31,7 @@ export function StudentNotesSheet({ student, open, onOpenChange }: StudentNotesS
   const studentId = student?.id ?? null
   const { data: notes = [], isLoading } = useGetStudentNotes(open ? studentId : null)
   const { mutateAsync: createNote, isPending: creating } = useCreateStudentNote(studentId ?? '')
+  const actions = useStudentNoteActions(studentId ?? '')
 
   async function handleCreate(data: StudentNoteInput) {
     if (!studentId) return
@@ -65,11 +69,27 @@ export function StudentNotesSheet({ student, open, onOpenChange }: StudentNotesS
           )}
         </SheetHeader>
 
-        <div className="bg-muted/20 scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : studentId ? (
-            <StudentNotesList studentId={studentId} notes={notes} />
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+          <div className="bg-muted/20 scrollbar-hide order-2 min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5 md:order-1">
+            {isLoading ? (
+              <LoadingSkeleton />
+            ) : studentId ? (
+              <StudentNotesList
+                notes={notes}
+                editingId={actions.editingId}
+                isUpdating={actions.updating}
+                onEdit={actions.editNote}
+                onCancelEdit={() => actions.setEditingId(null)}
+                onDelete={actions.setNoteToDelete}
+                onRemoveScore={actions.setScoreToRemove}
+                onUpdate={actions.handleUpdate}
+              />
+            ) : null}
+          </div>
+          {studentId ? (
+            <div className="order-1 md:order-2 md:min-h-0">
+              <StudentCategoryScores notes={isLoading ? [] : notes} />
+            </div>
           ) : null}
         </div>
 
@@ -79,6 +99,16 @@ export function StudentNotesSheet({ student, open, onOpenChange }: StudentNotesS
           ) : null}
         </div>
       </SheetContent>
+      <StudentNoteDialogs
+        noteToDelete={actions.noteToDelete}
+        scoreToRemove={actions.scoreToRemove}
+        deleting={actions.deleting}
+        removing={actions.updating}
+        onDeleteOpenChange={(open) => !open && actions.setNoteToDelete(null)}
+        onScoreOpenChange={(open) => !open && actions.setScoreToRemove(null)}
+        onConfirmDelete={actions.handleDelete}
+        onConfirmRemoveScore={actions.handleRemoveScore}
+      />
     </Sheet>
   )
 }

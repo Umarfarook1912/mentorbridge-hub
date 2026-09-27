@@ -18,6 +18,7 @@ interface StudentNoteCardProps {
   onEdit: () => void
   onCancelEdit: () => void
   onDelete: () => void
+  onRemoveScore: () => void
   onUpdate: (data: StudentNoteInput) => Promise<void>
 }
 
@@ -30,10 +31,12 @@ export function StudentNoteCard({
   onEdit,
   onCancelEdit,
   onDelete,
+  onRemoveScore,
   onUpdate,
 }: StudentNoteCardProps) {
   return (
     <div
+      id={`student-note-${note.id}`}
       className={cn(
         'group bg-card relative h-full rounded-xl border border-l-4 p-4 transition-colors',
         NOTE_CATEGORY_ACCENT[note.category],
@@ -49,11 +52,13 @@ export function StudentNoteCard({
       {isEditing ? (
         <StudentNoteForm
           key={note.id}
-          initial={{ body: note.body, category: note.category }}
+          idPrefix={`${note.id}-`}
+          initial={{ body: note.body, category: note.category, percentage: note.percentage }}
           submitLabel="Save"
           isLoading={isUpdating}
           onSubmit={onUpdate}
           onCancel={onCancelEdit}
+          onRemoveScore={note.percentage != null ? onRemoveScore : undefined}
         />
       ) : (
         <div className="space-y-2.5">
@@ -79,8 +84,13 @@ export function StudentNoteCard({
               >
                 {note.category}
               </span>
+              {note.percentage != null ? (
+                <span className="text-foreground text-[11px] font-semibold tabular-nums">
+                  +{note.percentage}%
+                </span>
+              ) : null}
             </div>
-            <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+            <div className="flex shrink-0 gap-0.5">
               <Button
                 type="button"
                 variant="ghost"

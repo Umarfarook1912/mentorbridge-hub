@@ -11,7 +11,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { data, error } = await auth.supabase
     .from('student_notes')
     .select(
-      'id, student_id, author_id, body, category, created_at, updated_at, author:author_id(full_name)'
+      'id, student_id, author_id, body, category, percentage, created_at, updated_at, author:author_id(full_name)'
     )
     .eq('student_id', studentId)
     .order('created_at', { ascending: false })
@@ -40,9 +40,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       author_id: auth.user.id,
       body: parsed.data.body,
       category: parsed.data.category,
+      percentage: parsed.data.percentage,
     })
     .select(
-      'id, student_id, author_id, body, category, created_at, updated_at, author:author_id(full_name)'
+      'id, student_id, author_id, body, category, percentage, created_at, updated_at, author:author_id(full_name)'
     )
     .single()
 
