@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Calendar, BookOpen, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
@@ -10,6 +10,7 @@ import {
   FeatureCardMeta,
 } from '@/components/shared/data-display/feature-card'
 import { SubmissionReviewMeta } from '@/components/shared/data-display/submission-review-meta'
+import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
@@ -20,6 +21,8 @@ import { useAuthStore } from '@/store/auth-store'
 import { formatDate } from '@/utils/format'
 import { isTaskOverdue } from '@/utils/meeting-time'
 import type { SubmissionStatus } from '@/types/supabase.types'
+
+type TaskTimeFilter = 'active' | 'overdue'
 
 interface Submission {
   id: string
@@ -41,7 +44,11 @@ export function StudentTasksList() {
     user?.id ?? '',
     user?.domainInterest ?? null
   )
+  const [time, setTime] = useState<TaskTimeFilter>('active')
   const [submitTaskId, setSubmitTaskId] = useState<string | null>(null)
+  const active = useMemo(() => tasks.filter((t) => !isTaskOverdue(t.due_date)), [tasks])
+  const overdueTasks = useMemo(() => tasks.filter((t) => isTaskOverdue(t.due_date)), [tasks])
+  const visible = time === 'active' ? active : overdueTasks
 
   if (!user) return null
 
@@ -50,113 +57,133 @@ export function StudentTasksList() {
     (s: Submission) => s.student_id === user.id
   ) as Submission | undefined
 
-  if (isLoading) return <LoadingSkeleton />
-
-  if (!tasks.length) {
-    return (
-      <EmptyState
-        icon={BookOpen}
-        title="No tasks assigned yet"
-        description="Tasks will appear here once the admin assigns them"
-      />
-    )
-  }
-
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {tasks.map((task) => {
-          const submission = task.task_submissions?.find(
-            (s: Submission) => s.student_id === user.id
-          ) as Submission | undefined
+      <div className="space-y-4">
+        <FilterPills
+          aria-label="Task time"
+          value={time}
+          onChange={setTime}
+          options={[
+            { value: 'active', label: `Active (${active.length})` },
+            { value: 'overdue', label: `Overdue (${overdueTasks.length})` },
+          ]}
+        />
 
-          const overdue = isTaskOverdue(task.due_date)
-          // Within due date: submit or edit Pending. After overdue: no submit/edit button.
-          const canSubmitOrEdit = !overdue && (!submission || submission.status === 'Pending')
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : !tasks.length ? (
+          <EmptyState
+            icon={BookOpen}
+            title="No tasks assigned yet"
+            description="Tasks will appear here once the admin assigns them"
+          />
+        ) : !visible.length ? (
+          <EmptyState
+            icon={BookOpen}
+            title={time === 'active' ? 'No active tasks' : 'No overdue tasks'}
+            description={
+              time === 'active'
+                ? 'All assigned tasks are past due — switch to Overdue to view them'
+                : 'No overdue tasks yet'
+            }
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {visible.map((task) => {
+              const submission = task.task_submissions?.find(
+                (s: Submission) => s.student_id === user.id
+              ) as Submission | undefined
 
-          const footer = canSubmitOrEdit ? (
-            <Button size="sm" className="w-full" onClick={() => setSubmitTaskId(task.id)}>
-              {submission ? 'Edit Submission' : 'Submit Task'}
-            </Button>
-          ) : undefined
+              const overdue = isTaskOverdue(task.due_date)
+              // Within due date: submit or edit Pending. After overdue: no submit/edit button.
+              const canSubmitOrEdit = !overdue && (!submission || submission.status === 'Pending')
 
-          return (
-            <FeatureCard
-              key={task.id}
-              accent={
-                overdue && !submission
-                  ? 'danger'
-                  : submission?.status === 'Approved'
-                    ? 'success'
-                    : 'brand'
-              }
-              highlighted={overdue && !submission}
-              footer={footer}
-            >
-              <div className="flex items-start gap-3">
-                <FeatureCardDateBlock
-                  day={formatDate(task.due_date, 'dd')}
-                  month={formatDate(task.due_date, 'MMM')}
-                  weekday={formatDate(task.due_date, 'EEE')}
-                  tone={overdue && !submission ? 'danger' : 'brand'}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1.5 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {submission ? <StatusBadge status={submission.status} /> : null}
-                      {overdue ? <StatusBadge status="overdue" /> : null}
+              const footer = canSubmitOrEdit ? (
+                <Button size="sm" className="w-full" onClick={() => setSubmitTaskId(task.id)}>
+                  {submission ? 'Edit Submission' : 'Submit Task'}
+                </Button>
+              ) : undefined
+
+              return (
+                <FeatureCard
+                  key={task.id}
+                  accent={
+                    overdue && !submission
+                      ? 'danger'
+                      : submission?.status === 'Approved'
+                        ? 'success'
+                        : 'brand'
+                  }
+                  highlighted={overdue && !submission}
+                  footer={footer}
+                >
+                  <div className="flex items-start gap-3">
+                    <FeatureCardDateBlock
+                      day={formatDate(task.due_date, 'dd')}
+                      month={formatDate(task.due_date, 'MMM')}
+                      weekday={formatDate(task.due_date, 'EEE')}
+                      tone={overdue && !submission ? 'danger' : 'brand'}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1.5 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {submission ? <StatusBadge status={submission.status} /> : null}
+                          {overdue ? <StatusBadge status="overdue" /> : null}
+                        </div>
+                        {submission && (
+                          <SubmissionReviewMeta
+                            status={submission.status}
+                            reviewedByName={submission.reviewed_by_name}
+                            reviewedAt={submission.reviewed_at}
+                          />
+                        )}
+                      </div>
+                      <h3 className="text-base leading-snug font-semibold">{task.title}</h3>
+                      {task.description && (
+                        <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+                          {task.description}
+                        </p>
+                      )}
                     </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <FeatureCardMeta
+                      icon={Calendar}
+                      label={`Due ${formatDate(task.due_date)}${overdue ? ' (Overdue)' : ''}`}
+                      tone={overdue ? 'danger' : 'default'}
+                    />
+                    {task.assigned_by ? (
+                      <FeatureCardMeta icon={User} label={`Assigned by ${task.assigned_by}`} />
+                    ) : null}
+                    {overdue ? (
+                      <p className="text-destructive text-xs font-medium">
+                        {submission
+                          ? 'Due date has passed — editing is closed.'
+                          : 'Due date has passed — submissions are closed.'}
+                      </p>
+                    ) : null}
+                    {submission?.feedback && (
+                      <div className="border-border/70 bg-muted/40 text-muted-foreground rounded-lg border p-2.5 text-xs">
+                        <p className="text-foreground mb-1 font-medium">Feedback</p>
+                        <p>{submission.feedback}</p>
+                      </div>
+                    )}
                     {submission && (
-                      <SubmissionReviewMeta
-                        status={submission.status}
-                        reviewedByName={submission.reviewed_by_name}
-                        reviewedAt={submission.reviewed_at}
+                      <TaskSubmissionLinks
+                        githubUrl={submission.github_url}
+                        googleDocUrl={submission.google_doc_url}
+                        mediumBlogUrl={submission.medium_blog_url}
+                        otherUrl={submission.other_url}
                       />
                     )}
                   </div>
-                  <h3 className="text-base leading-snug font-semibold">{task.title}</h3>
-                  {task.description && (
-                    <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-                      {task.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <FeatureCardMeta
-                  icon={Calendar}
-                  label={`Due ${formatDate(task.due_date)}${overdue ? ' (Overdue)' : ''}`}
-                  tone={overdue ? 'danger' : 'default'}
-                />
-                {task.assigned_by ? (
-                  <FeatureCardMeta icon={User} label={`Assigned by ${task.assigned_by}`} />
-                ) : null}
-                {overdue ? (
-                  <p className="text-destructive text-xs font-medium">
-                    {submission
-                      ? 'Due date has passed — editing is closed.'
-                      : 'Due date has passed — submissions are closed.'}
-                  </p>
-                ) : null}
-                {submission?.feedback && (
-                  <div className="border-border/70 bg-muted/40 text-muted-foreground rounded-lg border p-2.5 text-xs">
-                    <p className="text-foreground mb-1 font-medium">Feedback</p>
-                    <p>{submission.feedback}</p>
-                  </div>
-                )}
-                {submission && (
-                  <TaskSubmissionLinks
-                    githubUrl={submission.github_url}
-                    googleDocUrl={submission.google_doc_url}
-                    mediumBlogUrl={submission.medium_blog_url}
-                    otherUrl={submission.other_url}
-                  />
-                )}
-              </div>
-            </FeatureCard>
-          )
-        })}
+                </FeatureCard>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <FormDialog
