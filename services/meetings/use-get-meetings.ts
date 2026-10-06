@@ -12,14 +12,19 @@ export function useGetMeetings(filter?: MeetingListFilter) {
       const supabase = getSupabaseBrowserClient()
       const today = localToday()
 
-      let query = supabase.from('meetings').select('*').order('meeting_date', { ascending: false })
+      let query = supabase.from('meetings').select('*')
 
-      // Today tab: today + future (completed today filtered out client-side)
-      // Past tab: through today (incomplete today filtered out client-side)
+      // Today tab: soonest first. Past tab: most recent first.
       if (filter === 'today') {
-        query = query.gte('meeting_date', today)
-      } else if (filter === 'past') {
-        query = query.lte('meeting_date', today)
+        query = query
+          .gte('meeting_date', today)
+          .order('meeting_date', { ascending: true })
+          .order('start_time', { ascending: true })
+      } else {
+        query = query
+          .order('meeting_date', { ascending: false })
+          .order('start_time', { ascending: false })
+        if (filter === 'past') query = query.lte('meeting_date', today)
       }
 
       const { data, error } = await query

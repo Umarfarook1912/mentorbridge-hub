@@ -11,7 +11,8 @@ export function useGetTasks() {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .order('due_date', { ascending: true })
+        .order('created_at', { ascending: false })
+        .order('due_date', { ascending: false })
       if (error) throw error
       return data ?? []
     },
@@ -27,7 +28,8 @@ export function useGetStudentTasks(studentId: string, domainInterest: string | n
       const { data, error } = await supabase
         .from('tasks')
         .select('*, task_submissions(*)')
-        .order('due_date')
+        .order('created_at', { ascending: false })
+        .order('due_date', { ascending: false })
       if (error) throw error
       return (data ?? []).filter((task) =>
         isAudienceForStudent(

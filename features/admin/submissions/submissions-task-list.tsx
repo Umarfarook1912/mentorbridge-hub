@@ -8,17 +8,21 @@ import {
   FeatureCardMeta,
 } from '@/components/shared/data-display/feature-card'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
-import { FilterPills } from '@/components/shared/forms/filter-pills'
 import { LoadingSkeleton } from '@/components/shared/feedback/loading-skeleton'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
+import {
+  SubmissionsTaskFilters,
+  matchesSubmissionTask,
+  type SubmissionTaskFiltersState,
+} from './submissions-task-filters'
+import { useGetAllStudents } from '@/services/students/use-get-students'
 import { formatDate } from '@/utils/format'
+import { isAudienceForStudent } from '@/utils/meeting-audience'
 import { isTaskOverdue } from '@/utils/meeting-time'
 import type { ITaskEntity } from '@/services/tasks'
 
-type TaskTimeFilter = 'active' | 'overdue'
-
 type TaskWithCounts = ITaskEntity & {
-  task_submissions?: { id: string; status: string }[] | null
+  task_submissions?: { id: string; status: string; student_id: string }[] | null
 }
 
 interface SubmissionsTaskListProps {
@@ -27,65 +31,98 @@ interface SubmissionsTaskListProps {
   onSelect: (taskId: string) => void
 }
 
+function notSubmittedCount(
+  task: TaskWithCounts,
+  students: { id: string; domain_interest: string | null }[]
+) {
+  const submittedIds = new Set((task.task_submissions ?? []).map((s) => s.student_id))
+  return students.filter(
+    (student) =>
+      !submittedIds.has(student.id) &&
+      isAudienceForStudent(
+        {
+          targetDomains: task.target_domains,
+          targetStudentIds: task.target_student_ids,
+        },
+        { id: student.id, domainInterest: student.domain_interest }
+      )
+  ).length
+}
+
 export function SubmissionsTaskList({ tasks, isLoading, onSelect }: SubmissionsTaskListProps) {
-  const [time, setTime] = useState<TaskTimeFilter>('active')
+  const { data: students = [], isLoading: loadingStudents } = useGetAllStudents()
+  const [filters, setFilters] = useState<SubmissionTaskFiltersState>({
+    time: 'active',
+    domain: 'All',
+    search: '',
+    dateFrom: '',
+    dateTo: '',
+  })
 
-  const active = useMemo(() => tasks.filter((t) => !isTaskOverdue(t.due_date)), [tasks])
-  const overdue = useMemo(() => tasks.filter((t) => isTaskOverdue(t.due_date)), [tasks])
-  const visible = time === 'active' ? active : overdue
-
-  if (isLoading) return <LoadingSkeleton />
-
-  if (!tasks.length) {
-    return (
-      <EmptyState
-        icon={ClipboardList}
-        title="No tasks yet"
-        description="Create tasks first — submissions will appear under each task"
-      />
-    )
+  function updateFilter<K extends keyof SubmissionTaskFiltersState>(
+    key: K,
+    value: SubmissionTaskFiltersState[K]
+  ) {
+    setFilters((prev) => ({ ...prev, [key]: value }))
   }
+
+  const matched = useMemo(
+    () => tasks.filter((task) => matchesSubmissionTask(task, filters)),
+    [tasks, filters]
+  )
+  const active = matched.filter((task) => !isTaskOverdue(task.due_date))
+  const overdue = matched.filter((task) => isTaskOverdue(task.due_date))
+  const visible = filters.time === 'active' ? active : overdue
+  const filtersActive =
+    filters.domain !== 'All' || !!filters.search || !!filters.dateFrom || !!filters.dateTo
 
   return (
     <div className="space-y-4">
-      <FilterPills
-        aria-label="Task time"
-        value={time}
-        onChange={setTime}
-        options={[
-          { value: 'active', label: `Active (${active.length})` },
-          { value: 'overdue', label: `Overdue (${overdue.length})` },
-        ]}
+      <SubmissionsTaskFilters
+        filters={filters}
+        activeCount={active.length}
+        overdueCount={overdue.length}
+        onChange={updateFilter}
       />
 
-      {!visible.length ? (
+      {isLoading || loadingStudents ? (
+        <LoadingSkeleton />
+      ) : !tasks.length ? (
         <EmptyState
           icon={ClipboardList}
-          title={time === 'active' ? 'No active tasks' : 'No overdue tasks'}
+          title="No tasks yet"
+          description="Create tasks first — submissions will appear under each task"
+        />
+      ) : !visible.length ? (
+        <EmptyState
+          icon={ClipboardList}
+          title={filters.time === 'active' ? 'No active tasks' : 'No overdue tasks'}
           description={
-            time === 'active'
-              ? 'All tasks are past due — switch to Overdue to view them'
-              : 'No overdue tasks yet'
+            filtersActive
+              ? 'Try adjusting your filters'
+              : filters.time === 'active'
+                ? 'All tasks are past due — switch to Overdue to view them'
+                : 'No overdue tasks yet'
           }
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((task) => {
             const submissions = task.task_submissions ?? []
-            const pending = submissions.filter((s) => s.status === 'Pending').length
-            const overdue = isTaskOverdue(task.due_date)
+            const missing = notSubmittedCount(task, students)
+            const taskOverdue = isTaskOverdue(task.due_date)
 
             return (
               <FeatureCard
                 key={task.id}
-                accent={overdue ? 'danger' : 'brand'}
-                highlighted={pending > 0}
+                accent={taskOverdue ? 'danger' : 'brand'}
+                highlighted={missing > 0}
                 onClick={() => onSelect(task.id)}
                 footer={
                   <div className="text-muted-foreground flex w-full items-center justify-between text-xs">
                     <span>
                       {submissions.length} submission{submissions.length === 1 ? '' : 's'}
-                      {pending > 0 ? ` · ${pending} pending` : ''}
+                      {` · ${missing} not submitted`}
                     </span>
                     <span className="text-primary inline-flex items-center gap-0.5 font-medium">
                       View <ChevronRight className="h-3.5 w-3.5" />
@@ -98,12 +135,12 @@ export function SubmissionsTaskList({ tasks, isLoading, onSelect }: SubmissionsT
                     day={formatDate(task.due_date, 'dd')}
                     month={formatDate(task.due_date, 'MMM')}
                     weekday={formatDate(task.due_date, 'EEE')}
-                    tone={overdue ? 'danger' : 'brand'}
+                    tone={taskOverdue ? 'danger' : 'brand'}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                      {overdue ? <StatusBadge status="overdue" /> : null}
-                      {pending > 0 ? <StatusBadge status="Pending" /> : null}
+                      {taskOverdue ? <StatusBadge status="overdue" /> : null}
+                      {missing > 0 ? <StatusBadge status="missing" /> : null}
                     </div>
                     <h3 className="text-base leading-snug font-semibold">{task.title}</h3>
                     {task.description ? (
@@ -115,8 +152,8 @@ export function SubmissionsTaskList({ tasks, isLoading, onSelect }: SubmissionsT
                 </div>
                 <FeatureCardMeta
                   icon={Calendar}
-                  label={`Due ${formatDate(task.due_date)}${overdue ? ' (Overdue)' : ''}`}
-                  tone={overdue ? 'danger' : 'default'}
+                  label={`Due ${formatDate(task.due_date)}${taskOverdue ? ' (Overdue)' : ''}`}
+                  tone={taskOverdue ? 'danger' : 'default'}
                 />
                 {task.assigned_by ? (
                   <FeatureCardMeta icon={User} label={`Assigned by ${task.assigned_by}`} />

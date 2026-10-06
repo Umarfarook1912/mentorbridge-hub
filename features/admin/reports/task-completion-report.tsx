@@ -50,6 +50,7 @@ export function TaskCompletionReport() {
       let tasksQuery = supabase
         .from('tasks')
         .select('id, title, due_date, target_domains, target_student_ids')
+        .order('due_date', { ascending: false })
 
       if (!fullReport) {
         const { start, end } = monthRangeBounds(fromMonth, toMonth)

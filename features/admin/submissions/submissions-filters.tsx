@@ -7,29 +7,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { SearchBar } from '@/components/shared/forms/search-bar'
 import { DEPARTMENTS, DOMAIN_INTERESTS } from '@/lib/constants'
 
 interface SubmissionsFiltersProps {
+  search: string
   statusFilter: string
   departmentFilter: string
   domainFilter: string
   total: number
+  resultLabel: string
+  onSearchChange: (value: string) => void
   onStatusChange: (value: string) => void
   onDepartmentChange: (value: string) => void
   onDomainChange: (value: string) => void
 }
 
 export function SubmissionsFilters({
+  search,
   statusFilter,
   departmentFilter,
   domainFilter,
   total,
+  resultLabel,
+  onSearchChange,
   onStatusChange,
   onDepartmentChange,
   onDomainChange,
 }: SubmissionsFiltersProps) {
   return (
     <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <SearchBar
+        value={search}
+        onChange={onSearchChange}
+        placeholder="Search student name or email…"
+        className="w-full sm:w-64"
+      />
       <Select
         value={statusFilter || 'all'}
         onValueChange={(v) => onStatusChange(v === 'all' ? '' : (v ?? ''))}
@@ -85,7 +98,9 @@ export function SubmissionsFilters({
         </SelectContent>
       </Select>
 
-      <p className="text-muted-foreground text-sm sm:ml-auto">{total} submissions</p>
+      <p className="text-muted-foreground text-sm sm:ml-auto">
+        {total} {resultLabel}
+      </p>
     </div>
   )
 }

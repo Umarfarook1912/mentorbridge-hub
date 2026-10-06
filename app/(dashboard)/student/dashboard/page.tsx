@@ -28,14 +28,16 @@ export default function StudentDashboardPage() {
 
   const meetings = meetingsRaw.filter((m) => m.meeting_date === localToday())
 
-  const pendingTasks = tasks.filter((t) => {
-    const submissions = (t.task_submissions ?? []) as {
-      student_id: string
-      status: SubmissionStatus
-    }[]
-    const sub = submissions.find((s) => s.student_id === user.id)
-    return !sub || sub.status === 'Pending'
-  })
+  const pendingTasks = tasks
+    .filter((t) => {
+      const submissions = (t.task_submissions ?? []) as {
+        student_id: string
+        status: SubmissionStatus
+      }[]
+      const sub = submissions.find((s) => s.student_id === user.id)
+      return !sub || sub.status === 'Pending'
+    })
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
 
   return (
     <div className="space-y-6">

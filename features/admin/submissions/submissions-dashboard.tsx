@@ -19,7 +19,8 @@ export function SubmissionsDashboard() {
       const supabase = getSupabaseBrowserClient()
       const { data, error } = await supabase
         .from('tasks')
-        .select('*, task_submissions(id, status)')
+        .select('*, task_submissions(id, status, student_id)')
+        .order('created_at', { ascending: false })
         .order('due_date', { ascending: false })
       if (error) throw error
       return data ?? []

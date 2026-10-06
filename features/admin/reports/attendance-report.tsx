@@ -55,7 +55,7 @@ export function AttendanceReport() {
 
   const rows = [...(data ?? [])].sort(
     (a, b) =>
-      a.meetingDate.localeCompare(b.meetingDate) || a.meetingTitle.localeCompare(b.meetingTitle)
+      b.meetingDate.localeCompare(a.meetingDate) || a.meetingTitle.localeCompare(b.meetingTitle)
   )
   const summary = aggregateByStudent(rows)
   const chartData = buildSessionChartData(rows)
@@ -138,7 +138,12 @@ export function AttendanceReport() {
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="meeting" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis
+                    dataKey="meeting"
+                    tick={{ fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
                   <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip
                     contentStyle={{

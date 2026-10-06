@@ -17,17 +17,24 @@ export interface UnsubmittedStudent {
 interface UnsubmittedStudentsListProps {
   students: UnsubmittedStudent[]
   isLoading?: boolean
+  filtered?: boolean
 }
 
-export function UnsubmittedStudentsList({ students, isLoading }: UnsubmittedStudentsListProps) {
+export function UnsubmittedStudentsList({
+  students,
+  isLoading,
+  filtered,
+}: UnsubmittedStudentsListProps) {
   if (isLoading) return <LoadingSkeleton />
 
   if (!students.length) {
     return (
       <EmptyState
         icon={UserX}
-        title="Everyone has submitted"
-        description="All assigned students have turned in this task"
+        title={filtered ? 'No matching students' : 'Everyone has submitted'}
+        description={
+          filtered ? 'Try adjusting your filters' : 'All assigned students have turned in this task'
+        }
       />
     )
   }

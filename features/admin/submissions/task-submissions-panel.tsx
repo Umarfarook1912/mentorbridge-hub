@@ -34,6 +34,7 @@ export function TaskSubmissionsPanel({
   const { user } = useAuthStore()
   const canWrite = canMutate(user)
   const [tab, setTab] = useState<SubmissionsTab>('submitted')
+  const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [departmentFilter, setDepartmentFilter] = useState('')
   const [domainFilter, setDomainFilter] = useState('')
@@ -61,6 +62,11 @@ export function TaskSubmissionsPanel({
       .filter((s) => !submittedIds.has(s.id))
       .filter((s) => !departmentFilter || s.department === departmentFilter)
       .filter((s) => !domainFilter || s.domain_interest === domainFilter)
+      .filter((s) => {
+        const query = search.trim().toLowerCase()
+        if (!query) return true
+        return s.full_name.toLowerCase().includes(query) || s.email.toLowerCase().includes(query)
+      })
       .map((s) => ({
         id: s.id,
         full_name: s.full_name,
@@ -69,11 +75,30 @@ export function TaskSubmissionsPanel({
         domain_interest: s.domain_interest,
         avatar_url: s.avatar_url,
       }))
-  }, [allSubmissions, students, targetDomains, targetStudentIds, departmentFilter, domainFilter])
+  }, [
+    allSubmissions,
+    students,
+    targetDomains,
+    targetStudentIds,
+    departmentFilter,
+    domainFilter,
+    search,
+  ])
 
-  const total = submissions.length
+  const visibleSubmissions = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    if (!query) return submissions
+    return submissions.filter((row) => {
+      const profile = row.profiles as { full_name?: string; email?: string } | null
+      const name = profile?.full_name?.toLowerCase() ?? ''
+      const email = profile?.email?.toLowerCase() ?? ''
+      return name.includes(query) || email.includes(query)
+    })
+  }, [submissions, search])
+
+  const total = visibleSubmissions.length
   const { page, totalPages, canPrev, canNext } = pagination.getState(total)
-  const pageRows = pagination.paginate(submissions as SubmissionRow[])
+  const pageRows = pagination.paginate(visibleSubmissions as SubmissionRow[])
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -88,10 +113,16 @@ export function TaskSubmissionsPanel({
       />
 
       <SubmissionsFilters
+        search={search}
         statusFilter={statusFilter}
         departmentFilter={departmentFilter}
         domainFilter={domainFilter}
-        total={total}
+        total={tab === 'missing' ? unsubmitted.length : total}
+        resultLabel={tab === 'missing' ? 'not submitted' : 'submissions'}
+        onSearchChange={(v) => {
+          setSearch(v)
+          pagination.reset()
+        }}
         onStatusChange={(v) => {
           setStatusFilter(v)
           pagination.reset()
@@ -110,11 +141,19 @@ export function TaskSubmissionsPanel({
         <div className="w-full space-y-4">
           {isLoading ? (
             <LoadingSkeleton />
-          ) : !submissions.length ? (
+          ) : !visibleSubmissions.length ? (
             <EmptyState
               icon={ClipboardList}
-              title="No submissions for this task"
-              description="Submissions will appear here once students submit their work"
+              title={
+                search || statusFilter || departmentFilter || domainFilter
+                  ? 'No matching submissions'
+                  : 'No submissions for this task'
+              }
+              description={
+                search || statusFilter || departmentFilter || domainFilter
+                  ? 'Try adjusting your filters'
+                  : 'Submissions will appear here once students submit their work'
+              }
             />
           ) : (
             <>
@@ -141,6 +180,7 @@ export function TaskSubmissionsPanel({
         <UnsubmittedStudentsList
           students={unsubmitted}
           isLoading={loadingAll || loadingStudents}
+          filtered={!!(search || departmentFilter || domainFilter)}
         />
       )}
 
