@@ -97,6 +97,16 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  if (user && pathname.startsWith('/print')) {
+    const permUser = await loadPermUser()
+    if (isInactiveStudent({ role: permUser?.role, is_active: permUser?.isActive })) {
+      return NextResponse.redirect(new URL('/account-inactive', request.url))
+    }
+    if (!canUseAdminShell(permUser)) {
+      return NextResponse.redirect(new URL('/student/dashboard', request.url))
+    }
+  }
+
   if (
     user &&
     (ADMIN_ROUTES.some((r) => pathname.startsWith(r)) ||

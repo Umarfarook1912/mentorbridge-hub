@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/shared/layout/page-header'
 import { DashboardStatsGrid } from '@/features/admin/dashboard/dashboard-stats-grid'
+import { EnrollmentOverview } from '@/features/admin/dashboard/enrollment-overview'
 import { AttendanceChart } from '@/features/admin/dashboard/attendance-chart'
 import { QuickActions } from '@/features/admin/dashboard/quick-actions'
 import { DashboardBlogs } from '@/features/blogs/dashboard-blogs'
@@ -17,6 +18,7 @@ export default function AdminDashboardPage() {
       />
 
       <DashboardStatsGrid />
+      <EnrollmentOverview />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

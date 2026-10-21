@@ -192,3 +192,34 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Printed reports stay on the light brand theme. */
+@media print {
+  :root,
+  .dark {
+    --brand-primary: oklch(0.601 0.246 349.77);
+    --brand-primary-foreground: oklch(1 0 0);
+    --brand-secondary: oklch(0.773 0.149 215.5);
+    --brand-secondary-foreground: oklch(0.145 0 0);
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.601 0.246 349.77);
+    --primary-foreground: oklch(1 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --border: oklch(0.922 0 0);
+    --success: oklch(0.723 0.191 149.579);
+    --info: oklch(0.773 0.149 215.5);
+  }
+
+  html,
+  body {
+    overflow: visible !important;
+    height: auto !important;
+    background: var(--background);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
