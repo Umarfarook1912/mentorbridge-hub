@@ -20,6 +20,10 @@ export interface Database {
           avatar_url: string | null
           is_active: boolean
           inactive_at: string | null
+          company_name: string | null
+          company_role: string | null
+          company_location: string | null
+          company_joined_at: string | null
           created_at: string
         }
         Insert: {
@@ -35,6 +39,10 @@ export interface Database {
           avatar_url?: string | null
           is_active?: boolean
           inactive_at?: string | null
+          company_name?: string | null
+          company_role?: string | null
+          company_location?: string | null
+          company_joined_at?: string | null
           created_at?: string
         }
         Update: {
@@ -49,6 +57,10 @@ export interface Database {
           avatar_url?: string | null
           is_active?: boolean
           inactive_at?: string | null
+          company_name?: string | null
+          company_role?: string | null
+          company_location?: string | null
+          company_joined_at?: string | null
         }
       }
       meetings: {

@@ -31,8 +31,12 @@ export const updateStudentSchema = z
     domainInterest: z.string(),
     role: z.enum(USER_ROLES, { message: 'Select a role' }),
     sectionPermissions: z.array(z.enum(ADMIN_SECTIONS)),
-    isActive: z.boolean(),
+    enrollmentStatus: z.enum(['active', 'inactive', 'company']),
     inactiveAt: z.string().optional().or(z.literal('')),
+    companyName: z.string().optional().or(z.literal('')),
+    companyRole: z.string().optional().or(z.literal('')),
+    companyLocation: z.string().optional().or(z.literal('')),
+    companyJoinedAt: z.string().optional().or(z.literal('')),
   })
   .superRefine((data, ctx) => {
     if (data.role === 'Executive' && data.sectionPermissions.length === 0) {
@@ -42,12 +46,30 @@ export const updateStudentSchema = z
         path: ['sectionPermissions'],
       })
     }
-    if (!data.isActive && !data.inactiveAt) {
+    if (data.enrollmentStatus === 'inactive' && !data.inactiveAt) {
       ctx.addIssue({
         code: 'custom',
         message: 'Select the inactive date',
         path: ['inactiveAt'],
       })
+    }
+    if (data.enrollmentStatus === 'company') {
+      if (!data.companyName?.trim()) {
+        ctx.addIssue({ code: 'custom', message: 'Enter the company name', path: ['companyName'] })
+      }
+      if (!data.companyRole?.trim()) {
+        ctx.addIssue({ code: 'custom', message: 'Enter the role', path: ['companyRole'] })
+      }
+      if (!data.companyLocation?.trim()) {
+        ctx.addIssue({ code: 'custom', message: 'Enter the location', path: ['companyLocation'] })
+      }
+      if (!data.companyJoinedAt) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Select the date of joining',
+          path: ['companyJoinedAt'],
+        })
+      }
     }
   })
 

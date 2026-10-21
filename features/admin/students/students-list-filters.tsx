@@ -11,17 +11,18 @@ import { SearchBar } from '@/components/shared/forms/search-bar'
 import { Button } from '@/components/ui/button'
 import { UserPlus } from 'lucide-react'
 import { DEPARTMENTS, DOMAIN_INTERESTS } from '@/lib/constants'
+import type { EnrollmentStatus } from '@/lib/enrollment'
 
 interface StudentsListFiltersProps {
   search: string
   studentCategory: string
-  isActiveFilter: 'all' | 'active' | 'inactive'
+  isActiveFilter: 'all' | EnrollmentStatus
   department: string
   domainInterest: string
   canWrite: boolean
   onSearchChange: (v: string) => void
   onStudentCategoryChange: (v: string) => void
-  onIsActiveFilterChange: (v: 'all' | 'active' | 'inactive') => void
+  onIsActiveFilterChange: (v: 'all' | EnrollmentStatus) => void
   onDepartmentChange: (v: string) => void
   onDomainInterestChange: (v: string) => void
   onAddClick: () => void
@@ -72,7 +73,7 @@ export function StudentsListFilters({
       <Select
         value={isActiveFilter}
         onValueChange={(v) =>
-          onIsActiveFilterChange((v as 'all' | 'active' | 'inactive') ?? 'all')
+          onIsActiveFilterChange((v as 'all' | EnrollmentStatus) ?? 'all')
         }
       >
         <SelectTrigger className="w-36">
@@ -81,6 +82,7 @@ export function StudentsListFilters({
               if (!value || value === 'all') return 'All status'
               if (value === 'active') return 'Active'
               if (value === 'inactive') return 'Inactive'
+              if (value === 'company') return 'Company'
               return value
             }}
           </SelectValue>
@@ -89,6 +91,7 @@ export function StudentsListFilters({
           <SelectItem value="all">All status</SelectItem>
           <SelectItem value="active">Active</SelectItem>
           <SelectItem value="inactive">Inactive</SelectItem>
+          <SelectItem value="company">Company</SelectItem>
         </SelectContent>
       </Select>
       <Select

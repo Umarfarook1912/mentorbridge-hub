@@ -27,8 +27,12 @@ async function fetchStudents(filters: IStudentFilters) {
     query = query.eq('student_category', filters.studentCategory)
   }
 
-  if (typeof filters.isActive === 'boolean') {
-    query = query.eq('is_active', filters.isActive)
+  if (filters.enrollment === 'inactive') {
+    query = query.eq('is_active', false)
+  } else if (filters.enrollment === 'company') {
+    query = query.eq('is_active', true).not('company_name', 'is', null)
+  } else if (filters.enrollment === 'active') {
+    query = query.eq('is_active', true).is('company_name', null)
   }
 
   const pageSize = filters.pageSize ?? PAGE_SIZE

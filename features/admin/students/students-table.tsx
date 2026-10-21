@@ -13,7 +13,7 @@ import { DataTable, type Column } from '@/components/shared/data-display/data-ta
 import { UserAvatar } from '@/components/shared/data-display/user-avatar'
 import { FormDialog } from '@/components/shared/forms/form-dialog'
 import { ConfirmDialog } from '@/components/shared/forms/confirm-dialog'
-import { StatusBadge } from '@/components/shared/data-display/status-badge'
+import { EnrollmentStatusLabel } from '@/components/shared/data-display/enrollment-status-label'
 import { StudentForm } from './student-form'
 import { StudentNotesSheet } from './student-notes-sheet'
 import { StudentNotesButton } from './student-notes-button'
@@ -85,12 +85,14 @@ export function StudentsTable({ data, readOnly = false }: StudentsTableProps) {
       key: 'status',
       header: 'Status',
       cell: (row) => (
-        <div className="space-y-0.5">
-          <StatusBadge status={row.is_active ? 'Active' : 'Inactive'} />
-          {!row.is_active && row.inactive_at && (
-            <p className="text-muted-foreground text-xs">{formatDate(row.inactive_at)}</p>
-          )}
-        </div>
+        <EnrollmentStatusLabel
+          is_active={row.is_active}
+          inactiveAt={row.inactive_at}
+          company_name={row.company_name}
+          companyRole={row.company_role}
+          companyLocation={row.company_location}
+          companyJoinedAt={row.company_joined_at}
+        />
       ),
     },
     {

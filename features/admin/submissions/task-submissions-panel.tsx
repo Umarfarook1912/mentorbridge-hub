@@ -13,7 +13,7 @@ import { UnsubmittedStudentsList } from './unsubmitted-students-list'
 import { useGetSubmissions } from '@/services/submissions/use-get-submissions'
 import { useGetAllStudents } from '@/services/students/use-get-students'
 import { usePagination } from '@/hooks/use-pagination'
-import { isAudienceForStudent } from '@/utils/meeting-audience'
+import { filterRosterSubmissions, listUnsubmittedStudents } from './submission-roster'
 import type { SubmissionStatus } from '@/types/supabase.types'
 import { useAuthStore } from '@/store/auth-store'
 import { canMutate } from '@/lib/permissions'
@@ -50,51 +50,23 @@ export function TaskSubmissionsPanel({
   })
   const { data: students = [], isLoading: loadingStudents } = useGetAllStudents()
 
-  const unsubmitted = useMemo(() => {
-    const submittedIds = new Set(allSubmissions.map((s) => s.student_id))
-    return students
-      .filter((s) =>
-        isAudienceForStudent(
-          { targetDomains, targetStudentIds },
-          { id: s.id, domainInterest: s.domain_interest }
-        )
-      )
-      .filter((s) => !submittedIds.has(s.id))
-      .filter((s) => !departmentFilter || s.department === departmentFilter)
-      .filter((s) => !domainFilter || s.domain_interest === domainFilter)
-      .filter((s) => {
-        const query = search.trim().toLowerCase()
-        if (!query) return true
-        return s.full_name.toLowerCase().includes(query) || s.email.toLowerCase().includes(query)
-      })
-      .map((s) => ({
-        id: s.id,
-        full_name: s.full_name,
-        email: s.email,
-        department: s.department,
-        domain_interest: s.domain_interest,
-        avatar_url: s.avatar_url,
-      }))
-  }, [
-    allSubmissions,
-    students,
-    targetDomains,
-    targetStudentIds,
-    departmentFilter,
-    domainFilter,
-    search,
-  ])
+  const unsubmitted = useMemo(
+    () =>
+      listUnsubmittedStudents(students, new Set(allSubmissions.map((s) => s.student_id)), {
+        targetDomains,
+        targetStudentIds,
+      }, {
+        department: departmentFilter,
+        domain: domainFilter,
+        search,
+      }),
+    [allSubmissions, students, targetDomains, targetStudentIds, departmentFilter, domainFilter, search]
+  )
 
-  const visibleSubmissions = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (!query) return submissions
-    return submissions.filter((row) => {
-      const profile = row.profiles as { full_name?: string; email?: string } | null
-      const name = profile?.full_name?.toLowerCase() ?? ''
-      const email = profile?.email?.toLowerCase() ?? ''
-      return name.includes(query) || email.includes(query)
-    })
-  }, [submissions, search])
+  const visibleSubmissions = useMemo(
+    () => filterRosterSubmissions(submissions, search),
+    [submissions, search]
+  )
 
   const total = visibleSubmissions.length
   const { page, totalPages, canPrev, canNext } = pagination.getState(total)

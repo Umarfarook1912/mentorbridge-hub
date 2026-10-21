@@ -23,13 +23,10 @@ import { usePagination } from '@/hooks/use-pagination'
 import { exportToCSV } from '@/utils/export'
 import { taskDetailColumns, taskSummaryColumns } from './task-completion-report-columns'
 import { ReportFilters } from './report-filters'
-import { currentMonthValue, monthRangeBounds, reportPeriodLabel } from './report-date-range'
-import {
-  aggregateTaskByStudent,
-  buildTaskChartData,
-  buildTaskDetailRows,
-  type TaskDetailRow,
-} from './task-completion-report.utils'
+import { currentMonthValue, reportPeriodLabel } from './report-date-range'
+import { aggregateTaskByStudent, buildTaskChartData } from './task-completion-report.utils'
+import { fetchTaskDetailRows } from './fetch-task-detail-rows'
+import { taskSummaryExportRows } from './report-export-rows'
 
 export function TaskCompletionReport() {
   const [department, setDepartment] = useState('')
@@ -45,48 +42,17 @@ export function TaskCompletionReport() {
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: [QUERY_KEYS.reportsTasks, periodKey, department, domain, studentId, students],
-    queryFn: async () => {
-      const supabase = getSupabaseBrowserClient()
-      let tasksQuery = supabase
-        .from('tasks')
-        .select('id, title, due_date, target_domains, target_student_ids')
-        .order('due_date', { ascending: false })
-
-      if (!fullReport) {
-        const { start, end } = monthRangeBounds(fromMonth, toMonth)
-        tasksQuery = tasksQuery.gte('due_date', start).lte('due_date', end)
-      }
-
-      const { data: tasks, error: tasksError } = await tasksQuery
-      if (tasksError) throw tasksError
-      if (!tasks?.length) return [] as TaskDetailRow[]
-
-      const { data: submissions, error: submissionsError } = await supabase
-        .from('task_submissions')
-        .select('id, task_id, student_id, status, submitted_at')
-        .in(
-          'task_id',
-          tasks.map((t) => t.id)
-        )
-      if (submissionsError) throw submissionsError
-
-      let scopedStudents = students
-      if (department) scopedStudents = scopedStudents.filter((s) => s.department === department)
-      if (domain) scopedStudents = scopedStudents.filter((s) => s.domain_interest === domain)
-      if (studentId) scopedStudents = scopedStudents.filter((s) => s.id === studentId)
-
-      return buildTaskDetailRows(
-        scopedStudents.map((s) => ({
-          id: s.id,
-          full_name: s.full_name,
-          email: s.email,
-          department: s.department,
-          domain_interest: s.domain_interest,
-        })),
-        tasks,
-        submissions ?? []
-      )
-    },
+    queryFn: () =>
+      fetchTaskDetailRows({
+        supabase: getSupabaseBrowserClient(),
+        students,
+        fullReport,
+        fromMonth,
+        toMonth,
+        department,
+        domain,
+        studentId,
+      }),
     enabled: students.length > 0,
   })
 
@@ -98,23 +64,7 @@ export function TaskCompletionReport() {
 
   function handleExport() {
     if (studentId) exportToCSV(rows, `tasks-${studentId}-${periodKey}`)
-    else {
-      const exportRows = summary.map((s) => ({
-        rank: s.rank,
-        studentName: s.studentName,
-        email: s.email,
-        department: s.department,
-        Status: s.isActive ? 'Active' : 'Inactive',
-        'Inactive Date': s.inactiveAt ?? '',
-        assigned: s.assigned,
-        approved: s.approved,
-        pending: s.pending,
-        rejected: s.rejected,
-        missing: s.missing,
-        'Completion %': s.rate,
-      }))
-      exportToCSV(exportRows, `tasks-summary-${periodKey}`)
-    }
+    else exportToCSV(taskSummaryExportRows(summary), `tasks-summary-${periodKey}`)
   }
 
   return (

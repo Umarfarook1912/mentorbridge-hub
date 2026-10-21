@@ -18,6 +18,7 @@ import {
 import { useGetAllStudents } from '@/services/students/use-get-students'
 import { formatDate } from '@/utils/format'
 import { isAudienceForStudent } from '@/utils/meeting-audience'
+import { isRosterStudent } from '@/lib/enrollment'
 import { isTaskOverdue } from '@/utils/meeting-time'
 import type { ITaskEntity } from '@/services/tasks'
 
@@ -33,11 +34,17 @@ interface SubmissionsTaskListProps {
 
 function notSubmittedCount(
   task: TaskWithCounts,
-  students: { id: string; domain_interest: string | null }[]
+  students: {
+    id: string
+    domain_interest: string | null
+    is_active?: boolean | null
+    company_name?: string | null
+  }[]
 ) {
   const submittedIds = new Set((task.task_submissions ?? []).map((s) => s.student_id))
   return students.filter(
     (student) =>
+      isRosterStudent(student) &&
       !submittedIds.has(student.id) &&
       isAudienceForStudent(
         {
@@ -108,7 +115,10 @@ export function SubmissionsTaskList({ tasks, isLoading, onSelect }: SubmissionsT
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((task) => {
-            const submissions = task.task_submissions ?? []
+            const rosterIds = new Set(students.filter((s) => isRosterStudent(s)).map((s) => s.id))
+            const submissions = (task.task_submissions ?? []).filter((s) =>
+              rosterIds.has(s.student_id)
+            )
             const missing = notSubmittedCount(task, students)
             const taskOverdue = isTaskOverdue(task.due_date)
 

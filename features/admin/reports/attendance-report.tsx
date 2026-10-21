@@ -26,6 +26,7 @@ import { ReportFilters } from './report-filters'
 import { currentMonthValue, reportPeriodLabel } from './report-date-range'
 import { aggregateByStudent, buildSessionChartData } from './attendance-report.utils'
 import { fetchAttendanceDetailRows } from './fetch-attendance-detail-rows'
+import { attendanceSummaryExportRows } from './report-export-rows'
 
 export function AttendanceReport() {
   const [department, setDepartment] = useState('')
@@ -69,25 +70,7 @@ export function AttendanceReport() {
 
   function handleExport() {
     if (studentId) exportToCSV(rows, `attendance-${studentId}-${periodKey}`)
-    else {
-      exportToCSV(
-        summary.map((s) => ({
-          rank: s.rank,
-          studentName: s.studentName,
-          email: s.email,
-          department: s.department,
-          Status: s.isActive ? 'Active' : 'Inactive',
-          'Inactive Date': s.inactiveAt ?? '',
-          present: s.present,
-          absent: s.absent,
-          permission: s.permission,
-          total: s.total,
-          'Attended %': s.attendedRate,
-          'Permission %': s.permissionRate,
-        })),
-        `attendance-summary-${periodKey}`
-      )
-    }
+    else exportToCSV(attendanceSummaryExportRows(summary), `attendance-summary-${periodKey}`)
   }
 
   return (

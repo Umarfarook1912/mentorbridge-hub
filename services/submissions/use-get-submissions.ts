@@ -19,7 +19,7 @@ export function useGetSubmissions(filters: SubmissionFilters = {}) {
       let query = supabase
         .from('task_submissions')
         .select(
-          '*, tasks(title, due_date), profiles:student_id(full_name, email, department, domain_interest, avatar_url)'
+          '*, tasks(title, due_date), profiles:student_id(full_name, email, department, domain_interest, avatar_url, is_active, company_name)'
         )
         .order('submitted_at', { ascending: false })
 

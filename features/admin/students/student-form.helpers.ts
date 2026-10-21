@@ -10,8 +10,14 @@ export function toStudentUpdatePayload(editData: UpdateStudentInput): IStudentUp
     domainInterest: editData.domainInterest || '',
     role: editData.role,
     sectionPermissions: editData.role === 'Executive' ? editData.sectionPermissions : [],
-    isActive: editData.isActive,
-    inactiveAt: editData.isActive ? null : editData.inactiveAt || null,
+    isActive: editData.enrollmentStatus !== 'inactive',
+    inactiveAt: editData.enrollmentStatus === 'inactive' ? editData.inactiveAt || null : null,
+    companyName: editData.enrollmentStatus === 'company' ? editData.companyName?.trim() || null : null,
+    companyRole: editData.enrollmentStatus === 'company' ? editData.companyRole?.trim() || null : null,
+    companyLocation:
+      editData.enrollmentStatus === 'company' ? editData.companyLocation?.trim() || null : null,
+    companyJoinedAt:
+      editData.enrollmentStatus === 'company' ? editData.companyJoinedAt || null : null,
   }
 }
 

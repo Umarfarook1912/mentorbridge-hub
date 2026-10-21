@@ -13,6 +13,7 @@ import { useGetAttendanceByMeeting } from '@/services/attendance/use-get-attenda
 import { useMarkAttendance } from '@/services/attendance/use-mark-attendance'
 import { exportToCSV } from '@/utils/export'
 import { isMeetingForStudent } from '@/utils/meeting-audience'
+import { isRosterStudent } from '@/lib/enrollment'
 import type { AttendanceStatus } from '@/types/supabase.types'
 import { Users } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
@@ -63,7 +64,7 @@ export function AttendanceRoster({
     () =>
       allStudents.filter(
         (s) =>
-          s.is_active !== false &&
+          isRosterStudent(s) &&
           isMeetingForStudent(
             { targetDomains, targetStudentIds },
             { id: s.id, domainInterest: s.domain_interest }

@@ -11,6 +11,10 @@ export interface TaskDetailRow {
   department: string
   isActive: boolean
   inactiveAt: string | null
+  companyName: string | null
+  companyRole: string | null
+  companyLocation: string | null
+  companyJoinedAt: string | null
   taskId: string
   taskTitle: string
   dueDate: string
@@ -25,6 +29,10 @@ export interface StudentTaskSummary {
   department: string
   isActive: boolean
   inactiveAt: string | null
+  companyName: string | null
+  companyRole: string | null
+  companyLocation: string | null
+  companyJoinedAt: string | null
   assigned: number
   approved: number
   rejected: number
@@ -42,6 +50,10 @@ interface StudentInput {
   domain_interest: string | null
   is_active?: boolean | null
   inactive_at?: string | null
+  company_name?: string | null
+  company_role?: string | null
+  company_location?: string | null
+  company_joined_at?: string | null
 }
 
 interface TaskInput {
@@ -93,6 +105,10 @@ export function buildTaskDetailRows(
         department: student.department ?? '',
         isActive: student.is_active ?? true,
         inactiveAt: student.inactive_at ?? null,
+        companyName: student.company_name ?? null,
+        companyRole: student.company_role ?? null,
+        companyLocation: student.company_location ?? null,
+        companyJoinedAt: student.company_joined_at ?? null,
         taskId: task.id,
         taskTitle: task.title,
         dueDate: task.due_date,
@@ -117,6 +133,10 @@ export function aggregateTaskByStudent(rows: TaskDetailRow[]): StudentTaskSummar
         department: row.department,
         isActive: row.isActive,
         inactiveAt: row.inactiveAt,
+        companyName: row.companyName,
+        companyRole: row.companyRole,
+        companyLocation: row.companyLocation,
+        companyJoinedAt: row.companyJoinedAt,
         assigned: 0,
         approved: 0,
         rejected: 0,

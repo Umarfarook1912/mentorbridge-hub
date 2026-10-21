@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FormFieldWrapper } from '@/components/shared/forms/form-field-wrapper'
 import { StudentFormSelects } from './student-form-selects'
-import { StudentFormEditExtras } from './student-form-edit-extras'
+import { StudentFormEditSection } from './student-form-edit-section'
 import { toStudentUpdatePayload } from './student-form.helpers'
 import {
   studentSchema,
@@ -21,7 +21,7 @@ import { useCreateStudent } from '@/services/students/use-create-student'
 import { useUpdateStudent } from '@/services/students/use-update-student'
 import type { IStudentEntity } from '@/services/students'
 import { getErrorMessage } from '@/utils/form'
-import { localToday } from '@/utils/meeting-time'
+import { getEnrollmentStatus } from '@/lib/enrollment'
 import type { AdminSection } from '@/lib/permissions'
 
 interface StudentFormProps {
@@ -55,8 +55,12 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
         ? {
             role: 'Student' as const,
             sectionPermissions: [] as AdminSection[],
-            isActive: true,
+            enrollmentStatus: 'active' as const,
             inactiveAt: '',
+            companyName: '',
+            companyRole: '',
+            companyLocation: '',
+            companyJoinedAt: '',
           }
         : {}),
     },
@@ -66,10 +70,6 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
   const department = useWatch({ control, name: 'department' }) ?? ''
   const domainInterest = useWatch({ control, name: 'domainInterest' }) ?? ''
   const roleValue = useWatch({ control, name: 'role' }) ?? ''
-  const isActiveValue = (useWatch({ control, name: 'isActive' }) as boolean | undefined) ?? true
-  const inactiveAtValue = (useWatch({ control, name: 'inactiveAt' }) as string | undefined) ?? ''
-  const sectionPermissions =
-    (useWatch({ control, name: 'sectionPermissions' }) as AdminSection[] | undefined) ?? []
 
   useEffect(() => {
     if (!student) return
@@ -82,8 +82,12 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
       domainInterest: student.domain_interest ?? '',
       role: student.role,
       sectionPermissions: (student.section_permissions as AdminSection[] | null) ?? [],
-      isActive: student.is_active ?? true,
+      enrollmentStatus: getEnrollmentStatus(student),
       inactiveAt: student.inactive_at ?? '',
+      companyName: student.company_name ?? '',
+      companyRole: student.company_role ?? '',
+      companyLocation: student.company_location ?? '',
+      companyJoinedAt: student.company_joined_at ?? '',
     })
   }, [student, reset])
 
@@ -149,30 +153,7 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
         }}
       />
 
-      {isEdit && (
-        <StudentFormEditExtras
-          isActive={isActiveValue}
-          inactiveAt={inactiveAtValue}
-          roleValue={String(roleValue)}
-          sectionPermissions={sectionPermissions}
-          onIsActiveChange={(active) => {
-            setValue('isActive', active, { shouldValidate: true })
-            setValue('inactiveAt', active ? '' : inactiveAtValue || localToday(), {
-              shouldValidate: true,
-            })
-          }}
-          onInactiveAtChange={(date) => setValue('inactiveAt', date, { shouldValidate: true })}
-          onSectionPermissionsChange={(sections) =>
-            setValue('sectionPermissions', sections, { shouldValidate: true })
-          }
-          inactiveAtError={'inactiveAt' in errors ? errors.inactiveAt : undefined}
-          sectionPermissionsError={
-            'sectionPermissions' in errors
-              ? (errors.sectionPermissions as { message?: string } | undefined)
-              : undefined
-          }
-        />
-      )}
+      {isEdit && <StudentFormEditSection control={control} setValue={setValue} errors={errors} />}
 
       {!isEdit && (
         <FormFieldWrapper

@@ -32,8 +32,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { id } = await params
   const body = await request.json()
-  const { fullName, phone, department, domainInterest, studentCategory, role, sectionPermissions, isActive, inactiveAt } =
-    body
+  const {
+    fullName,
+    phone,
+    department,
+    domainInterest,
+    studentCategory,
+    role,
+    sectionPermissions,
+    isActive,
+    inactiveAt,
+    companyName,
+    companyRole,
+    companyLocation,
+    companyJoinedAt,
+  } = body
 
   if (role && !VALID_ROLES.includes(role)) {
     return NextResponse.json({ message: 'Invalid role' }, { status: 400 })
@@ -97,11 +110,23 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   if (typeof isActive === 'boolean') {
+    const placed = typeof companyName === 'string' && companyName.trim().length > 0
     if (!isActive && !inactiveAt) {
       return NextResponse.json({ message: 'Inactive date is required' }, { status: 400 })
     }
+    const roleText = typeof companyRole === 'string' ? companyRole.trim() : ''
+    if (isActive && placed && (!companyLocation || !companyJoinedAt || !roleText)) {
+      return NextResponse.json(
+        { message: 'Company name, role, location, and date of joining are required' },
+        { status: 400 }
+      )
+    }
     updates.is_active = isActive
     updates.inactive_at = isActive ? null : inactiveAt || null
+    updates.company_name = isActive && placed ? companyName.trim() : null
+    updates.company_role = isActive && placed ? roleText : null
+    updates.company_location = isActive && placed ? String(companyLocation).trim() : null
+    updates.company_joined_at = isActive && placed ? companyJoinedAt : null
   }
 
   if (role && VALID_ROLES.includes(role)) {

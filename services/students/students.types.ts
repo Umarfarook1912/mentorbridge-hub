@@ -22,6 +22,10 @@ export interface IStudentUpdateMutation {
   sectionPermissions?: string[]
   isActive?: boolean
   inactiveAt?: string | null
+  companyName?: string | null
+  companyRole?: string | null
+  companyLocation?: string | null
+  companyJoinedAt?: string | null
 }
 
 export interface IStudentFilters {
@@ -29,7 +33,7 @@ export interface IStudentFilters {
   department?: string
   domainInterest?: string
   studentCategory?: string
-  isActive?: boolean
+  enrollment?: 'active' | 'inactive' | 'company'
   page?: number
   pageSize?: number
 }

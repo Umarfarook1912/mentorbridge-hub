@@ -25,6 +25,10 @@ create table public.profiles (
   avatar_url  text,
   is_active   boolean not null default true,
   inactive_at date,
+  company_name text,
+  company_role text,
+  company_location text,
+  company_joined_at date,
   created_at  timestamptz not null default now()
 );
 

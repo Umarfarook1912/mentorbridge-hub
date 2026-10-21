@@ -1,5 +1,6 @@
 import type { Column } from '@/components/shared/data-display/data-table'
 import { StatusBadge } from '@/components/shared/data-display/status-badge'
+import { EnrollmentStatusLabel } from '@/components/shared/data-display/enrollment-status-label'
 import { formatDate } from '@/utils/format'
 import type { StudentTaskSummary, TaskDetailRow } from './task-completion-report.utils'
 
@@ -15,12 +16,14 @@ export const taskSummaryColumns: Column<StudentTaskSummary>[] = [
     cell: (r) => (
       <div className="space-y-1">
         <span className="text-sm font-medium">{r.studentName}</span>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <StatusBadge status={r.isActive ? 'Active' : 'Inactive'} />
-          {!r.isActive && r.inactiveAt && (
-            <span className="text-muted-foreground text-xs">{formatDate(r.inactiveAt)}</span>
-          )}
-        </div>
+        <EnrollmentStatusLabel
+          is_active={r.isActive}
+          inactiveAt={r.inactiveAt}
+          company_name={r.companyName}
+          companyRole={r.companyRole}
+          companyLocation={r.companyLocation}
+          companyJoinedAt={r.companyJoinedAt}
+        />
       </div>
     ),
   },

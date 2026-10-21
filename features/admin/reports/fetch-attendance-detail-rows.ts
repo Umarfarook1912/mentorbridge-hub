@@ -19,6 +19,10 @@ type ProfileJoin = {
   domain_interest: string | null
   is_active: boolean | null
   inactive_at: string | null
+  company_name: string | null
+  company_role: string | null
+  company_location: string | null
+  company_joined_at: string | null
 }
 
 type MeetingJoin = { title: string; meeting_date: string }
@@ -52,7 +56,7 @@ async function fetchAllAttendanceRows(
     let query = supabase
       .from('attendance')
       .select(
-        'id, student_id, status, meetings!inner(title, meeting_date), profiles:student_id(full_name, email, department, domain_interest, is_active, inactive_at)'
+        'id, student_id, status, meetings!inner(title, meeting_date), profiles:student_id(full_name, email, department, domain_interest, is_active, inactive_at, company_name, company_role, company_location, company_joined_at)'
       )
       .range(from, from + pageSize - 1)
 
@@ -97,6 +101,10 @@ export async function fetchAttendanceDetailRows({
         domainInterest: profile?.domain_interest ?? '',
         isActive: profile?.is_active ?? true,
         inactiveAt: profile?.inactive_at ?? null,
+        companyName: profile?.company_name ?? null,
+        companyRole: profile?.company_role ?? null,
+        companyLocation: profile?.company_location ?? null,
+        companyJoinedAt: profile?.company_joined_at ?? null,
         meetingTitle: meeting?.title ?? '',
         meetingDate: meeting?.meeting_date ?? '',
         status: r.status,

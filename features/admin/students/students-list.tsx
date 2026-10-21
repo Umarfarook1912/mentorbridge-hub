@@ -14,6 +14,7 @@ import { useDebounce } from '@/hooks/use-debounce'
 import { usePagination } from '@/hooks/use-pagination'
 import { useAuthStore } from '@/store/auth-store'
 import { canMutate } from '@/lib/permissions'
+import type { EnrollmentStatus } from '@/lib/enrollment'
 
 export function StudentsList() {
   const { user } = useAuthStore()
@@ -22,7 +23,7 @@ export function StudentsList() {
   const [department, setDepartment] = useState('')
   const [domainInterest, setDomainInterest] = useState('')
   const [studentCategory, setStudentCategory] = useState('')
-  const [isActiveFilter, setIsActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [isActiveFilter, setIsActiveFilter] = useState<'all' | EnrollmentStatus>('all')
   const [addOpen, setAddOpen] = useState(false)
 
   const debouncedSearch = useDebounce(search)
@@ -33,7 +34,7 @@ export function StudentsList() {
     department: department || undefined,
     domainInterest: domainInterest || undefined,
     studentCategory: studentCategory || undefined,
-    isActive: isActiveFilter === 'all' ? undefined : isActiveFilter === 'active',
+    enrollment: isActiveFilter === 'all' ? undefined : isActiveFilter,
     page: pagination.page,
     pageSize: pagination.pageSize,
   })

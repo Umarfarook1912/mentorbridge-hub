@@ -11,6 +11,7 @@ type StatusValue =
   | 'missing'
   | 'Active'
   | 'Inactive'
+  | 'Company'
 
 const STATUS_CONFIG: Record<StatusValue, { label: string; className: string }> = {
   Present: {
@@ -60,6 +61,10 @@ const STATUS_CONFIG: Record<StatusValue, { label: string; className: string }> =
   Inactive: {
     label: 'Inactive',
     className: 'bg-muted text-muted-foreground border-border hover:bg-muted/80',
+  },
+  Company: {
+    label: 'Company',
+    className: 'bg-info/10 text-info border-info/20 hover:bg-info/20',
   },
 }
 
